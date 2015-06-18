@@ -278,25 +278,24 @@ function Background(rows, cols) {
   // addUIEvent is being used in order to instruct the node's DOMElement
   // to add the appropriate event listener through the DOMRenderer.
   // DOM events are being emitted as UI Events and routed accordingly.
-//  this.addUIEvent('mousedown');
-//  this.addUIEvent('touchstart');
-//  // this.addUIEvent('mousemove');
-//  // this.addUIEvent('touchmove');
-//  this.addUIEvent('mouseup');
-//  this.addUIEvent('touchend');
+  this.addUIEvent('mousedown');
+  this.addUIEvent('touchstart');
+  // this.addUIEvent('mousemove');
+  // this.addUIEvent('touchmove');
+  this.addUIEvent('mouseup');
+  this.addUIEvent('touchend');
 }
 
 Background.prototype = Object.create(Node.prototype);
 Background.prototype.constructor = Node;
 
-/*Background.prototype.onReceive = function onReceive(type, ev) {
+Background.prototype.onReceive = function onReceive(type, ev) {
   if (type === 'mousedown') {
     // dispatch globally
     this.emit('x', ev.x).emit('y', ev.y);
     this.mousing = true;
   }
   if (type === 'touchstart') {
-    console.log('touchstart');
     // dispatch globally
     this.emit('x', ev.x).emit('y', ev.y);
     this.mousing = true;
@@ -315,13 +314,12 @@ Background.prototype.constructor = Node;
     this.mousing = false;
   }
   if (type === 'touchend') {
-    console.log('touchend');
     // dispatch globally
     this.emit('x', ev.x).emit('y', ev.y);
     this.mousing = false;
   }
   this.receive(type, ev);
-};*/
+};
 
 // The Layout component is a state machine. Each layout can is a state.
 // The state is defined by
@@ -419,12 +417,12 @@ function Dot(id) {
   // addUIEvent is being used in order to instruct the node's DOMElement
   // to add the appropriate event listener through the DOMRenderer.
   // DOM events are being emitted as UI Events and routed accordingly.
-//  this.addUIEvent('mousedown');
+  this.addUIEvent('mousedown');
   this.addUIEvent('touchstart');
-//  this.addUIEvent('mousemove');
+  this.addUIEvent('mousemove');
   this.addUIEvent('touchmove');
-//  this.addUIEvent('click');
-//  this.addUIEvent('mouseup');
+  this.addUIEvent('click');
+  this.addUIEvent('mouseup');
   this.addUIEvent('touchend');
 }
 
@@ -433,6 +431,7 @@ Dot.prototype.constructor = Dot;
 
 Dot.prototype.onReceive = function onReceive(type, ev) {
   if (type === 'mousedown') {
+    console.log('mousedown');
     this._parent.mousingDown(this.id);
   }
   if (type === 'touchstart') {
@@ -454,10 +453,12 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
     }
   }
   if (type === 'click') {
+    console.log('click', this.id);
     this._parent.fillDot(this.id);
     this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
   }
   if (type === 'mouseup') {
+    console.log('mouseup');
     this._parent.mousingUp(this.id);
   }
   if (type === 'touchend') {

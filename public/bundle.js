@@ -1,19 +1,19 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -978,19 +978,19 @@ module.exports = MountPoint;
 },{"./Position":7}],5:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -1037,7 +1037,7 @@ Opacity.prototype.toString = function toString() {
  *
  * @method
  *
- * @return {Object} contains component key which holds the stringified constructor
+ * @return {Object} contains component key which holds the stringified constructor 
  * and value key which contains the numeric value
  */
 Opacity.prototype.getValue = function getValue() {
@@ -1129,7 +1129,7 @@ Opacity.prototype.isActive = function isActive(){
  */
 Opacity.prototype.update = function update () {
     this._node.setOpacity(this._value.get());
-
+    
     if (this._value.isActive()) {
       this._node.requestUpdateOnNextTick(this._id);
     }
@@ -1145,19 +1145,19 @@ module.exports = Opacity;
 },{"../transitions/Transitionable":88}],6:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -1224,19 +1224,19 @@ module.exports = Origin;
 },{"./Position":7}],7:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -1262,9 +1262,9 @@ var Transitionable = require('../transitions/Transitionable');
 function Position(node) {
     this._node = node;
     this._id = node.addComponent(this);
-
+  
     this._requestingUpdate = false;
-
+    
     var initialPosition = node.getPosition();
 
     this._x = new Transitionable(initialPosition[0]);
@@ -1388,14 +1388,14 @@ Position.prototype.update = function update () {
 
 Position.prototype.onUpdate = Position.prototype.update;
 
-/**
+/** 
  * Setter for X position
  *
  * @method
- *
+ * 
  * @param {Number} val used to set x coordinate
  * @param {Object} transition options for the transition
- * @param {Function} callback function to execute after setting X
+ * @param {Function} callback function to execute after setting X 
  *
  * @return {Position} this
  */
@@ -1409,14 +1409,14 @@ Position.prototype.setX = function setX(val, transition, callback) {
     return this;
 };
 
-/**
+/** 
  * Setter for Y position
  *
  * @method
- *
+ * 
  * @param {Number} val used to set y coordinate
  * @param {Object} transition options for the transition
- * @param {Function} callback function to execute after setting Y
+ * @param {Function} callback function to execute after setting Y 
  *
  * @return {Position} this
  */
@@ -1430,14 +1430,14 @@ Position.prototype.setY = function setY(val, transition, callback) {
     return this;
 };
 
-/**
+/** 
  * Setter for Z position
  *
  * @method
- *
+ * 
  * @param {Number} val used to set z coordinate
  * @param {Object} transition options for the transition
- * @param {Function} callback function to execute after setting Z
+ * @param {Function} callback function to execute after setting Z 
  *
  * @return {Position} this
  */
@@ -1452,16 +1452,16 @@ Position.prototype.setZ = function setZ(val, transition, callback) {
 };
 
 
-/**
+/** 
  * Setter for X, Y, and Z positions
  *
  * @method
- *
+ * 
  * @param {Number} x used to set x coordinate
  * @param {Number} y used to set y coordinate
  * @param {Number} z used to set z coordinate
  * @param {Object} transition options for the transition
- * @param {Function} callback function to execute after setting X
+ * @param {Function} callback function to execute after setting X 
  *
  * @return {Position} this
  */
@@ -1511,19 +1511,19 @@ module.exports = Position;
 },{"../transitions/Transitionable":88}],8:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -1606,19 +1606,19 @@ module.exports = Rotation;
 },{"./Position":7}],9:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -1683,19 +1683,19 @@ module.exports = Scale;
 },{"./Position":7}],10:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -2436,19 +2436,19 @@ module.exports = Transform;
 },{"../math/Quaternion":42,"../transitions/Transitionable":88}],12:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -2987,19 +2987,19 @@ module.exports = Dispatch;
 },{"./Event":16}],16:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -3040,19 +3040,19 @@ module.exports = Event;
 },{}],17:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -5340,19 +5340,19 @@ module.exports = Size;
 },{}],21:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -5504,19 +5504,19 @@ module.exports = Transform;
 },{}],22:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -6146,19 +6146,19 @@ module.exports = DOMElement;
 },{"../utilities/CallbackStore":90}],24:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -6869,19 +6869,19 @@ module.exports = DOMRenderer;
 },{"../utilities/vendorPrefix":100,"./ElementCache":26,"./Math":27,"./events/EventMap":30}],26:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -6893,7 +6893,7 @@ module.exports = DOMRenderer;
 
 'use strict';
 
-// Transform identity matrix.
+// Transform identity matrix. 
 var ident = [
     1, 0, 0, 0,
     0, 1, 0, 0,
@@ -6906,12 +6906,12 @@ var ident = [
  * path, world transform, inverted parent, final transform (as being used for
  * setting the actual `transform`-property) and post render size (final size as
  * being rendered to the DOM).
- *
+ * 
  * @class ElementCache
- *
+ *  
  * @param {Element} element DOMElement
  * @param {String} path Path used for uniquely identifying the location in the scene graph.
- */
+ */ 
 function ElementCache (element, path) {
     this.element = element;
     this.path = path;
@@ -8259,19 +8259,19 @@ module.exports = WheelEvent;
 },{"./MouseEvent":34}],38:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -8300,19 +8300,19 @@ module.exports = {
 },{"./CompositionEvent":28,"./Event":29,"./EventMap":30,"./FocusEvent":31,"./InputEvent":32,"./KeyboardEvent":33,"./MouseEvent":34,"./TouchEvent":35,"./UIEvent":36,"./WheelEvent":37}],39:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -8378,19 +8378,19 @@ module.exports = {
 },{"./components":12,"./core":22,"./dom-renderables":24,"./dom-renderers":39,"./math":45,"./physics":75,"./polyfills":77,"./render-loops":80,"./renderers":85,"./transitions":89,"./utilities":96,"./webgl-geometries":105,"./webgl-materials":119,"./webgl-renderables":121,"./webgl-renderers":134,"./webgl-shaders":136}],41:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -8444,7 +8444,7 @@ Mat33.prototype.set = function set(values) {
  * @method
  *
  * @param {Mat33} matrix The Mat33 to copy.
- *
+ * 
  * @return {Mat33} this
  */
 Mat33.prototype.copy = function copy(matrix) {
@@ -10374,7 +10374,7 @@ Vec3.cross = function cross(v1, v2, output) {
  * @param {Vec3} v2 The right Vec3.
  * @param {Vec3} output Vec3 in which to place the result.
  *
- * @return {Object} the object the result of the cross product was placed into
+ * @return {Object} the object the result of the cross product was placed into 
  */
 Vec3.project = function project(v1, v2, output) {
     var x1 = v1.x;
@@ -10399,19 +10399,19 @@ module.exports = Vec3;
 },{}],45:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -10444,9 +10444,9 @@ module.exports = programify
 
 function programify(vertex, fragment, uniforms, attributes) {
   return {
-    vertex: vertex,
+    vertex: vertex, 
     fragment: fragment,
-    uniforms: uniforms,
+    uniforms: uniforms, 
     attributes: attributes
   };
 }
@@ -16740,19 +16740,19 @@ module.exports = animationFrame;
 },{}],77:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -16772,19 +16772,19 @@ module.exports = {
 },{"./animationFrame":76}],78:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -16803,7 +16803,7 @@ var now = require('./now');
  * `update` method invocations to the refresh rate of the screen.
  * Does not normalize the high resolution timestamp when being consecutively
  * started and stopped.
- *
+ * 
  * @class ContainerLoop
  */
 function ContainerLoop() {
@@ -16826,7 +16826,7 @@ function ContainerLoop() {
  * @private
  *
  * @param {Object} ev event payload from the window
- *
+ * 
  * @return {ContainerLoop} this
  */
 ContainerLoop.prototype._onWindowMessage = function _onWindowMessage(ev) {
@@ -16843,7 +16843,7 @@ ContainerLoop.prototype._onWindowMessage = function _onWindowMessage(ev) {
  * Starts the ContainerLoop.
  *
  * @method
- *
+ * 
  * @return {ContainerLoop} this
  */
 ContainerLoop.prototype.start = function start() {
@@ -16856,7 +16856,7 @@ ContainerLoop.prototype.start = function start() {
  * Stops the ContainerLoop.
  *
  * @method
- *
+ * 
  * @return {ContainerLoop} this
  */
 ContainerLoop.prototype.stop = function stop() {
@@ -16869,7 +16869,7 @@ ContainerLoop.prototype.stop = function stop() {
  * Determines whether the ContainerLoop is currently running or not.
  *
  * @method
- *
+ * 
  * @return {Boolean} boolean value indicating whether the ContainerLoop is currently running or not
  */
 ContainerLoop.prototype.isRunning = function isRunning() {
@@ -16880,7 +16880,7 @@ ContainerLoop.prototype.isRunning = function isRunning() {
  * Updates all registered objects.
  *
  * @method
- *
+ * 
  * @param {Number} time high resolution timstamp used for invoking the `update` method on all registered objects
  *
  * @return {ContainerLoop} this
@@ -16897,7 +16897,7 @@ ContainerLoop.prototype.step = function step (time) {
  * every paint, starting on the next paint (assuming the ContainerLoop is running).
  *
  * @method
- *
+ * 
  * @param {Object} updateable object to be updated
  * @param {Function} updateable.update update function to be called on the registered object
  *
@@ -16915,7 +16915,7 @@ ContainerLoop.prototype.update = function update(updateable) {
  * no longer updated.
  *
  * @method
- *
+ * 
  * @param {Object} updateable updateable object previously registered using `update`
  *
  * @return {ContainerLoop} this
@@ -17245,19 +17245,19 @@ module.exports = RequestAnimationFrameLoop;
 },{"../polyfills":77}],80:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18926,19 +18926,19 @@ module.exports = Transitionable;
 },{"../core/FamousEngine":17,"./Curves":87}],89:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19506,19 +19506,19 @@ module.exports = Color;
 },{"../transitions/Transitionable":88}],92:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19527,7 +19527,7 @@ module.exports = Color;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
+ 
 'use strict';
 
 /**
@@ -19706,19 +19706,19 @@ module.exports = ObjectManager;
 },{}],94:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19734,7 +19734,7 @@ module.exports = ObjectManager;
  * Returns a number guaranteed to be within the range [lower, upper].
  *
  * @method clamp
- *
+ * 
  * @param  {Number} value value to be processed by clamp
  * @param  {Number} lower lower bound  of the range
  * @param  {Number} upper upper bound of the range
@@ -19814,19 +19814,19 @@ module.exports = clone;
 },{}],96:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21764,19 +21764,19 @@ module.exports = Cylinder;
 },{"../Geometry":102,"../GeometryHelper":103}],109:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21800,7 +21800,7 @@ var GeometryHelper = require('../GeometryHelper');
  *
  * @param {Object} options Parameters that alter the
  * vertex buffers of the generated geometry.
- *
+ * 
  * @return {Object} constructed geometry
  */
 function GeodesicSphere (options) {
@@ -21844,19 +21844,19 @@ module.exports = GeodesicSphere;
 },{"../Geometry":102,"../GeometryHelper":103}],110:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21880,7 +21880,7 @@ var GeometryHelper = require('../GeometryHelper');
  *
  * @param {Object} options Parameters that alter the
  * vertex buffers of the generated geometry.
- *
+ * 
  * @return {Object} constructed geometry
  */
 function Icosahedron() {
@@ -22456,19 +22456,19 @@ module.exports = Triangle;
 },{"../Geometry":102,"../GeometryHelper":103}],117:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22477,7 +22477,7 @@ module.exports = Triangle;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
+ 
 'use strict';
 
 var TextureRegistry = require('./TextureRegistry');
@@ -25917,19 +25917,19 @@ module.exports = createCheckerBoard;
 },{}],134:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2015 Famous Industries Inc.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26054,7 +26054,7 @@ function radixSort(list, registry) {
             div = floatToInt(comp(list, registry, i));
             out[++buckets[div & radixMask]] = mutator(list, registry, i, div ^= div >> 31 | 0x80000000);
         }
-
+        
         swap = out;
         out = list;
         list = swap;
@@ -26361,25 +26361,24 @@ function Background(rows, cols) {
   // addUIEvent is being used in order to instruct the node's DOMElement
   // to add the appropriate event listener through the DOMRenderer.
   // DOM events are being emitted as UI Events and routed accordingly.
-  //  this.addUIEvent('mousedown');
-  //  this.addUIEvent('touchstart');
-  //  // this.addUIEvent('mousemove');
-  //  // this.addUIEvent('touchmove');
-  //  this.addUIEvent('mouseup');
-  //  this.addUIEvent('touchend');
+  this.addUIEvent('mousedown');
+  this.addUIEvent('touchstart');
+  // this.addUIEvent('mousemove');
+  // this.addUIEvent('touchmove');
+  this.addUIEvent('mouseup');
+  this.addUIEvent('touchend');
 }
 
 Background.prototype = Object.create(Node.prototype);
 Background.prototype.constructor = Node;
 
-/*Background.prototype.onReceive = function onReceive(type, ev) {
+Background.prototype.onReceive = function onReceive(type, ev) {
   if (type === 'mousedown') {
     // dispatch globally
     this.emit('x', ev.x).emit('y', ev.y);
     this.mousing = true;
   }
   if (type === 'touchstart') {
-    console.log('touchstart');
     // dispatch globally
     this.emit('x', ev.x).emit('y', ev.y);
     this.mousing = true;
@@ -26398,13 +26397,12 @@ Background.prototype.constructor = Node;
     this.mousing = false;
   }
   if (type === 'touchend') {
-    console.log('touchend');
     // dispatch globally
     this.emit('x', ev.x).emit('y', ev.y);
     this.mousing = false;
   }
   this.receive(type, ev);
-};*/
+};
 
 // The Layout component is a state machine. Each layout can is a state.
 // The state is defined by
@@ -26495,12 +26493,12 @@ function Dot(id) {
   // addUIEvent is being used in order to instruct the node's DOMElement
   // to add the appropriate event listener through the DOMRenderer.
   // DOM events are being emitted as UI Events and routed accordingly.
-  //  this.addUIEvent('mousedown');
+  this.addUIEvent('mousedown');
   this.addUIEvent('touchstart');
-  //  this.addUIEvent('mousemove');
+  this.addUIEvent('mousemove');
   this.addUIEvent('touchmove');
-  //  this.addUIEvent('click');
-  //  this.addUIEvent('mouseup');
+  this.addUIEvent('click');
+  this.addUIEvent('mouseup');
   this.addUIEvent('touchend');
 }
 
@@ -26509,6 +26507,7 @@ Dot.prototype.constructor = Dot;
 
 Dot.prototype.onReceive = function onReceive(type, ev) {
   if (type === 'mousedown') {
+    console.log('mousedown');
     this._parent.mousingDown(this.id);
   }
   if (type === 'touchstart') {
@@ -26530,10 +26529,12 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
     }
   }
   if (type === 'click') {
+    console.log('click', this.id);
     this._parent.fillDot(this.id);
     this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
   }
   if (type === 'mouseup') {
+    console.log('mouseup');
     this._parent.mousingUp(this.id);
   }
   if (type === 'touchend') {
