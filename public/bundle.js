@@ -104,6 +104,8 @@ module.exports = Align;
 
 'use strict';
 
+var Commands = require('../core/Commands');
+
 /**
  * Camera is a component that is responsible for sending information to the renderer about where
  * the camera is in the scene.  This allows the user to set the type of projection, the focal depth,
@@ -282,7 +284,7 @@ Camera.prototype.onUpdate = function onUpdate() {
     var path = this._node.getLocation();
 
     this._node
-        .sendDrawCommand('WITH')
+        .sendDrawCommand(Commands.WITH)
         .sendDrawCommand(path);
 
     if (this._perspectiveDirty) {
@@ -290,16 +292,16 @@ Camera.prototype.onUpdate = function onUpdate() {
 
         switch (this._projectionType) {
             case Camera.FRUSTUM_PROJECTION:
-                this._node.sendDrawCommand('FRUSTUM_PROJECTION');
+                this._node.sendDrawCommand(Commands.FRUSTRUM_PROJECTION);
                 this._node.sendDrawCommand(this._near);
                 this._node.sendDrawCommand(this._far);
                 break;
             case Camera.PINHOLE_PROJECTION:
-                this._node.sendDrawCommand('PINHOLE_PROJECTION');
+                this._node.sendDrawCommand(Commands.PINHOLE_PROJECTION);
                 this._node.sendDrawCommand(this._focalDepth);
                 break;
             case Camera.ORTHOGRAPHIC_PROJECTION:
-                this._node.sendDrawCommand('ORTHOGRAPHIC_PROJECTION');
+                this._node.sendDrawCommand(Commands.ORTHOGRAPHIC_PROJECTION);
                 break;
         }
     }
@@ -307,7 +309,7 @@ Camera.prototype.onUpdate = function onUpdate() {
     if (this._viewDirty) {
         this._viewDirty = false;
 
-        this._node.sendDrawCommand('CHANGE_VIEW_TRANSFORM');
+        this._node.sendDrawCommand(Commands.CHANGE_VIEW_TRANSFORM);
         this._node.sendDrawCommand(this._viewTransform[0]);
         this._node.sendDrawCommand(this._viewTransform[1]);
         this._node.sendDrawCommand(this._viewTransform[2]);
@@ -390,7 +392,7 @@ Camera.prototype.onTransformChange = function onTransformChange(transform) {
 
 module.exports = Camera;
 
-},{}],3:[function(require,module,exports){
+},{"../core/Commands":15}],3:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -896,7 +898,7 @@ function _processMouseLeave() {
 
 module.exports = GestureHandler;
 
-},{"../math/Vec2":43,"../utilities/CallbackStore":90}],4:[function(require,module,exports){
+},{"../math/Vec2":49,"../utilities/CallbackStore":94}],4:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -1142,7 +1144,7 @@ Opacity.prototype.onUpdate = Opacity.prototype.update;
 
 module.exports = Opacity;
 
-},{"../transitions/Transitionable":88}],6:[function(require,module,exports){
+},{"../transitions/Transitionable":92}],6:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1508,7 +1510,7 @@ Position.prototype.halt = function halt() {
 
 module.exports = Position;
 
-},{"../transitions/Transitionable":88}],8:[function(require,module,exports){
+},{"../transitions/Transitionable":92}],8:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1708,6 +1710,7 @@ module.exports = Scale;
 'use strict';
 
 var Transitionable = require('../transitions/Transitionable');
+var SizeSystem = require('../core/SizeSystem');
 
 /**
  * Size component used for managing the size of the Node it is attached to.
@@ -1811,7 +1814,7 @@ Size.prototype.toString = function toString() {
  */
 Size.prototype.getValue = function getValue() {
     return {
-        sizeMode: this._node.value.sizeMode,
+        sizeMode: SizeSystem.get(this._node.getLocation()).getSizeMode(),
         absolute: {
             x: this._absolute.x.get(),
             y: this._absolute.y.get(),
@@ -2090,7 +2093,7 @@ Size.prototype.halt = function halt () {
 
 module.exports = Size;
 
-},{"../transitions/Transitionable":88}],11:[function(require,module,exports){
+},{"../core/SizeSystem":24,"../transitions/Transitionable":92}],11:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2433,7 +2436,7 @@ Transform.prototype.onUpdate = Transform.prototype.clean;
 
 module.exports = Transform;
 
-},{"../math/Quaternion":42,"../transitions/Transitionable":88}],12:[function(require,module,exports){
+},{"../math/Quaternion":48,"../transitions/Transitionable":92}],12:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -2826,14 +2829,225 @@ module.exports = Clock;
  * THE SOFTWARE.
  */
 
-/*jshint -W079 */
+'use strict';
+
+/**
+ * An enumeration of the commands in our command queue.
+ */
+var Commands = {
+    INIT_DOM: 0,
+    DOM_RENDER_SIZE: 1,
+    CHANGE_TRANSFORM: 2,
+    CHANGE_SIZE: 3,
+    CHANGE_PROPERTY: 4,
+    CHANGE_CONTENT: 5,
+    CHANGE_ATTRIBUTE: 6,
+    ADD_CLASS: 7,
+    REMOVE_CLASS: 8,
+    SUBSCRIBE: 9,
+    GL_SET_DRAW_OPTIONS: 10,
+    GL_AMBIENT_LIGHT: 11,
+    GL_LIGHT_POSITION: 12,
+    GL_LIGHT_COLOR: 13,
+    MATERIAL_INPUT: 14,
+    GL_SET_GEOMETRY: 15,
+    GL_UNIFORMS: 16,
+    GL_BUFFER_DATA: 17,
+    GL_CUTOUT_STATE: 18,
+    GL_MESH_VISIBILITY: 19,
+    GL_REMOVE_MESH: 20,
+    PINHOLE_PROJECTION: 21,
+    ORTHOGRAPHIC_PROJECTION: 22,
+    CHANGE_VIEW_TRANSFORM: 23,
+    WITH: 24,
+    FRAME: 25,
+    ENGINE: 26,
+    START: 27,
+    STOP: 28,
+    TIME: 29,
+    TRIGGER: 30,
+    NEED_SIZE_FOR: 31,
+    DOM: 32,
+    READY: 33,
+    ALLOW_DEFAULT: 34,
+    PREVENT_DEFAULT: 35,
+    UNSUBSCRIBE: 36,
+    prettyPrint: function (buffer, start, count) {
+        var callback;
+        start = start ? start : 0;
+        var data = {
+            i: start,
+            result: ''
+        };
+        for (var len = count ? count + start : buffer.length ; data.i < len ; data.i++) {
+            callback = commandPrinters[buffer[data.i]];
+            if (!callback) throw new Error('PARSE ERROR: no command registered for: ' + buffer[data.i]);
+            callback(buffer, data);
+        }
+        return data.result;
+    }
+};
+
+var commandPrinters = [];
+
+commandPrinters[Commands.INIT_DOM] = function init_dom (buffer, data) {
+    data.result += data.i + '. INIT_DOM\n    tagName: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.DOM_RENDER_SIZE] = function dom_render_size (buffer, data) {
+    data.result += data.i + '. DOM_RENDER_SIZE\n    selector: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.CHANGE_TRANSFORM] = function change_transform (buffer, data) {
+    data.result += data.i + '. CHANGE_TRANSFORM\n    val: [';
+    for (var j = 0 ; j < 16 ; j++) data.result += buffer[++data.i] + (j < 15 ? ', ' : '');
+    data.result += ']\n\n';
+};
+
+commandPrinters[Commands.CHANGE_SIZE] = function change_size (buffer, data) {
+    data.result += data.i + '. CHANGE_SIZE\n    x: ' + buffer[++data.i] + ', y: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.CHANGE_PROPERTY] = function change_property (buffer, data) {
+    data.result += data.i + '. CHANGE_PROPERTY\n    key: ' + buffer[++data.i] + ', value: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.CHANGE_CONTENT] = function change_content (buffer, data) {
+    data.result += data.i + '. CHANGE_CONTENT\n    content: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.CHANGE_ATTRIBUTE] = function change_attribute (buffer, data) {
+    data.result += data.i + '. CHANGE_ATTRIBUTE\n    key: ' + buffer[++data.i] + ', value: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.ADD_CLASS] = function add_class (buffer, data) {
+    data.result += data.i + '. ADD_CLASS\n    className: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.REMOVE_CLASS] = function remove_class (buffer, data) {
+    data.result += data.i + '. REMOVE_CLASS\n    className: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.SUBSCRIBE] = function subscribe (buffer, data) {
+    data.result += data.i + '. SUBSCRIBE\n    event: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_SET_DRAW_OPTIONS] = function gl_set_draw_options (buffer, data) {
+    data.result += data.i + '. GL_SET_DRAW_OPTIONS\n    options: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_AMBIENT_LIGHT] = function gl_ambient_light (buffer, data) {
+    data.result += data.i + '. GL_AMBIENT_LIGHT\n    r: ' + buffer[++data.i] + 'g: ' + buffer[++data.i] + 'b: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_LIGHT_POSITION] = function gl_light_position (buffer, data) {
+    data.result += data.i + '. GL_LIGHT_POSITION\n    x: ' + buffer[++data.i] + 'y: ' + buffer[++data.i] + 'z: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_LIGHT_COLOR] = function gl_light_color (buffer, data) {
+    data.result += data.i + '. GL_LIGHT_COLOR\n    r: ' + buffer[++data.i] + 'g: ' + buffer[++data.i] + 'b: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.MATERIAL_INPUT] = function material_input (buffer, data) {
+    data.result += data.i + '. MATERIAL_INPUT\n    key: ' + buffer[++data.i] + ', value: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_SET_GEOMETRY] = function gl_set_geometry (buffer, data) {
+    data.result += data.i + '. GL_SET_GEOMETRY\n   x: ' + buffer[++data.i] + ', y: ' + buffer[++data.i] + ', z: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_UNIFORMS] = function gl_uniforms (buffer, data) {
+    data.result += data.i + '. GL_UNIFORMS\n    key: ' + buffer[++data.i] + ', value: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_BUFFER_DATA] = function gl_buffer_data (buffer, data) {
+    data.result += data.i + '. GL_BUFFER_DATA\n    data: ';
+    for (var i = 0; i < 5 ; i++) data.result += buffer[++data.i] + ', ';
+    data.result += '\n\n';
+};
+
+commandPrinters[Commands.GL_CUTOUT_STATE] = function gl_cutout_state (buffer, data) {
+    data.result += data.i + '. GL_CUTOUT_STATE\n    state: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_MESH_VISIBILITY] = function gl_mesh_visibility (buffer, data) {
+    data.result += data.i + '. GL_MESH_VISIBILITY\n    visibility: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.GL_REMOVE_MESH] = function gl_remove_mesh (buffer, data) {
+    data.result += data.i + '. GL_REMOVE_MESH\n\n';
+};
+
+commandPrinters[Commands.PINHOLE_PROJECTION] = function pinhole_projection (buffer, data) {
+    data.result += data.i + '. PINHOLE_PROJECTION\n    depth: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.ORTHOGRAPHIC_PROJECTION] = function orthographic_projection (buffer, data) {
+    data.result += data.i + '. ORTHOGRAPHIC_PROJECTION\n';
+};
+
+commandPrinters[Commands.CHANGE_VIEW_TRANSFORM] = function change_view_transform (buffer, data) {
+    data.result += data.i + '. CHANGE_VIEW_TRANSFORM\n   value: [';
+    for (var i = 0; i < 16 ; i++) data.result += buffer[++data.i] + (i < 15 ? ', ' : '');
+    data.result += ']\n\n';
+};
+
+commandPrinters[Commands.PREVENT_DEFAULT] = function prevent_default (buffer, data) {
+    data.result += data.i + '. PREVENT_DEFAULT\n    value: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.ALLOW_DEFAULT] = function allow_default (buffer, data) {
+    data.result += data.i + '. ALLOW_DEFAULT\n    value: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.READY] = function ready (buffer, data) {
+    data.result += data.i + '. READY\n\n';
+};
+
+commandPrinters[Commands.WITH] = function w (buffer, data) {
+    data.result += data.i + '. **WITH**\n     path: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.TIME] = function time (buffer, data) {
+    data.result += data.i + '. TIME\n     ms: ' + buffer[++data.i] + '\n\n';
+};
+
+commandPrinters[Commands.NEED_SIZE_FOR] = function need_size_for (buffer, data) {
+    data.result += data.i + '. NEED_SIZE_FOR\n    selector: ' + buffer[++data.i] + '\n\n';
+};
+
+module.exports = Commands;
+
+
+},{}],16:[function(require,module,exports){
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Famous Industries Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 'use strict';
 
-// TODO: Dispatch should be generalized so that it can work on any Node
-// not just Contexts.
-
 var Event = require('./Event');
+var PathUtils = require('./Path');
 
 /**
  * The Dispatch class is used to propogate events down the
@@ -2843,13 +3057,8 @@ var Event = require('./Event');
  * @param {Scene} context The context on which it operates
  * @constructor
  */
-function Dispatch (context) {
-
-    if (!context) throw new Error('Dispatch needs to be instantiated on a node');
-
-    this._context = context; // A reference to the context
-                             // on which the dispatcher
-                             // operates
+function Dispatch () {
+    this._nodes = {}; // a container for constant time lookup of nodes
 
     this._queue = []; // The queue is used for two purposes
                       // 1. It is used to list indicies in the
@@ -2859,6 +3068,244 @@ function Dispatch (context) {
                       //    such that it is possible to do a breadth first
                       //    traversal of the scene graph.
 }
+
+/**
+ * Protected method that sets the updater for the dispatch. The updater will
+ * almost certainly be the FamousEngine class.
+ *
+ * @method
+ * @protected
+ *
+ * @param {FamousEngine} updater The updater which will be passed through the scene graph
+ *
+ * @return {undefined} undefined
+ */
+Dispatch.prototype._setUpdater = function _setUpdater (updater) {
+    this._updater = updater;
+
+    for (var key in this._nodes) this._nodes[key]._setUpdater(updater);
+};
+
+/**
+ * Enque the children of a node within the dispatcher. Does not clear
+ * the dispatchers queue first.
+ *
+ * @method addChildrenToQueue
+ * @return {void}
+ *
+ * @param {Node} node from which to add children to the queue
+ */
+Dispatch.prototype.addChildrenToQueue = function addChildrenToQueue (node) {
+    var children = node.getChildren();
+    var child;
+    for (var i = 0, len = children.length ; i < len ; i++) {
+        child = children[i];
+        if (child) this._queue.push(child);
+    }
+};
+
+/**
+ * Returns the next item in the Dispatch's queue.
+ *
+ * @method next
+ * @return {Node} next node in the queue
+ */
+Dispatch.prototype.next = function next () {
+    return this._queue.shift();
+};
+
+/**
+ * Returns the next node in the queue, but also adds its children to
+ * the end of the queue. Continually calling this method will result
+ * in a breadth first traversal of the render tree.
+ *
+ * @method breadthFirstNext
+ * @return {Node | undefined} the next node in the traversal if one exists
+ */
+Dispatch.prototype.breadthFirstNext = function breadthFirstNext () {
+    var child = this._queue.shift();
+    if (!child) return void 0;
+    this.addChildrenToQueue(child);
+    return child;
+};
+
+/**
+ * Calls the onMount method for the node at a given path and
+ * properly registers all of that nodes children to their proper
+ * paths. Throws if that path doesn't have a node registered as
+ * a parent or if there is no node registered at that path.
+ *
+ * @method mount
+ *
+ * @param {String} path at which to begin mounting
+ * @param {Node} node the node that was mounted
+ *
+ * @return {void}
+ */
+Dispatch.prototype.mount = function mount (path, node) {
+    if (!node) throw new Error('Dispatch: no node passed to mount at: ' + path);
+    if (this._nodes[path])
+        throw new Error('Dispatch: there is a node already registered at: ' + path);
+
+    node._setUpdater(this._updater);
+    this._nodes[path] = node;
+    var parentPath = PathUtils.parent(path);
+
+    // scenes are their own parents
+    var parent = !parentPath ? node : this._nodes[parentPath];
+
+    if (!parent)
+        throw new Error(
+                'Parent to path: ' + path +
+                ' doesn\'t exist at expected path: ' + parentPath
+        );
+
+    var children = node.getChildren();
+    var components = node.getComponents();
+    var i;
+    var len;
+
+    if (parent.isMounted()) node._setMounted(true, path);
+    if (parent.isShown()) node._setShown(true);
+
+    if (parent.isMounted()) {
+        node._setParent(parent);
+        if (node.onMount) node.onMount(path);
+
+        for (i = 0, len = components.length ; i < len ; i++)
+            if (components[i] && components[i].onMount)
+                components[i].onMount(node, i);
+
+        for (i = 0, len = children.length ; i < len ; i++)
+            if (children[i] && children[i].mount) children[i].mount(path + '/' + i);
+            else if (children[i]) this.mount(path + '/' + i, children[i]);
+    }
+
+    if (parent.isShown()) {
+        if (node.onShow) node.onShow();
+        for (i = 0, len = components.length ; i < len ; i++)
+            if (components[i] && components[i].onShow)
+                components[i].onShow();
+    }
+};
+
+/**
+ * Calls the onDismount method for the node at a given path
+ * and deregisters all of that nodes children. Throws if there
+ * is no node registered at that path.
+ *
+ * @method dismount
+ * @return {void}
+ *
+ * @param {String} path at which to begin dismounting
+ */
+Dispatch.prototype.dismount = function dismount (path) {
+    var node = this._nodes[path];
+
+    if (!node)
+        throw new Error(
+                'No node registered to path: ' + path
+        );
+
+    var children = node.getChildren();
+    var components = node.getComponents();
+    var i;
+    var len;
+
+    if (node.isShown()) {
+        node._setShown(false);
+        if (node.onHide) node.onHide();
+        for (i = 0, len = components.length ; i < len ; i++)
+            if (components[i] && components[i].onHide)
+                components[i].onHide();
+    }
+
+    if (node.isMounted()) {
+        if (node.onDismount) node.onDismount(path);
+
+        for (i = 0, len = children.length ; i < len ; i++)
+            if (children[i] && children[i].dismount) children[i].dismount();
+            else if (children[i]) this.dismount(path + '/' + i);
+
+        for (i = 0, len = components.length ; i < len ; i++)
+            if (components[i] && components[i].onDismount)
+                components[i].onDismount();
+
+        node._setMounted(false);
+        node._setParent(null);
+    }
+
+    this._nodes[path] = null;
+};
+
+/**
+ * Returns a the node registered to the given path, or none
+ * if no node exists at that path.
+ *
+ * @method getNode
+ * @return {Node | void} node at the given path
+ *
+ * @param {String} path at which to look up the node
+ */
+Dispatch.prototype.getNode = function getNode (path) {
+    return this._nodes[path];
+};
+
+/**
+ * Issues the onShow method to the node registered at the given path,
+ * and shows the entire subtree below that node. Throws if no node
+ * is registered to this path.
+ *
+ * @method show
+ * @return {void}
+ *
+ * @param {String} path the path of the node to show
+ */
+Dispatch.prototype.show = function show (path) {
+    var node = this._nodes[path];
+
+    if (!node)
+        throw new Error(
+                'No node registered to path: ' + path
+        );
+
+    if (node.onShow) node.onShow();
+
+    this.addChildrenToQueue(node);
+    var child;
+
+    while ((child = this.breadthFirstNext()))
+        this.show(child.getLocation());
+
+};
+
+/**
+ * Issues the onHide method to the node registered at the given path,
+ * and hides the entire subtree below that node. Throws if no node
+ * is registered to this path.
+ *
+ * @method hide
+ * @return {void}
+ *
+ * @param {String} path the path of the node to hide
+ */
+Dispatch.prototype.hide = function hide (path) {
+    var node = this._nodes[path];
+
+    if (!node)
+        throw new Error(
+                'No node registered to path: ' + path
+        );
+
+    if (node.onHide) node.onHide();
+
+    this.addChildrenToQueue(node);
+    var child;
+
+    while ((child = this.breadthFirstNext()))
+        this.hide(child.getLocation());
+
+};
 
 /**
  * lookupNode takes a path and returns the node at the location specified
@@ -2871,26 +3318,15 @@ function Dispatch (context) {
 Dispatch.prototype.lookupNode = function lookupNode (location) {
     if (!location) throw new Error('lookupNode must be called with a path');
 
+    this._queue.length = 0;
     var path = this._queue;
 
     _splitTo(location, path);
 
-    if (path[0] !== this._context.getSelector()) return void 0;
+    for (var i = 0, len = path.length ; i < len ; i++)
+        path[i] = this._nodes[path[i]];
 
-    var children = this._context.getChildren();
-    var child;
-    var i = 1;
-    path[0] = this._context;
-
-    while (i < path.length) {
-        child = children[path[i]];
-        path[i] = child;
-        if (child) children = child.getChildren();
-        else return void 0;
-        i++;
-    }
-
-    return child;
+    return path[path.length - 1];
 };
 
 /**
@@ -2899,29 +3335,27 @@ Dispatch.prototype.lookupNode = function lookupNode (location) {
  * receive the events in a breadth first traversal, meaning that parents
  * have the opportunity to react to the event before children.
  *
+ * @param {String} path path of the node to send the event to
  * @param {String} event name of the event
- * @param {Any} payload the event payload
+ * @param {Any} payload data associated with the event
  *
  * @return {undefined} undefined
  */
-Dispatch.prototype.dispatch = function dispatch (event, payload) {
-    if (!event) throw new Error('dispatch requires an event name as it\'s first argument');
+Dispatch.prototype.dispatch = function dispatch (path, event, payload) {
+    if (!path) throw new Error('dispatch requires a path as it\'s first argument');
+    if (!event) throw new Error('dispatch requires an event name as it\'s second argument');
 
-    var queue = this._queue;
-    var item;
-    var i;
-    var len;
-    var children;
+    var node = this._nodes[path];
 
-    queue.length = 0;
-    queue.push(this._context);
+    if (!node) return;
 
-    while (queue.length) {
-        item = queue.shift();
-        if (item.onReceive) item.onReceive(event, payload);
-        children = item.getChildren();
-        for (i = 0, len = children.length ; i < len ; i++) queue.push(children[i]);
-    }
+    this.addChildrenToQueue(node);
+    var child;
+
+    while ((child = this.breadthFirstNext()))
+        if (child && child.onReceive)
+            child.onReceive(event, payload);
+
 };
 
 /**
@@ -2939,18 +3373,31 @@ Dispatch.prototype.dispatch = function dispatch (event, payload) {
 Dispatch.prototype.dispatchUIEvent = function dispatchUIEvent (path, event, payload) {
     if (!path) throw new Error('dispatchUIEvent needs a valid path to dispatch to');
     if (!event) throw new Error('dispatchUIEvent needs an event name as its second argument');
-
-    var queue = this._queue;
     var node;
 
     Event.call(payload);
-    payload.node = this.lookupNode(path); // After this call, the path is loaded into the queue
-                                          // (lookUp node doesn't clear the queue after the lookup)
+    node = this.getNode(path);
+    if (node) {
+        var parent;
+        var components;
+        var i;
+        var len;
 
-    while (queue.length) {
-        node = queue.pop(); // pop nodes off of the queue to move up the ancestor chain.
-        if (node.onReceive) node.onReceive(event, payload);
-        if (payload.propagationStopped) break;
+        payload.node = node;
+
+        while (node) {
+            if (node.onReceive) node.onReceive(event, payload);
+            components = node.getComponents();
+
+            for (i = 0, len = components.length ; i < len ; i++)
+                if (components[i] && components[i].onReceive)
+                    components[i].onReceive(event, payload);
+
+            if (payload.propagationStopped) break;
+            parent = node.getParent();
+            if (parent === node) return;
+            node = parent;
+        }
     }
 };
 
@@ -2982,9 +3429,9 @@ function _splitTo (string, target) {
     return target;
 }
 
-module.exports = Dispatch;
+module.exports = new Dispatch();
 
-},{"./Event":16}],16:[function(require,module,exports){
+},{"./Event":17,"./Path":20}],17:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -3037,22 +3484,22 @@ function stopPropagation () {
 module.exports = Event;
 
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2015 Famous Industries Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -3067,13 +3514,17 @@ module.exports = Event;
 var Clock = require('./Clock');
 var Scene = require('./Scene');
 var Channel = require('./Channel');
+var Dispatch = require('./Dispatch');
 var UIManager = require('../renderers/UIManager');
 var Compositor = require('../renderers/Compositor');
 var RequestAnimationFrameLoop = require('../render-loops/RequestAnimationFrameLoop');
+var TransformSystem = require('./TransformSystem');
+var SizeSystem = require('./SizeSystem');
+var Commands = require('./Commands');
 
-var ENGINE_START = ['ENGINE', 'START'];
-var ENGINE_STOP = ['ENGINE', 'STOP'];
-var TIME_UPDATE = ['TIME', null];
+var ENGINE_START = [Commands.ENGINE, Commands.START];
+var ENGINE_STOP = [Commands.ENGINE, Commands.STOP];
+var TIME_UPDATE = [Commands.TIME, null];
 
 /**
  * Famous has two responsibilities, one to act as the highest level
@@ -3085,6 +3536,8 @@ var TIME_UPDATE = ['TIME', null];
  */
 function FamousEngine() {
     var _this = this;
+
+    Dispatch._setUpdater(this);
 
     this._updateQueue = []; // The updateQueue is a place where nodes
                             // can place themselves in order to be
@@ -3108,6 +3561,7 @@ function FamousEngine() {
 
     this._clock = new Clock(); // a clock to keep track of time for the scene
                                // graph.
+
 
     this._channel = new Channel();
     this._channel.onMessage = function (message) {
@@ -3183,10 +3637,14 @@ FamousEngine.prototype._update = function _update () {
 
     this._messages[1] = time;
 
+    SizeSystem.update();
+    TransformSystem.update();
+
     while (nextQueue.length) queue.unshift(nextQueue.pop());
 
     while (queue.length) {
         item = queue.shift();
+        if (item && item.update) item.update(time);
         if (item && item.onUpdate) item.onUpdate(time);
     }
 
@@ -3253,10 +3711,10 @@ FamousEngine.prototype.handleMessage = function handleMessage (messages) {
     while (messages.length > 0) {
         command = messages.shift();
         switch (command) {
-            case 'WITH':
+            case Commands.WITH:
                 this.handleWith(messages);
                 break;
-            case 'FRAME':
+            case Commands.FRAME:
                 this.handleFrame(messages);
                 break;
             default:
@@ -3280,13 +3738,11 @@ FamousEngine.prototype.handleMessage = function handleMessage (messages) {
 FamousEngine.prototype.handleWith = function handleWith (messages) {
     var path = messages.shift();
     var command = messages.shift();
-
     switch (command) {
-        case 'TRIGGER': // the TRIGGER command sends a UIEvent to the specified path
+        case Commands.TRIGGER: // the TRIGGER command sends a UIEvent to the specified path
             var type = messages.shift();
             var ev = messages.shift();
-
-            this.getContext(path).getDispatch().dispatchUIEvent(path, type, ev);
+            Dispatch.dispatchUIEvent(path, type, ev);
             break;
         default:
             throw new Error('received unknown command: ' + command);
@@ -3330,7 +3786,7 @@ FamousEngine.prototype.step = function step (time) {
 
     if (this._messages.length) {
         this._channel.sendMessage(this._messages);
-        this._messages.length = 2;
+        while (this._messages.length > 2) this._messages.pop();
     }
 
     return this;
@@ -3357,7 +3813,7 @@ FamousEngine.prototype.getContext = function getContext (selector) {
 };
 
 /**
- * returns the instance of clock within famous.
+ * Returns the instance of clock used by the FamousEngine.
  *
  * @method
  *
@@ -3368,7 +3824,7 @@ FamousEngine.prototype.getClock = function getClock () {
 };
 
 /**
- * queues a message to be transfered to the renderers.
+ * Enqueues a message to be transfered to the renderers.
  *
  * @method
  *
@@ -3399,6 +3855,45 @@ FamousEngine.prototype.createScene = function createScene (selector) {
 };
 
 /**
+ * Introduce an already instantiated scene to the engine.
+ *
+ * @method
+ *
+ * @param {Scene} scene the scene to reintroduce to the engine
+ *
+ * @return {FamousEngine} this
+ */
+FamousEngine.prototype.addScene = function addScene (scene) {
+    var selector = scene._selector;
+
+    var current = this._scenes[selector];
+    if (current && current !== scene) current.dismount();
+    if (!scene.isMounted()) scene.mount();
+    this._scenes[selector] = scene;
+    return this;
+};
+
+/**
+ * Remove a scene.
+ *
+ * @method
+ *
+ * @param {Scene} scene the scene to remove from the engine
+ *
+ * @return {FamousEngine} this
+ */
+FamousEngine.prototype.removeScene = function removeScene (scene) {
+    var selector = scene._selector;
+
+    var current = this._scenes[selector];
+    if (current && current === scene) {
+        if (scene.isMounted()) scene.dismount();
+        delete this._scenes[selector];
+    }
+    return this;
+};
+
+/**
  * Starts the engine running in the Main-Thread.
  * This effects **every** updateable managed by the Engine.
  *
@@ -3406,7 +3901,7 @@ FamousEngine.prototype.createScene = function createScene (selector) {
  *
  * @return {FamousEngine} this
  */
-FamousEngine.prototype.startEngine = function startEngine () {
+FamousEngine.prototype.startRenderLoop = function startRenderLoop() {
     this._channel.sendMessage(ENGINE_START);
     return this;
 };
@@ -3419,14 +3914,42 @@ FamousEngine.prototype.startEngine = function startEngine () {
  *
  * @return {FamousEngine} this
  */
-FamousEngine.prototype.stopEngine = function stopEngine () {
+FamousEngine.prototype.stopRenderLoop = function stopRenderLoop() {
     this._channel.sendMessage(ENGINE_STOP);
     return this;
 };
 
+/**
+ * @method
+ * @deprecated Use {@link FamousEngine#startRenderLoop} instead!
+ *
+ * @return {FamousEngine} this
+ */
+FamousEngine.prototype.startEngine = function startEngine() {
+    console.warn(
+        'FamousEngine.startEngine is deprecated! Use ' +
+        'FamousEngine.startRenderLoop instead!'
+    );
+    return this.startRenderLoop();
+};
+
+/**
+ * @method
+ * @deprecated Use {@link FamousEngine#stopRenderLoop} instead!
+ *
+ * @return {FamousEngine} this
+ */
+FamousEngine.prototype.stopEngine = function stopEngine() {
+    console.warn(
+        'FamousEngine.stopEngine is deprecated! Use ' +
+        'FamousEngine.stopRenderLoop instead!'
+    );
+    return this.stopRenderLoop();
+};
+
 module.exports = new FamousEngine();
 
-},{"../render-loops/RequestAnimationFrameLoop":79,"../renderers/Compositor":82,"../renderers/UIManager":84,"./Channel":13,"./Clock":14,"./Scene":19}],18:[function(require,module,exports){
+},{"../render-loops/RequestAnimationFrameLoop":83,"../renderers/Compositor":86,"../renderers/UIManager":88,"./Channel":13,"./Clock":14,"./Commands":15,"./Dispatch":16,"./Scene":22,"./SizeSystem":24,"./TransformSystem":26}],19:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -3455,21 +3978,11 @@ module.exports = new FamousEngine();
 
 'use strict';
 
-var Transform = require('./Transform');
+var SizeSystem = require('./SizeSystem');
+var Dispatch = require('./Dispatch');
+var TransformSystem = require('./TransformSystem');
 var Size = require('./Size');
-
-var TRANSFORM_PROCESSOR = new Transform();
-var SIZE_PROCESSOR = new Size();
-
-var IDENT = [
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-];
-
-var ONES = [1, 1, 1];
-var QUAT = [0, 0, 0, 1];
+var Transform = require('./Transform');
 
 /**
  * Nodes define hierarchy and geometrical transformations. They can be moved
@@ -3510,13 +4023,13 @@ var QUAT = [0, 0, 0, 1];
  * @constructor
  */
 function Node () {
-    this._calculatedValues = {
-        transform: new Float32Array(IDENT),
-        size: new Float32Array(3)
-    };
-
     this._requestingUpdate = false;
     this._inUpdate = false;
+    this._mounted = false;
+    this._shown = true;
+    this._updater = null;
+    this._opacity = 1;
+    this._UIEvents = [];
 
     this._updateQueue = [];
     this._nextUpdateQueue = [];
@@ -3527,73 +4040,95 @@ function Node () {
     this._freedChildIndicies = [];
     this._children = [];
 
+    this._fullChildren = [];
+
     this._parent = null;
-    this._globalUpdater = null;
 
-    this._lastEulerX = 0;
-    this._lastEulerY = 0;
-    this._lastEulerZ = 0;
-    this._lastEuler = false;
+    this._id = null;
 
-    this.value = new Node.Spec();
+    this._transformID = null;
+    this._sizeID = null;
+
+    if (!this.constructor.NO_DEFAULT_COMPONENTS) this._init();
 }
 
-Node.RELATIVE_SIZE = Size.RELATIVE;
-Node.ABSOLUTE_SIZE = Size.ABSOLUTE;
-Node.RENDER_SIZE = Size.RENDER;
-Node.DEFAULT_SIZE = Size.DEFAULT;
+Node.RELATIVE_SIZE = 0;
+Node.ABSOLUTE_SIZE = 1;
+Node.RENDER_SIZE = 2;
+Node.DEFAULT_SIZE = 0;
+Node.NO_DEFAULT_COMPONENTS = false;
 
 /**
- * A Node spec holds the "data" associated with a Node.
+ * Protected method. Initializes a node with a default Transform and Size component
  *
- * @class Spec
- * @constructor
+ * @method
+ * @protected
  *
- * @property {String} location path to the node (e.g. "body/0/1")
- * @property {Object} showState
- * @property {Boolean} showState.mounted
- * @property {Boolean} showState.shown
- * @property {Number} showState.opacity
- * @property {Object} offsets
- * @property {Float32Array.<Number>} offsets.mountPoint
- * @property {Float32Array.<Number>} offsets.align
- * @property {Float32Array.<Number>} offsets.origin
- * @property {Object} vectors
- * @property {Float32Array.<Number>} vectors.position
- * @property {Float32Array.<Number>} vectors.rotation
- * @property {Float32Array.<Number>} vectors.scale
- * @property {Object} size
- * @property {Float32Array.<Number>} size.sizeMode
- * @property {Float32Array.<Number>} size.proportional
- * @property {Float32Array.<Number>} size.differential
- * @property {Float32Array.<Number>} size.absolute
- * @property {Float32Array.<Number>} size.render
+ * @return {undefined} undefined
  */
-Node.Spec = function Spec () {
-    this.location = null;
-    this.showState = {
-        mounted: false,
-        shown: false,
-        opacity: 1
-    };
-    this.offsets = {
-        mountPoint: new Float32Array(3),
-        align: new Float32Array(3),
-        origin: new Float32Array(3)
-    };
-    this.vectors = {
-        position: new Float32Array(3),
-        rotation: new Float32Array(QUAT),
-        scale: new Float32Array(ONES)
-    };
-    this.size = {
-        sizeMode: new Float32Array([Size.RELATIVE, Size.RELATIVE, Size.RELATIVE]),
-        proportional: new Float32Array(ONES),
-        differential: new Float32Array(3),
-        absolute: new Float32Array(3),
-        render: new Float32Array(3)
-    };
-    this.UIEvents = [];
+Node.prototype._init = function _init () {
+    this._transformID = this.addComponent(new Transform());
+    this._sizeID = this.addComponent(new Size());
+};
+
+/**
+ * Protected method. Sets the parent of this node such that it can be looked up.
+ *
+ * @method
+ *
+ * @param {Node} parent The node to set as the parent of this
+ *
+ * @return {undefined} undefined;
+ */
+Node.prototype._setParent = function _setParent (parent) {
+    if (this._parent && this._parent.getChildren().indexOf(this) !== -1) {
+        this._parent.removeChild(this);
+    }
+    this._parent = parent;
+};
+
+/**
+ * Protected method. Sets the mount state of the node. Should only be called
+ * by the dispatch
+ *
+ * @method
+ *
+ * @param {Boolean} mounted whether or not the Node is mounted.
+ * @param {String} path The path that the node will be mounted to
+ *
+ * @return {undefined} undefined
+ */
+Node.prototype._setMounted = function _setMounted (mounted, path) {
+    this._mounted = mounted;
+    this._id = path ? path : null;
+};
+
+/**
+ * Protected method, sets whether or not the Node is shown. Should only
+ * be called by the dispatch
+ *
+ * @method
+ *
+ * @param {Boolean} shown whether or not the node is shown
+ *
+ * @return {undefined} undefined
+ */
+Node.prototype._setShown = function _setShown (shown) {
+    this._shown = shown;
+};
+
+/**
+ * Protected method. Sets the updater of the node.
+ *
+ * @method
+ *
+ * @param {FamousEngine} updater the Updater of the node.
+ *
+ * @return {undefined} undefined
+ */
+Node.prototype._setUpdater = function _setUpdater (updater) {
+    this._updater = updater;
+    if (this._requestingUpdate) this._updater.requestUpdate(this);
 };
 
 /**
@@ -3609,7 +4144,7 @@ Node.Spec = function Spec () {
  * @return {String} location (path), e.g. `body/0/1`
  */
 Node.prototype.getLocation = function getLocation () {
-    return this.value.location;
+    return this._id;
 };
 
 /**
@@ -3620,7 +4155,7 @@ Node.prototype.getLocation = function getLocation () {
 Node.prototype.getId = Node.prototype.getLocation;
 
 /**
- * Globally dispatches the event using the Scene's Dispatch. All nodes will
+ * Dispatches the event using the Dispatch. All descendent nodes will
  * receive the dispatched event.
  *
  * @method emit
@@ -3631,19 +4166,13 @@ Node.prototype.getId = Node.prototype.getLocation;
  * @return {Node} this
  */
 Node.prototype.emit = function emit (event, payload) {
-    var current = this;
-
-    while (current !== current.getParent()) {
-        current = current.getParent();
-    }
-
-    current.getDispatch().dispatch(event, payload);
+    Dispatch.dispatch(this.getLocation(), event, payload);
     return this;
 };
 
 // THIS WILL BE DEPRECATED
 Node.prototype.sendDrawCommand = function sendDrawCommand (message) {
-    this._globalUpdater.message(message);
+    this._updater.message(message);
     return this;
 };
 
@@ -3661,19 +4190,65 @@ Node.prototype.getValue = function getValue () {
     var i = 0;
 
     var value = {
-        location: this.value.location,
-        spec: this.value,
-        components: new Array(numberOfComponents),
-        children: new Array(numberOfChildren)
+        location: this.getId(),
+        spec: {
+            location: this.getId(),
+            showState: {
+                mounted: this.isMounted(),
+                shown: this.isShown(),
+                opacity: this.getOpacity() || null
+            },
+            offsets: {
+                mountPoint: [0, 0, 0],
+                align: [0, 0, 0],
+                origin: [0, 0, 0]
+            },
+            vectors: {
+                position: [0, 0, 0],
+                rotation: [0, 0, 0, 1],
+                scale: [1, 1, 1]
+            },
+            size: {
+                sizeMode: [0, 0, 0],
+                proportional: [1, 1, 1],
+                differential: [0, 0, 0],
+                absolute: [0, 0, 0],
+                render: [0, 0, 0]
+            }
+        },
+        UIEvents: this._UIEvents,
+        components: [],
+        children: []
     };
 
-    for (; i < numberOfChildren ; i++)
+    if (value.location) {
+        var transform = TransformSystem.get(this.getId());
+        var size = SizeSystem.get(this.getId());
+
+        for (i = 0 ; i < 3 ; i++) {
+            value.spec.offsets.mountPoint[i] = transform.offsets.mountPoint[i];
+            value.spec.offsets.align[i] = transform.offsets.align[i];
+            value.spec.offsets.origin[i] = transform.offsets.origin[i];
+            value.spec.vectors.position[i] = transform.vectors.position[i];
+            value.spec.vectors.rotation[i] = transform.vectors.rotation[i];
+            value.spec.vectors.scale[i] = transform.vectors.scale[i];
+            value.spec.size.sizeMode[i] = size.sizeMode[i];
+            value.spec.size.proportional[i] = size.proportionalSize[i];
+            value.spec.size.differential[i] = size.differentialSize[i];
+            value.spec.size.absolute[i] = size.absoluteSize[i];
+            value.spec.size.render[i] = size.renderSize[i];
+        }
+
+        value.spec.vectors.rotation[3] = transform.vectors.rotation[3];
+    }
+
+    for (i = 0; i < numberOfChildren ; i++)
         if (this._children[i] && this._children[i].getValue)
-            value.children[i] = this._children[i].getValue();
+            value.children.push(this._children[i].getValue());
 
     for (i = 0 ; i < numberOfComponents ; i++)
         if (this._components[i] && this._components[i].getValue)
-            value.components[i] = this._components[i].getValue();
+            value.components.push(this._components[i].getValue());
 
     return value;
 };
@@ -3689,16 +4264,21 @@ Node.prototype.getValue = function getValue () {
  *                      children, excluding components.
  */
 Node.prototype.getComputedValue = function getComputedValue () {
+    console.warn('Node.getComputedValue is depricated. Use Node.getValue instead');
     var numberOfChildren = this._children.length;
 
     var value = {
-        location: this.value.location,
-        computedValues: this._calculatedValues,
-        children: new Array(numberOfChildren)
+        location: this.getId(),
+        computedValues: {
+            transform: this.isMounted() ? TransformSystem.get(this.getLocation()).getLocalTransform() : null,
+            size: this.isMounted() ? SizeSystem.get(this.getLocation()).get() : null
+        },
+        children: []
     };
 
     for (var i = 0 ; i < numberOfChildren ; i++)
-        value.children[i] = this._children[i].getComputedValue();
+        if (this._children[i] && this._children[i].getComputedValue)
+            value.children.push(this._children[i].getComputedValue());
 
     return value;
 };
@@ -3711,6 +4291,19 @@ Node.prototype.getComputedValue = function getComputedValue () {
  * @return {Array.<Node>}   An array of children.
  */
 Node.prototype.getChildren = function getChildren () {
+    return this._fullChildren;
+};
+
+/**
+ * Method used internally to retrieve the children of a node. Each index in the
+ * returned array represents a path fragment.
+ *
+ * @method getRawChildren
+ * @private
+ *
+ * @return {Array}  An array of children. Might contain `null` elements.
+ */
+Node.prototype.getRawChildren = function getRawChildren() {
     return this._children;
 };
 
@@ -3744,8 +4337,10 @@ Node.prototype.getParent = function getParent () {
 Node.prototype.requestUpdate = function requestUpdate (requester) {
     if (this._inUpdate || !this.isMounted())
         return this.requestUpdateOnNextTick(requester);
-    this._updateQueue.push(requester);
-    if (!this._requestingUpdate) this._requestUpdate();
+    if (this._updateQueue.indexOf(requester) === -1) {
+        this._updateQueue.push(requester);
+        if (!this._requestingUpdate) this._requestUpdate();
+    }
     return this;
 };
 
@@ -3764,19 +4359,9 @@ Node.prototype.requestUpdate = function requestUpdate (requester) {
  * @return {Node} this
  */
 Node.prototype.requestUpdateOnNextTick = function requestUpdateOnNextTick (requester) {
-    this._nextUpdateQueue.push(requester);
+    if (this._nextUpdateQueue.indexOf(requester) === -1)
+        this._nextUpdateQueue.push(requester);
     return this;
-};
-
-/**
- * Get the object responsible for updating this node.
- *
- * @method
- *
- * @return {Object} The global updater.
- */
-Node.prototype.getUpdater = function getUpdater () {
-    return this._globalUpdater;
 };
 
 /**
@@ -3788,7 +4373,19 @@ Node.prototype.getUpdater = function getUpdater () {
  * @return {Boolean}    Boolean indicating whether the node is mounted or not.
  */
 Node.prototype.isMounted = function isMounted () {
-    return this.value.showState.mounted;
+    return this._mounted;
+};
+
+/**
+ * Checks if the node is being rendered. A node is being rendererd when it is
+ * mounted to a parent node **and** shown.
+ *
+ * @method isRendered
+ *
+ * @return {Boolean}    Boolean indicating whether the node is rendered or not.
+ */
+Node.prototype.isRendered = function isRendered () {
+    return this._mounted && this._shown;
 };
 
 /**
@@ -3800,7 +4397,7 @@ Node.prototype.isMounted = function isMounted () {
  *                      ("shown") or not.
  */
 Node.prototype.isShown = function isShown () {
-    return this.value.showState.shown;
+    return this._shown;
 };
 
 /**
@@ -3814,7 +4411,7 @@ Node.prototype.isShown = function isShown () {
  * @return {Number}         Relative opacity of the node.
  */
 Node.prototype.getOpacity = function getOpacity () {
-    return this.value.showState.opacity;
+    return this._opacity;
 };
 
 /**
@@ -3825,7 +4422,11 @@ Node.prototype.getOpacity = function getOpacity () {
  * @return {Float32Array}   An array representing the mount point.
  */
 Node.prototype.getMountPoint = function getMountPoint () {
-    return this.value.offsets.mountPoint;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._transformID).getMountPoint();
+    else if (this.isMounted())
+        return TransformSystem.get(this.getLocation()).getMountPoint();
+    else throw new Error('This node does not have access to a transform component');
 };
 
 /**
@@ -3836,7 +4437,11 @@ Node.prototype.getMountPoint = function getMountPoint () {
  * @return {Float32Array}   An array representing the align.
  */
 Node.prototype.getAlign = function getAlign () {
-    return this.value.offsets.align;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._transformID).getAlign();
+    else if (this.isMounted())
+        return TransformSystem.get(this.getLocation()).getAlign();
+    else throw new Error('This node does not have access to a transform component');
 };
 
 /**
@@ -3847,7 +4452,11 @@ Node.prototype.getAlign = function getAlign () {
  * @return {Float32Array}   An array representing the origin.
  */
 Node.prototype.getOrigin = function getOrigin () {
-    return this.value.offsets.origin;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._transformID).getOrigin();
+    else if (this.isMounted())
+        return TransformSystem.get(this.getLocation()).getOrigin();
+    else throw new Error('This node does not have access to a transform component');
 };
 
 /**
@@ -3858,7 +4467,11 @@ Node.prototype.getOrigin = function getOrigin () {
  * @return {Float32Array}   An array representing the position.
  */
 Node.prototype.getPosition = function getPosition () {
-    return this.value.vectors.position;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._transformID).getPosition();
+    else if (this.isMounted())
+        return TransformSystem.get(this.getLocation()).getPosition();
+    else throw new Error('This node does not have access to a transform component');
 };
 
 /**
@@ -3869,7 +4482,11 @@ Node.prototype.getPosition = function getPosition () {
  * @return {Float32Array} an array of four values, showing the rotation as a quaternion
  */
 Node.prototype.getRotation = function getRotation () {
-    return this.value.vectors.rotation;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._transformID).getRotation();
+    else if (this.isMounted())
+        return TransformSystem.get(this.getLocation()).getRotation();
+    else throw new Error('This node does not have access to a transform component');
 };
 
 /**
@@ -3880,7 +4497,11 @@ Node.prototype.getRotation = function getRotation () {
  * @return {Float32Array} an array showing the current scale vector
  */
 Node.prototype.getScale = function getScale () {
-    return this.value.vectors.scale;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._transformID).getScale();
+    else if (this.isMounted())
+        return TransformSystem.get(this.getLocation()).getScale();
+    else throw new Error('This node does not have access to a transform component');
 };
 
 /**
@@ -3891,7 +4512,11 @@ Node.prototype.getScale = function getScale () {
  * @return {Float32Array} an array of numbers showing the current size mode
  */
 Node.prototype.getSizeMode = function getSizeMode () {
-    return this.value.size.sizeMode;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._sizeID).getSizeMode();
+    else if (this.isMounted())
+        return SizeSystem.get(this.getLocation()).getSizeMode();
+    else throw new Error('This node does not have access to a size component');
 };
 
 /**
@@ -3902,7 +4527,11 @@ Node.prototype.getSizeMode = function getSizeMode () {
  * @return {Float32Array} a vector 3 showing the current proportional size
  */
 Node.prototype.getProportionalSize = function getProportionalSize () {
-    return this.value.size.proportional;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._sizeID).getProportional();
+    else if (this.isMounted())
+        return SizeSystem.get(this.getLocation()).getProportional();
+    else throw new Error('This node does not have access to a size component');
 };
 
 /**
@@ -3913,7 +4542,11 @@ Node.prototype.getProportionalSize = function getProportionalSize () {
  * @return {Float32Array} a vector 3 showing the current differential size
  */
 Node.prototype.getDifferentialSize = function getDifferentialSize () {
-    return this.value.size.differential;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._sizeID).getDifferential();
+    else if (this.isMounted())
+        return SizeSystem.get(this.getLocation()).getDifferential();
+    else throw new Error('This node does not have access to a size component');
 };
 
 /**
@@ -3924,7 +4557,11 @@ Node.prototype.getDifferentialSize = function getDifferentialSize () {
  * @return {Float32Array} a vector 3 showing the current absolute size of the node
  */
 Node.prototype.getAbsoluteSize = function getAbsoluteSize () {
-    return this.value.size.absolute;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._sizeID).getAbsolute();
+    else if (this.isMounted())
+        return SizeSystem.get(this.getLocation()).getAbsolute();
+    else throw new Error('This node does not have access to a size component');
 };
 
 /**
@@ -3937,7 +4574,11 @@ Node.prototype.getAbsoluteSize = function getAbsoluteSize () {
  * @return {Float32Array} a vector 3 showing the current render size
  */
 Node.prototype.getRenderSize = function getRenderSize () {
-    return this.value.size.render;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._sizeID).getRender();
+    else if (this.isMounted())
+        return SizeSystem.get(this.getLocation()).getRender();
+    else throw new Error('This node does not have access to a size component');
 };
 
 /**
@@ -3948,7 +4589,11 @@ Node.prototype.getRenderSize = function getRenderSize () {
  * @return {Float32Array} a vector 3 of the final calculated side of the node
  */
 Node.prototype.getSize = function getSize () {
-    return this._calculatedValues.size;
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        return this.getComponent(this._sizeID).get();
+    else if (this.isMounted())
+        return SizeSystem.get(this.getLocation()).get();
+    else throw new Error('This node does not have access to a size component');
 };
 
 /**
@@ -3959,7 +4604,7 @@ Node.prototype.getSize = function getSize () {
  * @return {Float32Array} a 16 value transform
  */
 Node.prototype.getTransform = function getTransform () {
-    return this._calculatedValues.transform;
+    return TransformSystem.get(this.getLocation());
 };
 
 /**
@@ -3970,7 +4615,7 @@ Node.prototype.getTransform = function getTransform () {
  * @return {Array} an array of strings representing the current subscribed UI event of this node
  */
 Node.prototype.getUIEvents = function getUIEvents () {
-    return this.value.UIEvents;
+    return this._UIEvents;
 };
 
 /**
@@ -3989,16 +4634,15 @@ Node.prototype.addChild = function addChild (child) {
     child = child ? child : new Node();
 
     if (index === -1) {
-        index = this._freedChildIndicies.length ? this._freedChildIndicies.pop() : this._children.length;
+        index = this._freedChildIndicies.length ?
+                this._freedChildIndicies.pop() : this._children.length;
+
         this._children[index] = child;
-
-        if (this.isMounted() && child.onMount) {
-            var myId = this.getId();
-            var childId = myId + '/' + index;
-            child.onMount(this, childId);
-        }
-
+        this._fullChildren.push(child);
     }
+
+    if (this.isMounted())
+        child.mount(this.getLocation() + '/' + index);
 
     return child;
 };
@@ -4015,16 +4659,28 @@ Node.prototype.addChild = function addChild (child) {
  */
 Node.prototype.removeChild = function removeChild (child) {
     var index = this._children.indexOf(child);
-    var added = index !== -1;
-    if (added) {
+
+    if (index > - 1) {
         this._freedChildIndicies.push(index);
 
         this._children[index] = null;
 
-        if (this.isMounted() && child.onDismount)
-            child.onDismount();
+        if (child.isMounted()) child.dismount();
+
+        var fullChildrenIndex = this._fullChildren.indexOf(child);
+        var len = this._fullChildren.length;
+        var i = 0;
+
+        for (i = fullChildrenIndex; i < len-1; i++)
+            this._fullChildren[i] = this._fullChildren[i + 1];
+
+        this._fullChildren.pop();
+
+        return true;
     }
-    return added;
+    else {
+        return false;
+    }
 };
 
 /**
@@ -4091,6 +4747,32 @@ Node.prototype.removeComponent = function removeComponent (component) {
 };
 
 /**
+ * Removes a node's subscription to a particular UIEvent. All components
+ * on the node will have the opportunity to remove all listeners depending
+ * on this event.
+ *
+ * @method
+ *
+ * @param {String} eventName the name of the event
+ *
+ * @return {undefined} undefined
+ */
+Node.prototype.removeUIEvent = function removeUIEvent (eventName) {
+    var UIEvents = this.getUIEvents();
+    var components = this._components;
+    var component;
+
+    var index = UIEvents.indexOf(eventName);
+    if (index !== -1) {
+        UIEvents.splice(index, 1);
+        for (var i = 0, len = components.length ; i < len ; i++) {
+            component = components[i];
+            if (component && component.onRemoveUIEvent) component.onRemoveUIEvent(eventName);
+        }
+    }
+};
+
+/**
  * Subscribes a node to a UI Event. All components on the node
  * will have the opportunity to begin listening to that event
  * and alerting the scene graph.
@@ -4099,7 +4781,7 @@ Node.prototype.removeComponent = function removeComponent (component) {
  *
  * @param {String} eventName the name of the event
  *
- * @return {undefined} undefined
+ * @return {Node} this
  */
 Node.prototype.addUIEvent = function addUIEvent (eventName) {
     var UIEvents = this.getUIEvents();
@@ -4114,6 +4796,8 @@ Node.prototype.addUIEvent = function addUIEvent (eventName) {
             if (component && component.onAddUIEvent) component.onAddUIEvent(eventName);
         }
     }
+
+    return this;
 };
 
 /**
@@ -4127,8 +4811,9 @@ Node.prototype.addUIEvent = function addUIEvent (eventName) {
  * @return {undefined} undefined
  */
 Node.prototype._requestUpdate = function _requestUpdate (force) {
-    if (force || (!this._requestingUpdate && this._globalUpdater)) {
-        this._globalUpdater.requestUpdate(this);
+    if (force || !this._requestingUpdate) {
+        if (this._updater)
+            this._updater.requestUpdate(this);
         this._requestingUpdate = true;
     }
 };
@@ -4164,26 +4849,8 @@ Node.prototype._vecOptionalSet = function _vecOptionalSet (vec, index, val) {
  * @return {Node} this
  */
 Node.prototype.show = function show () {
-    var i = 0;
-    var items = this._components;
-    var len = items.length;
-    var item;
-
-    this.value.showState.shown = true;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onShow) item.onShow();
-    }
-
-    i = 0;
-    items = this._children;
-    len = items.length;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onParentShow) item.onParentShow();
-    }
+    Dispatch.show(this.getLocation());
+    this._shown = true;
     return this;
 };
 
@@ -4197,26 +4864,8 @@ Node.prototype.show = function show () {
  * @return {Node} this
  */
 Node.prototype.hide = function hide () {
-    var i = 0;
-    var items = this._components;
-    var len = items.length;
-    var item;
-
-    this.value.showState.shown = false;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onHide) item.onHide();
-    }
-
-    i = 0;
-    items = this._children;
-    len = items.length;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onParentHide) item.onParentHide();
-    }
+    Dispatch.hide(this.getLocation());
+    this._shown = false;
     return this;
 };
 
@@ -4233,26 +4882,11 @@ Node.prototype.hide = function hide () {
  * @return {Node} this
  */
 Node.prototype.setAlign = function setAlign (x, y, z) {
-    var vec3 = this.value.offsets.align;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    if (z != null) propogate = this._vecOptionalSet(vec3, 2, (z - 0.5)) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onAlignChange) item.onAlignChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._transformID).setAlign(x, y, z);
+    else if (this.isMounted())
+        TransformSystem.get(this.getLocation()).setAlign(x, y, z);
+    else throw new Error('This node does not have access to a transform component');
     return this;
 };
 
@@ -4269,26 +4903,11 @@ Node.prototype.setAlign = function setAlign (x, y, z) {
  * @return {Node} this
  */
 Node.prototype.setMountPoint = function setMountPoint (x, y, z) {
-    var vec3 = this.value.offsets.mountPoint;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    if (z != null) propogate = this._vecOptionalSet(vec3, 2, (z - 0.5)) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onMountPointChange) item.onMountPointChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._transformID).setMountPoint(x, y, z);
+    else if (this.isMounted())
+        TransformSystem.get(this.getLocation()).setMountPoint(x, y, z);
+    else throw new Error('This node does not have access to a transform component');
     return this;
 };
 
@@ -4305,26 +4924,11 @@ Node.prototype.setMountPoint = function setMountPoint (x, y, z) {
  * @return {Node} this
  */
 Node.prototype.setOrigin = function setOrigin (x, y, z) {
-    var vec3 = this.value.offsets.origin;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    if (z != null) propogate = this._vecOptionalSet(vec3, 2, (z - 0.5)) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onOriginChange) item.onOriginChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._transformID).setOrigin(x, y, z);
+    else if (this.isMounted())
+        TransformSystem.get(this.getLocation()).setOrigin(x, y, z);
+    else throw new Error('This node does not have access to a transform component');
     return this;
 };
 
@@ -4341,27 +4945,11 @@ Node.prototype.setOrigin = function setOrigin (x, y, z) {
  * @return {Node} this
  */
 Node.prototype.setPosition = function setPosition (x, y, z) {
-    var vec3 = this.value.vectors.position;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    propogate = this._vecOptionalSet(vec3, 2, z) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onPositionChange) item.onPositionChange(x, y, z);
-        }
-    }
-
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._transformID).setPosition(x, y, z);
+    else if (this.isMounted())
+        TransformSystem.get(this.getLocation()).setPosition(x, y, z);
+    else throw new Error('This node does not have access to a transform component');
     return this;
 };
 
@@ -4381,89 +4969,11 @@ Node.prototype.setPosition = function setPosition (x, y, z) {
  * @return {Node} this
  */
 Node.prototype.setRotation = function setRotation (x, y, z, w) {
-    var quat = this.value.vectors.rotation;
-    var propogate = false;
-    var qx, qy, qz, qw;
-
-    if (w != null) {
-        qx = x;
-        qy = y;
-        qz = z;
-        qw = w;
-        this._lastEulerX = null;
-        this._lastEulerY = null;
-        this._lastEulerZ = null;
-        this._lastEuler = false;
-    }
-    else {
-        if (x == null || y == null || z == null) {
-            if (this._lastEuler) {
-                x = x == null ? this._lastEulerX : x;
-                y = y == null ? this._lastEulerY : y;
-                z = z == null ? this._lastEulerZ : z;
-            }
-            else {
-                var sp = -2 * (quat[1] * quat[2] - quat[3] * quat[0]);
-
-                if (Math.abs(sp) > 0.99999) {
-                    y = y == null ? Math.PI * 0.5 * sp : y;
-                    x = x == null ? Math.atan2(-quat[0] * quat[2] + quat[3] * quat[1], 0.5 - quat[1] * quat[1] - quat[2] * quat[2]) : x;
-                    z = z == null ? 0 : z;
-                }
-                else {
-                    y = y == null ? Math.asin(sp) : y;
-                    x = x == null ? Math.atan2(quat[0] * quat[2] + quat[3] * quat[1], 0.5 - quat[0] * quat[0] - quat[1] * quat[1]) : x;
-                    z = z == null ? Math.atan2(quat[0] * quat[1] + quat[3] * quat[2], 0.5 - quat[0] * quat[0] - quat[2] * quat[2]) : z;
-                }
-            }
-        }
-
-        var hx = x * 0.5;
-        var hy = y * 0.5;
-        var hz = z * 0.5;
-
-        var sx = Math.sin(hx);
-        var sy = Math.sin(hy);
-        var sz = Math.sin(hz);
-        var cx = Math.cos(hx);
-        var cy = Math.cos(hy);
-        var cz = Math.cos(hz);
-
-        var sysz = sy * sz;
-        var cysz = cy * sz;
-        var sycz = sy * cz;
-        var cycz = cy * cz;
-
-        qx = sx * cycz + cx * sysz;
-        qy = cx * sycz - sx * cysz;
-        qz = cx * cysz + sx * sycz;
-        qw = cx * cycz - sx * sysz;
-
-        this._lastEuler = true;
-        this._lastEulerX = x;
-        this._lastEulerY = y;
-        this._lastEulerZ = z;
-    }
-
-    propogate = this._vecOptionalSet(quat, 0, qx) || propogate;
-    propogate = this._vecOptionalSet(quat, 1, qy) || propogate;
-    propogate = this._vecOptionalSet(quat, 2, qz) || propogate;
-    propogate = this._vecOptionalSet(quat, 3, qw) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = quat[0];
-        y = quat[1];
-        z = quat[2];
-        w = quat[3];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onRotationChange) item.onRotationChange(x, y, z, w);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._transformID).setRotation(x, y, z, w);
+    else if (this.isMounted())
+        TransformSystem.get(this.getLocation()).setRotation(x, y, z, w);
+    else throw new Error('This node does not have access to a transform component');
     return this;
 };
 
@@ -4480,26 +4990,11 @@ Node.prototype.setRotation = function setRotation (x, y, z, w) {
  * @return {Node} this
  */
 Node.prototype.setScale = function setScale (x, y, z) {
-    var vec3 = this.value.vectors.scale;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    propogate = this._vecOptionalSet(vec3, 2, z) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onScaleChange) item.onScaleChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._transformID).setScale(x, y, z);
+    else if (this.isMounted())
+        TransformSystem.get(this.getLocation()).setScale(x, y, z);
+    else throw new Error('This node does not have access to a transform component');
     return this;
 };
 
@@ -4514,8 +5009,8 @@ Node.prototype.setScale = function setScale (x, y, z) {
  * @return {Node} this
  */
 Node.prototype.setOpacity = function setOpacity (val) {
-    if (val !== this.value.showState.opacity) {
-        this.value.showState.opacity = val;
+    if (val !== this._opacity) {
+        this._opacity = val;
         if (!this._requestingUpdate) this._requestUpdate();
 
         var i = 0;
@@ -4556,55 +5051,12 @@ Node.prototype.setOpacity = function setOpacity (val) {
  * @return {Node} this
  */
 Node.prototype.setSizeMode = function setSizeMode (x, y, z) {
-    var vec3 = this.value.size.sizeMode;
-    var propogate = false;
-
-    if (x != null) propogate = this._resolveSizeMode(vec3, 0, x) || propogate;
-    if (y != null) propogate = this._resolveSizeMode(vec3, 1, y) || propogate;
-    if (z != null) propogate = this._resolveSizeMode(vec3, 2, z) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onSizeModeChange) item.onSizeModeChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._sizeID).setSizeMode(x, y, z);
+    else if (this.isMounted())
+        SizeSystem.get(this.getLocation()).setSizeMode(x, y, z);
+    else throw new Error('This node does not have access to a size component');
     return this;
-};
-
-/**
- * A protected method that resolves string representations of size mode
- * to numeric values and applies them.
- *
- * @method
- *
- * @param {Array} vec the array to write size mode to
- * @param {Number} index the index to write to in the array
- * @param {String|Number} val the value to write
- *
- * @return {Bool} whether or not the sizemode has been changed for this index.
- */
-Node.prototype._resolveSizeMode = function _resolveSizeMode (vec, index, val) {
-    if (val.constructor === String) {
-        switch (val.toLowerCase()) {
-            case 'relative':
-            case 'default':
-                return this._vecOptionalSet(vec, index, 0);
-            case 'absolute':
-                return this._vecOptionalSet(vec, index, 1);
-            case 'render':
-                return this._vecOptionalSet(vec, index, 2);
-            default: throw new Error('unknown size mode: ' + val);
-        }
-    }
-    else return this._vecOptionalSet(vec, index, val);
 };
 
 /**
@@ -4621,26 +5073,11 @@ Node.prototype._resolveSizeMode = function _resolveSizeMode (vec, index, val) {
  * @return {Node} this
  */
 Node.prototype.setProportionalSize = function setProportionalSize (x, y, z) {
-    var vec3 = this.value.size.proportional;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    propogate = this._vecOptionalSet(vec3, 2, z) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onProportionalSizeChange) item.onProportionalSizeChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._sizeID).setProportional(x, y, z);
+    else if (this.isMounted())
+        SizeSystem.get(this.getLocation()).setProportional(x, y, z);
+    else throw new Error('This node does not have access to a size component');
     return this;
 };
 
@@ -4663,26 +5100,11 @@ Node.prototype.setProportionalSize = function setProportionalSize (x, y, z) {
  * @return {Node} this
  */
 Node.prototype.setDifferentialSize = function setDifferentialSize (x, y, z) {
-    var vec3 = this.value.size.differential;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    propogate = this._vecOptionalSet(vec3, 2, z) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onDifferentialSizeChange) item.onDifferentialSizeChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._sizeID).setDifferential(x, y, z);
+    else if (this.isMounted())
+        SizeSystem.get(this.getLocation()).setDifferential(x, y, z);
+    else throw new Error('This node does not have access to a size component');
     return this;
 };
 
@@ -4691,96 +5113,19 @@ Node.prototype.setDifferentialSize = function setDifferentialSize (x, y, z) {
  *
  * @method setAbsoluteSize
  *
- * @param {Number} x    x-Size in pixels ("width").
- * @param {Number} y    y-Size in pixels ("height").
- * @param {Number} z    z-Size in pixels ("depth").
+ * @param {Number} x x-Size in pixels ("width").
+ * @param {Number} y y-Size in pixels ("height").
+ * @param {Number} z z-Size in pixels ("depth").
  *
  * @return {Node} this
  */
 Node.prototype.setAbsoluteSize = function setAbsoluteSize (x, y, z) {
-    var vec3 = this.value.size.absolute;
-    var propogate = false;
-
-    propogate = this._vecOptionalSet(vec3, 0, x) || propogate;
-    propogate = this._vecOptionalSet(vec3, 1, y) || propogate;
-    propogate = this._vecOptionalSet(vec3, 2, z) || propogate;
-
-    if (propogate) {
-        var i = 0;
-        var list = this._components;
-        var len = list.length;
-        var item;
-        x = vec3[0];
-        y = vec3[1];
-        z = vec3[2];
-        for (; i < len ; i++) {
-            item = list[i];
-            if (item && item.onAbsoluteSizeChange) item.onAbsoluteSizeChange(x, y, z);
-        }
-    }
+    if (!this.constructor.NO_DEFAULT_COMPONENTS)
+        this.getComponent(this._sizeID).setAbsolute(x, y, z);
+    else if (this.isMounted())
+        SizeSystem.get(this.getLocation()).setAbsolute(x, y, z);
+    else throw new Error('This node does not have access to a size component');
     return this;
-};
-
-/**
- * Private method for alerting all components and children that
- * this node's transform has changed.
- *
- * @method
- *
- * @param {Float32Array} transform The transform that has changed
- *
- * @return {undefined} undefined
- */
-Node.prototype._transformChanged = function _transformChanged (transform) {
-    var i = 0;
-    var items = this._components;
-    var len = items.length;
-    var item;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onTransformChange) item.onTransformChange(transform);
-    }
-
-    i = 0;
-    items = this._children;
-    len = items.length;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onParentTransformChange) item.onParentTransformChange(transform);
-    }
-};
-
-/**
- * Private method for alerting all components and children that
- * this node's size has changed.
- *
- * @method
- *
- * @param {Float32Array} size the size that has changed
- *
- * @return {undefined} undefined
- */
-Node.prototype._sizeChanged = function _sizeChanged (size) {
-    var i = 0;
-    var items = this._components;
-    var len = items.length;
-    var item;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onSizeChange) item.onSizeChange(size);
-    }
-
-    i = 0;
-    items = this._children;
-    len = items.length;
-
-    for (; i < len ; i++) {
-        item = items[i];
-        if (item && item.onParentSizeChange) item.onParentSizeChange(size);
-    }
 };
 
 /**
@@ -4791,7 +5136,7 @@ Node.prototype._sizeChanged = function _sizeChanged (size) {
  * @return {Number} current frame
  */
 Node.prototype.getFrame = function getFrame () {
-    return this._globalUpdater.getFrame();
+    return this._updater.getFrame();
 };
 
 /**
@@ -4829,28 +5174,16 @@ Node.prototype.update = function update (time){
         if (item && item.onUpdate) item.onUpdate(time);
     }
 
-    var mySize = this.getSize();
-    var myTransform = this.getTransform();
-    var parent = this.getParent();
-    var parentSize = parent.getSize();
-    var parentTransform = parent.getTransform();
-    var sizeChanged = SIZE_PROCESSOR.fromSpecWithParent(parentSize, this, mySize);
-
-    var transformChanged = TRANSFORM_PROCESSOR.fromSpecWithParent(parentTransform, this.value, mySize, parentSize, myTransform);
-    if (transformChanged) this._transformChanged(myTransform);
-    if (sizeChanged) this._sizeChanged(mySize);
-
     this._inUpdate = false;
     this._requestingUpdate = false;
 
     if (!this.isMounted()) {
         // last update
         this._parent = null;
-        this.value.location = null;
-        this._globalUpdater = null;
+        this._id = null;
     }
     else if (this._nextUpdateQueue.length) {
-        this._globalUpdater.requestUpdateOnNextTick(this);
+        this._updater.requestUpdateOnNextTick(this);
         this._requestingUpdate = true;
     }
     return this;
@@ -4862,38 +5195,27 @@ Node.prototype.update = function update (time){
  *
  * @method mount
  *
- * @param  {Node} parent    parent node
- * @param  {String} myId    path to node (e.g. `body/0/1`)
+ * @param  {String} path unique path of node (e.g. `body/0/1`)
  *
  * @return {Node} this
  */
-Node.prototype.mount = function mount (parent, myId) {
-    if (this.isMounted()) return this;
-    var i = 0;
-    var list = this._components;
-    var len = list.length;
-    var item;
+Node.prototype.mount = function mount (path) {
+    if (this.isMounted())
+        throw new Error('Node is already mounted at: ' + this.getLocation());
 
-    this._parent = parent;
-    this._globalUpdater = parent.getUpdater();
-    this.value.location = myId;
-    this.value.showState.mounted = true;
-
-    for (; i < len ; i++) {
-        item = list[i];
-        if (item && item.onMount) item.onMount(this, i);
+    if (!this.constructor.NO_DEFAULT_COMPONENTS){
+        TransformSystem.registerTransformAtPath(path, this.getComponent(this._transformID));
+        SizeSystem.registerSizeAtPath(path, this.getComponent(this._sizeID));
     }
-
-    i = 0;
-    list = this._children;
-    len = list.length;
-    for (; i < len ; i++) {
-        item = list[i];
-        if (item && item.onParentMount) item.onParentMount(this, myId, i);
+    else {
+        TransformSystem.registerTransformAtPath(path);
+        SizeSystem.registerSizeAtPath(path);
     }
+    Dispatch.mount(path, this);
 
-    if (!this._requestingUpdate) this._requestUpdate(true);
+    if (!this._requestingUpdate) this._requestUpdate();
     return this;
+
 };
 
 /**
@@ -4905,205 +5227,195 @@ Node.prototype.mount = function mount (parent, myId) {
  * @return {Node} this
  */
 Node.prototype.dismount = function dismount () {
-    if (!this.isMounted()) return this;
-    var i = 0;
-    var list = this._components;
-    var len = list.length;
-    var item;
+    if (!this.isMounted())
+        throw new Error('Node is not mounted');
 
-    this.value.showState.mounted = false;
+    var path = this.getLocation();
 
-    this._parent.removeChild(this);
-
-    for (; i < len ; i++) {
-        item = list[i];
-        if (item && item.onDismount) item.onDismount();
-    }
-
-    i = 0;
-    list = this._children;
-    len = list.length;
-    for (; i < len ; i++) {
-        item = list[i];
-        if (item && item.onParentDismount) item.onParentDismount();
-    }
+    TransformSystem.deregisterTransformAtPath(path);
+    SizeSystem.deregisterSizeAtPath(path);
+    Dispatch.dismount(path);
 
     if (!this._requestingUpdate) this._requestUpdate();
-    return this;
 };
-
-/**
- * Function to be invoked by the parent as soon as the parent is
- * being mounted.
- *
- * @method onParentMount
- *
- * @param  {Node} parent        The parent node.
- * @param  {String} parentId    The parent id (path to parent).
- * @param  {Number} index       Id the node should be mounted to.
- *
- * @return {Node} this
- */
-Node.prototype.onParentMount = function onParentMount (parent, parentId, index) {
-    return this.mount(parent, parentId + '/' + index);
-};
-
-/**
- * Function to be invoked by the parent as soon as the parent is being
- * unmounted.
- *
- * @method onParentDismount
- *
- * @return {Node} this
- */
-Node.prototype.onParentDismount = function onParentDismount () {
-    return this.dismount();
-};
-
-/**
- * Method to be called in order to dispatch an event to the node and all its
- * components. Note that this doesn't recurse the subtree.
- *
- * @method receive
- *
- * @param  {String} type   The event type (e.g. "click").
- * @param  {Object} ev     The event payload object to be dispatched.
- *
- * @return {Node} this
- */
-Node.prototype.receive = function receive (type, ev) {
-    var i = 0;
-    var list = this._components;
-    var len = list.length;
-    var item;
-    for (; i < len ; i++) {
-        item = list[i];
-        if (item && item.onReceive) item.onReceive(type, ev);
-    }
-    return this;
-};
-
-
-/**
- * Private method to avoid accidentally passing arguments
- * to update events.
- *
- * @method
- *
- * @return {undefined} undefined
- */
-Node.prototype._requestUpdateWithoutArgs = function _requestUpdateWithoutArgs () {
-    if (!this._requestingUpdate) this._requestUpdate();
-};
-
-/**
- * A method to execute logic on update. Defaults to the
- * node's .update method.
- *
- * @method
- *
- * @param {Number} current time
- *
- * @return {undefined} undefined
- */
-Node.prototype.onUpdate = Node.prototype.update;
-
-/**
- * A method to execute logic when a parent node is shown. Delegates
- * to Node.show.
- *
- * @method
- *
- * @return {Node} this
- */
-Node.prototype.onParentShow = Node.prototype.show;
-
-/**
- * A method to execute logic when the parent is hidden. Delegates
- * to Node.hide.
- *
- * @method
- *
- * @return {Node} this
- */
-Node.prototype.onParentHide = Node.prototype.hide;
-
-/**
- * A method to execute logic when the parent transform changes.
- * Delegates to Node._requestUpdateWithoutArgs.
- *
- * @method
- *
- * @return {undefined} undefined
- */
-Node.prototype.onParentTransformChange = Node.prototype._requestUpdateWithoutArgs;
-
-/**
- * A method to execute logic when the parent size changes.
- * Delegates to Node._requestUpdateWIthoutArgs.
- *
- * @method
- *
- * @return {undefined} undefined
- */
-Node.prototype.onParentSizeChange = Node.prototype._requestUpdateWithoutArgs;
-
-/**
- * A method to execute logic when the node something wants
- * to show the node. Delegates to Node.show.
- *
- * @method
- *
- * @return {Node} this
- */
-Node.prototype.onShow = Node.prototype.show;
-
-/**
- * A method to execute logic when something wants to hide this
- * node. Delegates to Node.hide.
- *
- * @method
- *
- * @return {Node} this
- */
-Node.prototype.onHide = Node.prototype.hide;
-
-/**
- * A method which can execute logic when this node is added to
- * to the scene graph. Delegates to mount.
- *
- * @method
- *
- * @return {Node} this
- */
-Node.prototype.onMount = Node.prototype.mount;
-
-/**
- * A method which can execute logic when this node is removed from
- * the scene graph. Delegates to Node.dismount.
- *
- * @method
- *
- * @return {Node} this
- */
-Node.prototype.onDismount = Node.prototype.dismount;
-
-/**
- * A method which can execute logic when this node receives
- * an event from the scene graph. Delegates to Node.receive.
- *
- * @method
- *
- * @param {String} event name
- * @param {Object} payload
- *
- * @return {undefined} undefined
- */
-Node.prototype.onReceive = Node.prototype.receive;
 
 module.exports = Node;
 
-},{"./Size":20,"./Transform":21}],19:[function(require,module,exports){
+},{"./Dispatch":16,"./Size":23,"./SizeSystem":24,"./Transform":25,"./TransformSystem":26}],20:[function(require,module,exports){
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Famous Industries Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+'use strict';
+
+/**
+ * A collection of utilities for handling paths.
+ *
+ * @namespace
+ */
+var Path = {
+
+    /**
+     * determines if the passed in path has a trailing slash. Paths of the form
+     * 'body/0/1/' return true, while paths of the form 'body/0/1' return false.
+     *
+     * @method
+     *
+     * @param {String} path the path
+     *
+     * @return {Boolean} whether or not the path has a trailing slash
+     */
+    hasTrailingSlash: function hasTrailingSlash (path) {
+        return path[path.length - 1] === '/';
+    },
+
+    /**
+     * Returns the depth in the tree this path represents. Essentially counts
+     * the slashes ignoring a trailing slash.
+     *
+     * @method
+     *
+     * @param {String} path the path
+     *
+     * @return {Number} the depth in the tree that this path represents
+     */
+    depth: function depth (path) {
+        var count = 0;
+        var length = path.length;
+        var len = this.hasTrailingSlash(path) ? length - 1 : length;
+        var i = 0;
+        for (; i < len ; i++) count += path[i] === '/' ? 1 : 0;
+        return count;
+    },
+
+    /**
+     * Gets the position of this path in relation to its siblings.
+     *
+     * @method
+     *
+     * @param {String} path the path
+     *
+     * @return {Number} the index of this path in relation to its siblings.
+     */
+    index: function index (path) {
+        var length = path.length;
+        var len = this.hasTrailingSlash(path) ? length - 1 : length;
+        while (len--) if (path[len] === '/') break;
+        var result = parseInt(path.substring(len + 1));
+        return isNaN(result) ? 0 : result;
+    },
+
+    /**
+     * Gets the position of the path at a particular breadth in relationship
+     * to its siblings
+     *
+     * @method
+     *
+     * @param {String} path the path
+     * @param {Number} depth the breadth at which to find the index
+     *
+     * @return {Number} index at the particular depth
+     */
+    indexAtDepth: function indexAtDepth (path, depth) {
+        var i = 0;
+        var len = path.length;
+        var index = 0;
+        for (; i < len ; i++) {
+            if (path[i] === '/') index++;
+            if (index === depth) {
+                path = path.substring(i ? i + 1 : i);
+                index = path.indexOf('/');
+                path = index === -1 ? path : path.substring(0, index);
+                index = parseInt(path);
+                return isNaN(index) ? path : index;
+            }
+        }
+    },
+
+    /**
+     * returns the path of the passed in path's parent.
+     *
+     * @method
+     *
+     * @param {String} path the path
+     *
+     * @return {String} the path of the passed in path's parent
+     */
+    parent: function parent (path) {
+        return path.substring(0, path.lastIndexOf('/', path.length - 2));
+    },
+
+    /**
+     * Determines whether or not the first argument path is the direct child
+     * of the second argument path.
+     *
+     * @method
+     *
+     * @param {String} child the path that may be a child
+     * @param {String} parent the path that may be a parent
+     *
+     * @return {Boolean} whether or not the first argument path is a child of the second argument path
+     */
+    isChildOf: function isChildOf (child, parent) {
+        return this.isDescendentOf(child, parent) && this.depth(child) === this.depth(parent) + 1;
+    },
+
+    /**
+     * Returns true if the first argument path is a descendent of the second argument path.
+     *
+     * @method
+     *
+     * @param {String} child potential descendent path
+     * @param {String} parent potential ancestor path
+     *
+     * @return {Boolean} whether or not the path is a descendent
+     */
+    isDescendentOf: function isDescendentOf(child, parent) {
+        if (child === parent) return false;
+        child = this.hasTrailingSlash(child) ? child : child + '/';
+        parent = this.hasTrailingSlash(parent) ? parent : parent + '/';
+        return this.depth(parent) < this.depth(child) && child.indexOf(parent) === 0;
+    },
+
+    /**
+     * returns the selector portion of the path.
+     *
+     * @method
+     *
+     * @param {String} path the path
+     *
+     * @return {String} the selector portion of the path.
+     */
+    getSelector: function getSelector(path) {
+        var index = path.indexOf('/');
+        return index === -1 ? path : path.substring(0, index);
+    }
+
+};
+
+module.exports = Path;
+
+},{}],21:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5132,9 +5444,180 @@ module.exports = Node;
 
 'use strict';
 
-var Dispatch = require('./Dispatch');
+var PathUtils = require('./Path');
+
+/**
+ * A class that can be used to associate any item with a path.
+ * Items and paths are kept in flat arrays for easy iteration
+ * and a memo is used to provide constant time lookup.
+ *
+ * @class
+ *
+ */
+function PathStore () {
+    this.items = [];
+    this.paths = [];
+    this.memo = {};
+}
+
+/**
+ * Associates an item with the given path. Errors if an item
+ * already exists at the given path.
+ *
+ * @method
+ *
+ * @param {String} path The path at which to insert the item
+ * @param {Any} item The item to associate with the given path.
+ *
+ * @return {undefined} undefined
+ */
+PathStore.prototype.insert = function insert (path, item) {
+    var paths = this.paths;
+    var index = paths.indexOf(path);
+    if (index !== -1)
+        throw new Error('item already exists at path: ' + path);
+
+    var i = 0;
+    var targetDepth = PathUtils.depth(path);
+    var targetIndex = PathUtils.index(path);
+
+    // The item will be inserted at a point in the array
+    // such that it is within its own breadth in the tree
+    // that the paths represent
+    while (
+        paths[i] &&
+        targetDepth >= PathUtils.depth(paths[i])
+    ) i++;
+
+    // The item will be sorted within its breadth by index
+    // in regard to its siblings.
+    while (
+        paths[i] &&
+        targetDepth === PathUtils.depth(paths[i]) &&
+        targetIndex < PathUtils.index(paths[i])
+    ) i++;
+
+    // insert the items in the path
+    paths.splice(i, 0, path);
+    this.items.splice(i, 0, item);
+
+    // store the relationship between path and index in the memo
+    this.memo[path] = i;
+
+    // all items behind the inserted item are now no longer
+    // accurately stored in the memo. Thus the memo must be cleared for
+    // these items.
+    for (var len = this.paths.length ; i < len ; i++)
+        this.memo[this.paths[i]] = null;
+};
+
+/**
+ * Removes the the item from the store at the given path.
+ * Errors if no item exists at the given path.
+ *
+ * @method
+ *
+ * @param {String} path The path at which to remove the item.
+ *
+ * @return {undefined} undefined
+ */
+PathStore.prototype.remove = function remove (path) {
+    var paths = this.paths;
+    var index = this.memo[path] ? this.memo[path] : paths.indexOf(path);
+    if (index === -1)
+        throw new Error('Cannot remove. No item exists at path: ' + path);
+
+    paths.splice(index, 1);
+    this.items.splice(index, 1);
+
+    this.memo[path] = null;
+
+    for (var len = this.paths.length ; index < len ; index++)
+        this.memo[this.paths[index]] = null;
+};
+
+/**
+ * Returns the item stored at the current path. Returns undefined
+ * if no item is stored at that path.
+ *
+ * @method
+ *
+ * @param {String} path The path to lookup the item for
+ *
+ * @return {Any | undefined} the item stored or undefined
+ */
+PathStore.prototype.get = function get (path) {
+    if (this.memo[path]) return this.items[this.memo[path]];
+
+    var index = this.paths.indexOf(path);
+
+    if (index === -1) return void 0;
+
+    this.memo[path] = index;
+
+    return this.items[index];
+};
+
+/**
+ * Returns an array of the items currently stored in this
+ * PathStore.
+ *
+ * @method
+ *
+ * @return {Array} items currently stored
+ */
+PathStore.prototype.getItems = function getItems () {
+    return this.items;
+};
+
+/**
+ * Returns an array of the paths currently stored in this
+ * PathStore.
+ *
+ * @method
+ *
+ * @return {Array} paths currently stored
+ */
+PathStore.prototype.getPaths = function getPaths () {
+    return this.paths;
+};
+
+module.exports = PathStore;
+
+},{"./Path":20}],22:[function(require,module,exports){
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Famous Industries Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+/*jshint -W079 */
+
+'use strict';
+
 var Node = require('./Node');
-var Size = require('./Size');
+var Dispatch = require('./Dispatch');
+var Commands = require('./Commands');
+var TransformSystem = require('./TransformSystem');
+var SizeSystem = require('./SizeSystem');
 
 /**
  * Scene is the bottom of the scene graph. It is its own
@@ -5142,6 +5625,7 @@ var Size = require('./Size');
  *
  * @class Scene
  * @constructor
+ * @extends Node
  *
  * @param {String} selector a string which is a dom selector
  *                 signifying which dom element the context
@@ -5156,33 +5640,29 @@ function Scene (selector, updater) {
 
     Node.call(this);         // Scene inherits from node
 
-    this._updater = updater; // The updater that will both
-                             // send messages to the renderers
-                             // and update dirty nodes
-
-    this._dispatch = new Dispatch(this); // instantiates a dispatcher
-                                         // to send events to the scene
-                                         // graph below this context
+    this._globalUpdater = updater; // The updater that will both
+                                   // send messages to the renderers
+                                   // and update dirty nodes
 
     this._selector = selector; // reference to the DOM selector
                                // that represents the element
                                // in the dom that this context
                                // inhabits
 
-    this.onMount(this, selector); // Mount the context to itself
-                                  // (it is its own parent)
+    this.mount(selector); // Mount the context to itself
+                          // (it is its own parent)
 
-    this._updater                  // message a request for the dom
-        .message('NEED_SIZE_FOR')  // size of the context so that
-        .message(selector);        // the scene graph has a total size
+    this._globalUpdater                  // message a request for the dom
+        .message(Commands.NEED_SIZE_FOR)  // size of the context so that
+        .message(selector);               // the scene graph has a total size
 
     this.show(); // the context begins shown (it's already present in the dom)
-
 }
 
 // Scene inherits from node
 Scene.prototype = Object.create(Node.prototype);
 Scene.prototype.constructor = Scene;
+Scene.NO_DEFAULT_COMPONENTS = true;
 
 /**
  * Scene getUpdater function returns the passed in updater
@@ -5207,9 +5687,11 @@ Scene.prototype.getSelector = function getSelector () {
  * to the nodes in the scene graph.
  *
  * @return {Dispatch} the Scene's Dispatch
+ * @deprecated
  */
 Scene.prototype.getDispatch = function getDispatch () {
-    return this._dispatch;
+    console.warn('Scene#getDispatch is deprecated, require the dispatch directly');
+    return Dispatch;
 };
 
 /**
@@ -5228,25 +5710,36 @@ Scene.prototype.onReceive = function onReceive (event, payload) {
     // and the context would receive its size the same way that any render size
     // component receives its size.
     if (event === 'CONTEXT_RESIZE') {
-
         if (payload.length < 2)
             throw new Error(
                     'CONTEXT_RESIZE\'s payload needs to be at least a pair' +
                     ' of pixel sizes'
             );
 
-        this.setSizeMode(Size.ABSOLUTE, Size.ABSOLUTE, Size.ABSOLUTE);
+        this.setSizeMode('absolute', 'absolute', 'absolute');
         this.setAbsoluteSize(payload[0],
                              payload[1],
                              payload[2] ? payload[2] : 0);
 
+        this._updater.message(Commands.WITH).message(this._selector).message(Commands.READY);
     }
+};
+
+
+Scene.prototype.mount = function mount (path) {
+    if (this.isMounted())
+        throw new Error('Scene is already mounted at: ' + this.getLocation());
+    Dispatch.mount(path, this);
+    this._id = path;
+    this._mounted = true;
+    this._parent = this;
+    TransformSystem.registerTransformAtPath(path);
+    SizeSystem.registerSizeAtPath(path);
 };
 
 module.exports = Scene;
 
-
-},{"./Dispatch":15,"./Node":18,"./Size":20}],20:[function(require,module,exports){
+},{"./Commands":15,"./Dispatch":16,"./Node":19,"./SizeSystem":24,"./TransformSystem":26}],23:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5273,12 +5766,36 @@ module.exports = Scene;
 
 'use strict';
 
+var ONES = [1, 1, 1];
+var ZEROS = [0, 0, 0];
+
 /**
  * The Size class is responsible for processing Size from a node
  * @constructor Size
+ *
+ * @param {Size} parent the parent size
  */
-function Size () {
-    this._size = new Float32Array(3);
+function Size (parent) {
+
+    this.finalSize = new Float32Array(3);
+    this.sizeChanged = false;
+
+    this.sizeMode = new Uint8Array(3);
+    this.sizeModeChanged = false;
+
+    this.absoluteSize = new Float32Array(3);
+    this.absoluteSizeChanged = false;
+
+    this.proportionalSize = new Float32Array(ONES);
+    this.proportionalSizeChanged = false;
+
+    this.differentialSize = new Float32Array(3);
+    this.differentialSizeChanged = false;
+
+    this.renderSize = new Float32Array(3);
+    this.renderSizeChanged = false;
+
+    this.parent = parent != null ? parent : null;
 }
 
 // an enumeration of the different types of size modes
@@ -5288,34 +5805,252 @@ Size.RENDER = 2;
 Size.DEFAULT = Size.RELATIVE;
 
 /**
+ * Private method which sets a value within an array
+ * and report if the value has changed.
+ *
+ * @method
+ *
+ * @param {Array} vec The array to set the value in
+ * @param {Number} index The index at which to set the value
+ * @param {Any} val If the val is undefined or null, or if the value
+ *                  is the same as what is already there, then nothing
+ *                  is set.
+ *
+ * @return {Boolean} returns true if anything changed
+ */
+function _vecOptionalSet (vec, index, val) {
+    if (val != null && vec[index] !== val) {
+        vec[index] = val;
+        return true;
+    } else return false;
+}
+
+/**
+ * Private method which sets three values within an array of three
+ * using _vecOptionalSet. Returns whether anything has changed.
+ *
+ * @method
+ *
+ * @param {Array} vec The array to set the values of
+ * @param {Any} x The first value to set within the array
+ * @param {Any} y The second value to set within the array
+ * @param {Any} z The third value to set within the array
+ *
+ * @return {Boolean} whether anything has changed
+ */
+function setVec (vec, x, y, z) {
+    var propagate = false;
+
+    propagate = _vecOptionalSet(vec, 0, x) || propagate;
+    propagate = _vecOptionalSet(vec, 1, y) || propagate;
+    propagate = _vecOptionalSet(vec, 2, z) || propagate;
+
+    return propagate;
+}
+
+/**
+ * Private method to allow for polymorphism in the size mode such that strings
+ * or the numbers from the enumeration can be used.
+ *
+ * @method
+ *
+ * @param {String|Number} val The Size mode to resolve.
+ *
+ * @return {Number} the resolved size mode from the enumeration.
+ */
+function resolveSizeMode (val) {
+    if (val.constructor === String) {
+        switch (val.toLowerCase()) {
+            case 'relative':
+            case 'default': return Size.RELATIVE;
+            case 'absolute': return Size.ABSOLUTE;
+            case 'render': return Size.RENDER;
+            default: throw new Error('unknown size mode: ' + val);
+        }
+    }
+    else if (val < 0 || val > Size.RENDER) throw new Error('unknown size mode: ' + val);
+    return val;
+}
+
+/**
+ * Sets the parent of this size.
+ *
+ * @method
+ *
+ * @param {Size} parent The parent size component
+ *
+ * @return {Size} this
+ */
+Size.prototype.setParent = function setParent (parent) {
+    this.parent = parent;
+    return this;
+};
+
+/**
+ * Gets the parent of this size.
+ *
+ * @method
+ *
+ * @returns {Size|undefined} the parent if one exists
+ */
+Size.prototype.getParent = function getParent () {
+    return this.parent;
+};
+
+/**
+ * Gets the size mode of this size representation
+ *
+ * @method
+ *
+ * @param {Number} x the size mode to use for the width
+ * @param {Number} y the size mode to use for the height
+ * @param {Number} z the size mode to use for the depth
+ *
+ * @return {array} array of size modes
+ */
+Size.prototype.setSizeMode = function setSizeMode (x, y, z) {
+    if (x != null) x = resolveSizeMode(x);
+    if (y != null) y = resolveSizeMode(y);
+    if (z != null) z = resolveSizeMode(z);
+    this.sizeModeChanged = setVec(this.sizeMode, x, y, z);
+    return this;
+};
+
+/**
+ * Returns the size mode of this component.
+ *
+ * @method
+ *
+ * @return {Array} the current size mode of the this.
+ */
+Size.prototype.getSizeMode = function getSizeMode () {
+    return this.sizeMode;
+};
+
+/**
+ * Sets the absolute size of this size representation.
+ *
+ * @method
+ *
+ * @param {Number} x The x dimension of the absolute size
+ * @param {Number} y The y dimension of the absolute size
+ * @param {Number} z The z dimension of the absolute size
+ *
+ * @return {Size} this
+ */
+Size.prototype.setAbsolute = function setAbsolute (x, y, z) {
+    this.absoluteSizeChanged = setVec(this.absoluteSize, x, y, z);
+    return this;
+};
+
+/**
+ * Gets the absolute size of this size representation
+ *
+ * @method
+ *
+ * @return {array} array of absolute size
+ */
+Size.prototype.getAbsolute = function getAbsolute () {
+    return this.absoluteSize;
+};
+
+/**
+ * Sets the proportional size of this size representation.
+ *
+ * @method
+ *
+ * @param {Number} x The x dimension of the proportional size
+ * @param {Number} y The y dimension of the proportional size
+ * @param {Number} z The z dimension of the proportional size
+ *
+ * @return {Size} this
+ */
+Size.prototype.setProportional = function setProportional (x, y, z) {
+    this.proportionalSizeChanged = setVec(this.proportionalSize, x, y, z);
+    return this;
+};
+
+/**
+ * Gets the propotional size of this size representation
+ *
+ * @method
+ *
+ * @return {array} array of proportional size
+ */
+Size.prototype.getProportional = function getProportional () {
+    return this.proportionalSize;
+};
+
+/**
+ * Sets the differential size of this size representation.
+ *
+ * @method
+ *
+ * @param {Number} x The x dimension of the differential size
+ * @param {Number} y The y dimension of the differential size
+ * @param {Number} z The z dimension of the differential size
+ *
+ * @return {Size} this
+ */
+Size.prototype.setDifferential = function setDifferential (x, y, z) {
+    this.differentialSizeChanged = setVec(this.differentialSize, x, y, z);
+    return this;
+};
+
+/**
+ * Gets the differential size of this size representation
+ *
+ * @method
+ *
+ * @return {array} array of differential size
+ */
+Size.prototype.getDifferential = function getDifferential () {
+    return this.differentialSize;
+};
+
+/**
+ * Sets the size of this size representation.
+ *
+ * @method
+ *
+ * @param {Number} x The x dimension of the size
+ * @param {Number} y The y dimension of the size
+ * @param {Number} z The z dimension of the size
+ *
+ * @return {Size} this
+ */
+Size.prototype.get = function get () {
+    return this.finalSize;
+};
+
+/**
  * fromSpecWithParent takes the parent node's size, the target node's spec,
  * and a target array to write to. Using the node's size mode it calculates
  * a final size for the node from the node's spec. Returns whether or not
  * the final size has changed from its last value.
  *
- * @param {Array} parentSize parent node's calculated size
- * @param {Node.Spec} node the target node's spec
- * @param {Array} target an array to write the result to
+ * @method
+ *
+ * @param {Array} components the node's components
  *
  * @return {Boolean} true if the size of the node has changed.
  */
-Size.prototype.fromSpecWithParent = function fromSpecWithParent (parentSize, node, target) {
-    var spec = node.getValue().spec;
-    var components = node.getComponents();
-    var mode = spec.size.sizeMode;
+Size.prototype.fromComponents = function fromComponents (components) {
+    var mode = this.sizeMode;
+    var target = this.finalSize;
+    var parentSize = this.parent ? this.parent.get() : ZEROS;
     var prev;
     var changed = false;
     var len = components.length;
     var j;
     for (var i = 0 ; i < 3 ; i++) {
+        prev = target[i];
         switch (mode[i]) {
             case Size.RELATIVE:
-                prev = target[i];
-                target[i] = parentSize[i] * spec.size.proportional[i] + spec.size.differential[i];
+                target[i] = parentSize[i] * this.proportionalSize[i] + this.differentialSize[i];
                 break;
             case Size.ABSOLUTE:
-                prev = target[i];
-                target[i] = spec.size.absolute[i];
+                target[i] = this.absoluteSize[i];
                 break;
             case Size.RENDER:
                 var candidate;
@@ -5324,7 +6059,6 @@ Size.prototype.fromSpecWithParent = function fromSpecWithParent (parentSize, nod
                     component = components[j];
                     if (component && component.getRenderSize) {
                         candidate = component.getRenderSize()[i];
-                        prev = target[i];
                         target[i] = target[i] < candidate || target[i] === 0 ? candidate : target[i];
                     }
                 }
@@ -5332,27 +6066,29 @@ Size.prototype.fromSpecWithParent = function fromSpecWithParent (parentSize, nod
         }
         changed = changed || prev !== target[i];
     }
+    this.sizeChanged = changed;
     return changed;
 };
 
 module.exports = Size;
 
-},{}],21:[function(require,module,exports){
+
+},{}],24:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2015 Famous Industries Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -5364,39 +6100,843 @@ module.exports = Size;
 
 'use strict';
 
+var PathStore = require('./PathStore');
+var Size = require('./Size');
+var Dispatch = require('./Dispatch');
+var PathUtils = require('./Path');
+
+/**
+ * The size system is used to calculate size throughout the scene graph.
+ * It holds size components and operates upon them.
+ *
+ * @constructor
+ */
+function SizeSystem () {
+    this.pathStore = new PathStore();
+}
+
+/**
+ * Registers a size component to a give path. A size component can be passed as the second argument
+ * or a default one will be created. Throws if no size component has been added at the parent path.
+ *
+ * @method
+ *
+ * @param {String} path The path at which to register the size component
+ * @param {Size | undefined} size The size component to be registered or undefined.
+ *
+ * @return {undefined} undefined
+ */
+SizeSystem.prototype.registerSizeAtPath = function registerSizeAtPath (path, size) {
+    if (!PathUtils.depth(path)) return this.pathStore.insert(path, size ? size : new Size());
+
+    var parent = this.pathStore.get(PathUtils.parent(path));
+
+    if (!parent) throw new Error(
+            'No parent size registered at expected path: ' + PathUtils.parent(path)
+    );
+
+    if (size) size.setParent(parent);
+
+    this.pathStore.insert(path, size ? size : new Size(parent));
+};
+
+/**
+ * Removes the size component from the given path. Will throw if no component is at that
+ * path
+ *
+ * @method
+ *
+ * @param {String} path The path at which to remove the size.
+ *
+ * @return {undefined} undefined
+ */
+SizeSystem.prototype.deregisterSizeAtPath = function deregisterSizeAtPath(path) {
+    this.pathStore.remove(path);
+};
+
+/**
+ * Returns the size component stored at a given path. Returns undefined if no
+ * size component is registered to that path.
+ *
+ * @method
+ *
+ * @param {String} path The path at which to get the size component.
+ *
+ * @return {undefined} undefined
+ */
+SizeSystem.prototype.get = function get (path) {
+    return this.pathStore.get(path);
+};
+
+/**
+ * Updates the sizes in the scene graph. Called internally by the famous engine.
+ *
+ * @method
+ *
+ * @return {undefined} undefined
+ */
+SizeSystem.prototype.update = function update () {
+    var sizes = this.pathStore.getItems();
+    var paths = this.pathStore.getPaths();
+    var node;
+    var size;
+    var i;
+    var len;
+    var components;
+
+    for (i = 0, len = sizes.length ; i < len ; i++) {
+        node = Dispatch.getNode(paths[i]);
+        components = node.getComponents();
+        if (!node) continue;
+        size = sizes[i];
+        if (size.sizeModeChanged) sizeModeChanged(node, components, size);
+        if (size.absoluteSizeChanged) absoluteSizeChanged(node, components, size);
+        if (size.proportionalSizeChanged) proportionalSizeChanged(node, components, size);
+        if (size.differentialSizeChanged) differentialSizeChanged(node, components, size);
+        if (size.renderSizeChanged) renderSizeChanged(node, components, size);
+        if (size.fromComponents(components)) sizeChanged(node, components, size);
+    }
+};
+
+// private methods
+
+/**
+ * Private method to alert the node and components that size mode changed.
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node Node to potentially call sizeModeChanged on
+ * @param {Array} components a list of the nodes' components
+ * @param {Size} size the size class for the Node
+ *
+ * @return {undefined} undefined
+ */
+function sizeModeChanged (node, components, size) {
+    var sizeMode = size.getSizeMode();
+    var x = sizeMode[0];
+    var y = sizeMode[1];
+    var z = sizeMode[2];
+    if (node.onSizeModeChange) node.onSizeModeChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onSizeModeChange)
+            components[i].onSizeModeChange(x, y, z);
+    size.sizeModeChanged = false;
+}
+
+/**
+ * Private method to alert the node and components that absoluteSize changed.
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node Node to potentially call onAbsoluteSizeChange on
+ * @param {Array} components a list of the nodes' components
+ * @param {Size} size the size class for the Node
+ *
+ * @return {undefined} undefined
+ */
+function absoluteSizeChanged (node, components, size) {
+    var absoluteSize = size.getAbsolute();
+    var x = absoluteSize[0];
+    var y = absoluteSize[1];
+    var z = absoluteSize[2];
+    if (node.onAbsoluteSizeChange) node.onAbsoluteSizeChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onAbsoluteSizeChange)
+            components[i].onAbsoluteSizeChange(x, y, z);
+    size.absoluteSizeChanged = false;
+}
+
+/**
+ * Private method to alert the node and components that the proportional size changed.
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node Node to potentially call onProportionalSizeChange on
+ * @param {Array} components a list of the nodes' components
+ * @param {Size} size the size class for the Node
+ *
+ * @return {undefined} undefined
+ */
+function proportionalSizeChanged (node, components, size) {
+    var proportionalSize = size.getProportional();
+    var x = proportionalSize[0];
+    var y = proportionalSize[1];
+    var z = proportionalSize[2];
+    if (node.onProportionalSizeChange) node.onProportionalSizeChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onProportionalSizeChange)
+            components[i].onProportionalSizeChange(x, y, z);
+    size.proportionalSizeChanged = false;
+}
+
+/**
+ * Private method to alert the node and components that differential size changed.
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node Node to potentially call onDifferentialSize on
+ * @param {Array} components a list of the nodes' components
+ * @param {Size} size the size class for the Node
+ *
+ * @return {undefined} undefined
+ */
+function differentialSizeChanged (node, components, size) {
+    var differentialSize = size.getDifferential();
+    var x = differentialSize[0];
+    var y = differentialSize[1];
+    var z = differentialSize[2];
+    if (node.onDifferentialSizeChange) node.onDifferentialSizeChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onDifferentialSizeChange)
+            components[i].onDifferentialSizeChange(x, y, z);
+    size.differentialSizeChanged = false;
+}
+
+/**
+ * Private method to alert the node and components that render size changed.
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node Node to potentially call onRenderSizeChange on
+ * @param {Array} components a list of the nodes' components
+ * @param {Size} size the size class for the Node
+ *
+ * @return {undefined} undefined
+ */
+function renderSizeChanged (node, components, size) {
+    var renderSize = size.getRenderSize();
+    var x = renderSize[0];
+    var y = renderSize[1];
+    var z = renderSize[2];
+    if (node.onRenderSizeChange) node.onRenderSizeChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onRenderSizeChange)
+            components[i].onRenderSizeChange(x, y, z);
+    size.renderSizeChanged = false;
+}
+
+/**
+ * Private method to alert the node and components that the size changed.
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node Node to potentially call onSizeChange on
+ * @param {Array} components a list of the nodes' components
+ * @param {Size} size the size class for the Node
+ *
+ * @return {undefined} undefined
+ */
+function sizeChanged (node, components, size) {
+    var finalSize = size.get();
+    var x = finalSize[0];
+    var y = finalSize[1];
+    var z = finalSize[2];
+    if (node.onSizeChange) node.onSizeChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onSizeChange)
+            components[i].onSizeChange(x, y, z);
+    size.sizeChanged = false;
+}
+
+module.exports = new SizeSystem();
+
+},{"./Dispatch":16,"./Path":20,"./PathStore":21,"./Size":23}],25:[function(require,module,exports){
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Famous Industries Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+'use strict';
+
+var QUAT = [0, 0, 0, 1];
+var ONES = [1, 1, 1];
+
 /**
  * The transform class is responsible for calculating the transform of a particular
  * node from the data on the node and its parent
  *
  * @constructor Transform
+ *
+ * @param {Transform} parent the parent Transform
  */
-function Transform () {
-    this._matrix = new Float32Array(16);
+function Transform (parent) {
+    this.local = new Float32Array(Transform.IDENT);
+    this.global = new Float32Array(Transform.IDENT);
+    this.offsets = {
+        align: new Float32Array(3),
+        alignChanged: false,
+        mountPoint: new Float32Array(3),
+        mountPointChanged: false,
+        origin: new Float32Array(3),
+        originChanged: false
+    };
+    this.vectors = {
+        position: new Float32Array(3),
+        positionChanged: false,
+        rotation: new Float32Array(QUAT),
+        rotationChanged: false,
+        scale: new Float32Array(ONES),
+        scaleChanged: false
+    };
+    this._lastEulerVals = [0, 0, 0];
+    this._lastEuler = false;
+    this.parent = parent ? parent : null;
+    this.breakPoint = false;
+    this.calculatingWorldMatrix = false;
 }
 
+Transform.IDENT = [ 1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1 ];
+
+Transform.WORLD_CHANGED = 1;
+Transform.LOCAL_CHANGED = 2;
+
 /**
- * Returns the last calculated transform
+ * resets the transform state such that it no longer has a parent
+ * and is not a breakpoint.
  *
- * @return {Array} a transform
+ * @method
+ *
+ * @return {undefined} undefined
  */
-Transform.prototype.get = function get () {
-    return this._matrix;
+Transform.prototype.reset = function reset () {
+    this.parent = null;
+    this.breakPoint = false;
+    this.calculatingWorldMatrix = false;
 };
 
 /**
- * Uses the parent transform, the node's spec, the node's size, and the parent's size
+ * sets the parent of this transform.
+ *
+ * @method
+ *
+ * @param {Transform} parent The transform class that parents this class
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setParent = function setParent (parent) {
+    this.parent = parent;
+};
+
+/**
+ * returns the parent of this transform
+ *
+ * @method
+ *
+ * @return {Transform | null} the parent of this transform if one exists
+ */
+Transform.prototype.getParent = function getParent () {
+    return this.parent;
+};
+
+/**
+ * Makes this transform a breakpoint. This will cause it to calculate
+ * both a local (relative to the nearest ancestor breakpoint) and a world
+ * matrix (relative to the scene).
+ *
+ * @method
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setBreakPoint = function setBreakPoint () {
+    this.breakPoint = true;
+    this.calculatingWorldMatrix = true;
+};
+
+/**
+ * Set this node to calculate the world matrix.
+ *
+ * @method
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setCalculateWorldMatrix = function setCalculateWorldMatrix () {
+    this.calculatingWorldMatrix = true;
+};
+
+/**
+ * returns whether or not this transform is a breakpoint.
+ *
+ * @method
+ *
+ * @return {Boolean} true if this transform is a breakpoint
+ */
+Transform.prototype.isBreakPoint = function isBreakPoint () {
+    return this.breakPoint;
+};
+
+/**
+ * returns the local transform
+ *
+ * @method
+ *
+ * @return {Float32Array} local transform
+ */
+Transform.prototype.getLocalTransform = function getLocalTransform () {
+    return this.local;
+};
+
+/**
+ * returns the world transform. Requires that this transform is a breakpoint.
+ *
+ * @method
+ *
+ * @return {Float32Array} world transform.
+ */
+Transform.prototype.getWorldTransform = function getWorldTransform () {
+    if (!this.isBreakPoint() && !this.calculatingWorldMatrix)
+        throw new Error('This transform is not calculating world transforms');
+    return this.global;
+};
+
+/**
+ * Takes a node and calculates the proper transform from it.
+ *
+ * @method
+ *
+ * @param {Node} node the node to calculate the transform from
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.calculate = function calculate (node) {
+    if (!this.parent || this.parent.isBreakPoint())
+        return fromNode(node, this);
+    else return fromNodeWithParent(node, this);
+};
+
+/**
+ * A private method to potentially set a value within an
+ * array. Will set the value if a value was given
+ * for the third argument and if that value is different
+ * than the value that is currently in the array at the given index.
+ * Returns true if a value was set and false if not.
+ *
+ * @method
+ *
+ * @param {Array} vec The array to set the value within
+ * @param {Number} index The index at which to set the value
+ * @param {Any} val The value to potentially set in the array
+ *
+ * @return {Boolean} whether or not a value was set
+ */
+function _vecOptionalSet (vec, index, val) {
+    if (val != null && vec[index] !== val) {
+        vec[index] = val;
+        return true;
+    } else return false;
+}
+
+/**
+ * private method to set values within an array.
+ * Returns whether or not the array has been changed.
+ *
+ * @method
+ *
+ * @param {Array} vec The vector to be operated upon
+ * @param {Number | null | undefined} x The x value of the vector
+ * @param {Number | null | undefined} y The y value of the vector
+ * @param {Number | null | undefined} z The z value of the vector
+ * @param {Number | null | undefined} w the w value of the vector
+ *
+ * @return {Boolean} whether or not the array was changed
+ */
+function setVec (vec, x, y, z, w) {
+    var propagate = false;
+
+    propagate = _vecOptionalSet(vec, 0, x) || propagate;
+    propagate = _vecOptionalSet(vec, 1, y) || propagate;
+    propagate = _vecOptionalSet(vec, 2, z) || propagate;
+    if (w != null)
+        propagate = _vecOptionalSet(vec, 3, w) || propagate;
+
+    return propagate;
+}
+
+/**
+ * Gets the position component of the transform
+ *
+ * @method
+ *
+ * @return {Float32Array} the position component of the transform
+ */
+Transform.prototype.getPosition = function getPosition () {
+    return this.vectors.position;
+};
+
+/**
+ * Sets the position component of the transform.
+ *
+ * @method
+ *
+ * @param {Number} x The x dimension of the position
+ * @param {Number} y The y dimension of the position
+ * @param {Number} z The z dimension of the position
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setPosition = function setPosition (x, y, z) {
+    this.vectors.positionChanged = setVec(this.vectors.position, x, y, z);
+};
+
+/**
+ * Gets the rotation component of the transform. Will return a quaternion.
+ *
+ * @method
+ *
+ * @return {Float32Array} the quaternion representation of the transform's rotation
+ */
+Transform.prototype.getRotation = function getRotation () {
+    return this.vectors.rotation;
+};
+
+/**
+ * Sets the rotation component of the transform. Can take either Euler
+ * angles or a quaternion.
+ *
+ * @method
+ *
+ * @param {Number} x The rotation about the x axis or the extent in the x dimension
+ * @param {Number} y The rotation about the y axis or the extent in the y dimension
+ * @param {Number} z The rotation about the z axis or the extent in the z dimension
+ * @param {Number} w The rotation about the proceeding vector
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setRotation = function setRotation (x, y, z, w) {
+    var quat = this.vectors.rotation;
+    var qx, qy, qz, qw;
+
+    if (w != null) {
+        qx = x;
+        qy = y;
+        qz = z;
+        qw = w;
+        this._lastEulerVals[0] = null;
+        this._lastEulerVals[1] = null;
+        this._lastEulerVals[2] = null;
+        this._lastEuler = false;
+    }
+    else {
+        if (x == null || y == null || z == null) {
+            if (this._lastEuler) {
+                x = x == null ? this._lastEulerVals[0] : x;
+                y = y == null ? this._lastEulerVals[1] : y;
+                z = z == null ? this._lastEulerVals[2] : z;
+            }
+            else {
+                var sp = -2 * (quat[1] * quat[2] - quat[3] * quat[0]);
+
+                if (Math.abs(sp) > 0.99999) {
+                    y = y == null ? Math.PI * 0.5 * sp : y;
+                    x = x == null ? Math.atan2(-quat[0] * quat[2] + quat[3] * quat[1], 0.5 - quat[1] * quat[1] - quat[2] * quat[2]) : x;
+                    z = z == null ? 0 : z;
+                }
+                else {
+                    y = y == null ? Math.asin(sp) : y;
+                    x = x == null ? Math.atan2(quat[0] * quat[2] + quat[3] * quat[1], 0.5 - quat[0] * quat[0] - quat[1] * quat[1]) : x;
+                    z = z == null ? Math.atan2(quat[0] * quat[1] + quat[3] * quat[2], 0.5 - quat[0] * quat[0] - quat[2] * quat[2]) : z;
+                }
+            }
+        }
+
+        var hx = x * 0.5;
+        var hy = y * 0.5;
+        var hz = z * 0.5;
+
+        var sx = Math.sin(hx);
+        var sy = Math.sin(hy);
+        var sz = Math.sin(hz);
+        var cx = Math.cos(hx);
+        var cy = Math.cos(hy);
+        var cz = Math.cos(hz);
+
+        var sysz = sy * sz;
+        var cysz = cy * sz;
+        var sycz = sy * cz;
+        var cycz = cy * cz;
+
+        qx = sx * cycz + cx * sysz;
+        qy = cx * sycz - sx * cysz;
+        qz = cx * cysz + sx * sycz;
+        qw = cx * cycz - sx * sysz;
+
+        this._lastEuler = true;
+        this._lastEulerVals[0] = x;
+        this._lastEulerVals[1] = y;
+        this._lastEulerVals[2] = z;
+    }
+
+    this.vectors.rotationChanged = setVec(quat, qx, qy, qz, qw);
+};
+
+/**
+ * Gets the scale component of the transform
+ *
+ * @method
+ *
+ * @return {Float32Array} the scale component of the transform
+ */
+Transform.prototype.getScale = function getScale () {
+    return this.vectors.scale;
+};
+
+/**
+ * Sets the scale component of the transform.
+ *
+ * @method
+ *
+ * @param {Number | null | undefined} x The x dimension of the scale
+ * @param {Number | null | undefined} y The y dimension of the scale
+ * @param {Number | null | undefined} z The z dimension of the scale
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setScale = function setScale (x, y, z) {
+    this.vectors.scaleChanged = setVec(this.vectors.scale, x, y, z);
+};
+
+/**
+ * Gets the align value of the transform
+ *
+ * @method
+ *
+ * @return {Float32Array} the align value of the transform
+ */
+Transform.prototype.getAlign = function getAlign () {
+    return this.offsets.align;
+};
+
+/**
+ * Sets the align value of the transform.
+ *
+ * @method
+ *
+ * @param {Number | null | undefined} x The x dimension of the align
+ * @param {Number | null | undefined} y The y dimension of the align
+ * @param {Number | null | undefined} z The z dimension of the align
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setAlign = function setAlign (x, y, z) {
+    this.offsets.alignChanged = setVec(this.offsets.align, x, y, z != null ? z - 0.5 : z);
+};
+
+/**
+ * Gets the mount point value of the transform.
+ *
+ * @method
+ *
+ * @return {Float32Array} the mount point of the transform
+ */
+Transform.prototype.getMountPoint = function getMountPoint () {
+    return this.offsets.mountPoint;
+};
+
+/**
+ * Sets the mount point value of the transform.
+ *
+ * @method
+ *
+ * @param {Number | null | undefined} x the x dimension of the mount point
+ * @param {Number | null | undefined} y the y dimension of the mount point
+ * @param {Number | null | undefined} z the z dimension of the mount point
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setMountPoint = function setMountPoint (x, y, z) {
+    this.offsets.mountPointChanged = setVec(this.offsets.mountPoint, x, y, z != null ? z - 0.5 : z);
+};
+
+/**
+ * Gets the origin of the transform.
+ *
+ * @method
+ *
+ * @return {Float32Array} the origin
+ */
+Transform.prototype.getOrigin = function getOrigin () {
+    return this.offsets.origin;
+};
+
+/**
+ * Sets the origin of the transform.
+ *
+ * @method
+ *
+ * @param {Number | null | undefined} x the x dimension of the origin
+ * @param {Number | null | undefined} y the y dimension of the origin
+ * @param {Number | null | undefined} z the z dimension of the origin
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.setOrigin = function setOrigin (x, y, z) {
+    this.offsets.originChanged = setVec(this.offsets.origin, x, y, z != null ? z - 0.5 : z);
+};
+
+/**
+ * Calculates the world for this particular transform.
+ *
+ * @method
+ *
+ * @return {undefined} undefined
+ */
+Transform.prototype.calculateWorldMatrix = function calculateWorldMatrix () {
+    var nearestBreakPoint = this.parent;
+
+    while (nearestBreakPoint && !nearestBreakPoint.isBreakPoint())
+        nearestBreakPoint = nearestBreakPoint.parent;
+
+    if (nearestBreakPoint) return multiply(this.global, nearestBreakPoint.getWorldTransform(), this.local);
+    else {
+        for (var i = 0; i < 16 ; i++) this.global[i] = this.local[i];
+        return false;
+    }
+};
+
+
+/**
+ * Private function. Creates a transformation matrix from a Node's spec.
+ *
+ * @param {Node} node the node to create a transform for
+ * @param {Transform} transform transform to apply
+ *
+ * @return {Boolean} whether or not the target array was changed
+ */
+function fromNode (node, transform) {
+    var target = transform.getLocalTransform();
+    var mySize = node.getSize();
+    var vectors = transform.vectors;
+    var offsets = transform.offsets;
+    var parentSize = node.getParent().getSize();
+    var changed = 0;
+
+    var t00         = target[0];
+    var t01         = target[1];
+    var t02         = target[2];
+    var t10         = target[4];
+    var t11         = target[5];
+    var t12         = target[6];
+    var t20         = target[8];
+    var t21         = target[9];
+    var t22         = target[10];
+    var t30         = target[12];
+    var t31         = target[13];
+    var t32         = target[14];
+    var posX        = vectors.position[0];
+    var posY        = vectors.position[1];
+    var posZ        = vectors.position[2];
+    var rotX        = vectors.rotation[0];
+    var rotY        = vectors.rotation[1];
+    var rotZ        = vectors.rotation[2];
+    var rotW        = vectors.rotation[3];
+    var scaleX      = vectors.scale[0];
+    var scaleY      = vectors.scale[1];
+    var scaleZ      = vectors.scale[2];
+    var alignX      = offsets.align[0] * parentSize[0];
+    var alignY      = offsets.align[1] * parentSize[1];
+    var alignZ      = offsets.align[2] * parentSize[2];
+    var mountPointX = offsets.mountPoint[0] * mySize[0];
+    var mountPointY = offsets.mountPoint[1] * mySize[1];
+    var mountPointZ = offsets.mountPoint[2] * mySize[2];
+    var originX     = offsets.origin[0] * mySize[0];
+    var originY     = offsets.origin[1] * mySize[1];
+    var originZ     = offsets.origin[2] * mySize[2];
+
+    var wx = rotW * rotX;
+    var wy = rotW * rotY;
+    var wz = rotW * rotZ;
+    var xx = rotX * rotX;
+    var yy = rotY * rotY;
+    var zz = rotZ * rotZ;
+    var xy = rotX * rotY;
+    var xz = rotX * rotZ;
+    var yz = rotY * rotZ;
+
+    target[0] = (1 - 2 * (yy + zz)) * scaleX;
+    target[1] = (2 * (xy + wz)) * scaleX;
+    target[2] = (2 * (xz - wy)) * scaleX;
+    target[3] = 0;
+    target[4] = (2 * (xy - wz)) * scaleY;
+    target[5] = (1 - 2 * (xx + zz)) * scaleY;
+    target[6] = (2 * (yz + wx)) * scaleY;
+    target[7] = 0;
+    target[8] = (2 * (xz + wy)) * scaleZ;
+    target[9] = (2 * (yz - wx)) * scaleZ;
+    target[10] = (1 - 2 * (xx + yy)) * scaleZ;
+    target[11] = 0;
+    target[12] = alignX + posX - mountPointX + originX -
+                 (target[0] * originX + target[4] * originY + target[8] * originZ);
+    target[13] = alignY + posY - mountPointY + originY -
+                 (target[1] * originX + target[5] * originY + target[9] * originZ);
+    target[14] = alignZ + posZ - mountPointZ + originZ -
+                 (target[2] * originX + target[6] * originY + target[10] * originZ);
+    target[15] = 1;
+
+    if (transform.calculatingWorldMatrix && transform.calculateWorldMatrix())
+        changed |= Transform.WORLD_CHANGED;
+
+    if (t00 !== target[0] ||
+        t01 !== target[1] ||
+        t02 !== target[2] ||
+        t10 !== target[4] ||
+        t11 !== target[5] ||
+        t12 !== target[6] ||
+        t20 !== target[8] ||
+        t21 !== target[9] ||
+        t22 !== target[10] ||
+        t30 !== target[12] ||
+        t31 !== target[13] ||
+        t32 !== target[14]) changed |= Transform.LOCAL_CHANGED;
+
+    return changed;
+}
+
+/**
+ * Private function. Uses the parent transform, the node's spec, the node's size, and the parent's size
  * to calculate a final transform for the node. Returns true if the transform has changed.
  *
- * @param {Array} parentMatrix the parent matrix
- * @param {Node.Spec} spec the target node's spec
- * @param {Array} mySize the size of the node
- * @param {Array} parentSize the size of the parent
- * @param {Array} target the target array to write the resulting transform to
+ * @private
+ *
+ * @param {Node} node the node to create a transform for
+ * @param {Transform} transform transform to apply
  *
  * @return {Boolean} whether or not the transform changed
  */
-Transform.prototype.fromSpecWithParent = function fromSpecWithParent (parentMatrix, spec, mySize, parentSize, target) {
-    target = target ? target : this._matrix;
+function fromNodeWithParent (node, transform) {
+    var target = transform.getLocalTransform();
+    var parentMatrix = transform.parent.getLocalTransform();
+    var mySize = node.getSize();
+    var vectors = transform.vectors;
+    var offsets = transform.offsets;
+    var parentSize = node.getParent().getSize();
+    var changed = false;
 
     // local cache of everything
     var t00         = target[0];
@@ -5423,25 +6963,25 @@ Transform.prototype.fromSpecWithParent = function fromSpecWithParent (parentMatr
     var p30         = parentMatrix[12];
     var p31         = parentMatrix[13];
     var p32         = parentMatrix[14];
-    var posX        = spec.vectors.position[0];
-    var posY        = spec.vectors.position[1];
-    var posZ        = spec.vectors.position[2];
-    var rotX        = spec.vectors.rotation[0];
-    var rotY        = spec.vectors.rotation[1];
-    var rotZ        = spec.vectors.rotation[2];
-    var rotW        = spec.vectors.rotation[3];
-    var scaleX      = spec.vectors.scale[0];
-    var scaleY      = spec.vectors.scale[1];
-    var scaleZ      = spec.vectors.scale[2];
-    var alignX      = spec.offsets.align[0] * parentSize[0];
-    var alignY      = spec.offsets.align[1] * parentSize[1];
-    var alignZ      = spec.offsets.align[2] * parentSize[2];
-    var mountPointX = spec.offsets.mountPoint[0] * mySize[0];
-    var mountPointY = spec.offsets.mountPoint[1] * mySize[1];
-    var mountPointZ = spec.offsets.mountPoint[2] * mySize[2];
-    var originX     = spec.offsets.origin[0] * mySize[0];
-    var originY     = spec.offsets.origin[1] * mySize[1];
-    var originZ     = spec.offsets.origin[2] * mySize[2];
+    var posX        = vectors.position[0];
+    var posY        = vectors.position[1];
+    var posZ        = vectors.position[2];
+    var rotX        = vectors.rotation[0];
+    var rotY        = vectors.rotation[1];
+    var rotZ        = vectors.rotation[2];
+    var rotW        = vectors.rotation[3];
+    var scaleX      = vectors.scale[0];
+    var scaleY      = vectors.scale[1];
+    var scaleZ      = vectors.scale[2];
+    var alignX      = offsets.align[0] * parentSize[0];
+    var alignY      = offsets.align[1] * parentSize[1];
+    var alignZ      = offsets.align[2] * parentSize[2];
+    var mountPointX = offsets.mountPoint[0] * mySize[0];
+    var mountPointY = offsets.mountPoint[1] * mySize[1];
+    var mountPointZ = offsets.mountPoint[2] * mySize[2];
+    var originX     = offsets.origin[0] * mySize[0];
+    var originY     = offsets.origin[1] * mySize[1];
+    var originZ     = offsets.origin[2] * mySize[2];
 
     var wx = rotW * rotX;
     var wy = rotW * rotY;
@@ -5484,7 +7024,10 @@ Transform.prototype.fromSpecWithParent = function fromSpecWithParent (parentMatr
     target[14] = p02 * tx + p12 * ty + p22 * tz + p32;
     target[15] = 1;
 
-    return t00 !== target[0] ||
+    if (transform.calculatingWorldMatrix && transform.calculateWorldMatrix())
+        changed |= Transform.WORLD_CHANGED;
+
+    if (t00 !== target[0] ||
         t01 !== target[1] ||
         t02 !== target[2] ||
         t10 !== target[4] ||
@@ -5495,28 +7038,494 @@ Transform.prototype.fromSpecWithParent = function fromSpecWithParent (parentMatr
         t22 !== target[10] ||
         t30 !== target[12] ||
         t31 !== target[13] ||
-        t32 !== target[14];
+        t32 !== target[14]) changed |= Transform.LOCAL_CHANGED;
 
-};
+    return changed;
+}
+
+/**
+ * private method to multiply two transforms.
+ *
+ * @method
+ *
+ * @param {Array} out The array to write the result to
+ * @param {Array} a the left hand transform
+ * @param {Array} b the right hand transform
+ *
+ * @return {undefined} undefined
+ */
+function multiply (out, a, b) {
+    var a00 = a[0], a01 = a[1], a02 = a[2],
+        a10 = a[4], a11 = a[5], a12 = a[6],
+        a20 = a[8], a21 = a[9], a22 = a[10],
+        a30 = a[12], a31 = a[13], a32 = a[14];
+
+    var changed = false;
+    var res;
+
+    // Cache only the current line of the second matrix
+    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+
+    res = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    changed = changed ? changed : out[0] === res;
+    out[0] = res;
+
+    res = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    changed = changed ? changed : out[1] === res;
+    out[1] = res;
+
+    res = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    changed = changed ? changed : out[2] === res;
+    out[2] = res;
+
+    out[3] = 0;
+
+    b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+
+    res = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    changed = changed ? changed : out[4] === res;
+    out[4] = res;
+
+    res = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    changed = changed ? changed : out[5] === res;
+    out[5] = res;
+
+    res = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    changed = changed ? changed : out[6] === res;
+    out[6] = res;
+
+    out[7] = 0;
+
+    b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+
+    res = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    changed = changed ? changed : out[8] === res;
+    out[8] = res;
+
+    res = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    changed = changed ? changed : out[9] === res;
+    out[9] = res;
+
+    res = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    changed = changed ? changed : out[10] === res;
+    out[10] = res;
+
+    out[11] = 0;
+
+    b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+
+    res = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    changed = changed ? changed : out[12] === res;
+    out[12] = res;
+
+    res = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    changed = changed ? changed : out[13] === res;
+    out[13] = res;
+
+    res = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    changed = changed ? changed : out[14] === res;
+    out[14] = res;
+
+    out[15] = 1;
+
+    return changed;
+}
 
 module.exports = Transform;
 
-},{}],22:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2015 Famous Industries Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+'use strict';
+
+var PathUtils = require('./Path');
+var Transform = require('./Transform');
+var Dispatch = require('./Dispatch');
+var PathStore = require('./PathStore');
+
+/**
+ * The transform class is responsible for calculating the transform of a particular
+ * node from the data on the node and its parent
+ *
+ * @constructor {TransformSystem}
+ */
+function TransformSystem () {
+    this.pathStore = new PathStore();
+}
+
+/**
+ * registers a new Transform for the given path. This transform will be updated
+ * when the TransformSystem updates.
+ *
+ * @method registerTransformAtPath
+ * @return {undefined} undefined
+ *
+ * @param {String} path for the transform to be registered to.
+ * @param {Transform | undefined} transform optional transform to register.
+ */
+TransformSystem.prototype.registerTransformAtPath = function registerTransformAtPath (path, transform) {
+    if (!PathUtils.depth(path))
+        return this.pathStore.insert(path, transform ? transform : new Transform());
+
+    var parent = this.pathStore.get(PathUtils.parent(path));
+
+    if (!parent) throw new Error(
+            'No parent transform registered at expected path: ' + PathUtils.parent(path)
+    );
+
+    if (transform) transform.setParent(parent);
+
+    this.pathStore.insert(path, transform ? transform : new Transform(parent));
+};
+
+/**
+ * deregisters a transform registered at the given path.
+ *
+ * @method deregisterTransformAtPath
+ * @return {void}
+ *
+ * @param {String} path at which to register the transform
+ */
+TransformSystem.prototype.deregisterTransformAtPath = function deregisterTransformAtPath (path) {
+    this.pathStore.remove(path);
+};
+
+/**
+ * Method which will make the transform currently stored at the given path a breakpoint.
+ * A transform being a breakpoint means that both a local and world transform will be calculated
+ * for that point. The local transform being the concatinated transform of all ancestor transforms up
+ * until the nearest breakpoint, and the world being the concatinated transform of all ancestor transforms.
+ * This method throws if no transform is at the provided path.
+ *
+ * @method
+ *
+ * @param {String} path The path at which to turn the transform into a breakpoint
+ *
+ * @return {undefined} undefined
+ */
+TransformSystem.prototype.makeBreakPointAt = function makeBreakPointAt (path) {
+    var transform = this.pathStore.get(path);
+    if (!transform) throw new Error('No transform Registered at path: ' + path);
+    transform.setBreakPoint();
+};
+
+/**
+ * Method that will make the transform at this location calculate a world matrix.
+ *
+ * @method
+ *
+ * @param {String} path The path at which to make the transform calculate a world matrix
+ *
+ * @return {undefined} undefined
+ */
+TransformSystem.prototype.makeCalculateWorldMatrixAt = function makeCalculateWorldMatrixAt (path) {
+        var transform = this.pathStore.get(path);
+        if (!transform) throw new Error('No transform Registered at path: ' + path);
+        transform.setCalculateWorldMatrix();
+};
+
+/**
+ * Returns the instance of the transform class associated with the given path,
+ * or undefined if no transform is associated.
+ *
+ * @method
+ *
+ * @param {String} path The path to lookup
+ *
+ * @return {Transform | undefined} the transform at that path is available, else undefined.
+ */
+TransformSystem.prototype.get = function get (path) {
+    return this.pathStore.get(path);
+};
+
+/**
+ * update is called when the transform system requires an update.
+ * It traverses the transform array and evaluates the necessary transforms
+ * in the scene graph with the information from the corresponding node
+ * in the scene graph
+ *
+ * @method update
+ *
+ * @return {undefined} undefined
+ */
+TransformSystem.prototype.update = function update () {
+    var transforms = this.pathStore.getItems();
+    var paths = this.pathStore.getPaths();
+    var transform;
+    var changed;
+    var node;
+    var vectors;
+    var offsets;
+    var components;
+
+    for (var i = 0, len = transforms.length ; i < len ; i++) {
+        node = Dispatch.getNode(paths[i]);
+        if (!node) continue;
+        components = node.getComponents();
+        transform = transforms[i];
+        vectors = transform.vectors;
+        offsets = transform.offsets;
+        if (offsets.alignChanged) alignChanged(node, components, offsets);
+        if (offsets.mountPointChanged) mountPointChanged(node, components, offsets);
+        if (offsets.originChanged) originChanged(node, components, offsets);
+        if (vectors.positionChanged) positionChanged(node, components, vectors);
+        if (vectors.rotationChanged) rotationChanged(node, components, vectors);
+        if (vectors.scaleChanged) scaleChanged(node, components, vectors);
+        if ((changed = transform.calculate(node))) {
+            transformChanged(node, components, transform);
+            if (changed & Transform.LOCAL_CHANGED) localTransformChanged(node, components, transform.getLocalTransform());
+            if (changed & Transform.WORLD_CHANGED) worldTransformChanged(node, components, transform.getWorldTransform());
+        }
+    }
+};
+
+// private methods
+
+/**
+ * Private method to call when align changes. Triggers 'onAlignChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to call onAlignChange if necessary
+ * @param {Array} components the components on which to call onAlignChange if necessary
+ * @param {Object} offsets the set of offsets from the transform
+ *
+ * @return {undefined} undefined
+ */
+function alignChanged (node, components, offsets) {
+    var x = offsets.align[0];
+    var y = offsets.align[1];
+    var z = offsets.align[2];
+    if (node.onAlignChange) node.onAlignChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onAlignChange)
+            components[i].onAlignChange(x, y, z);
+    offsets.alignChanged = false;
+}
+
+/**
+ * Private method to call when MountPoint changes. Triggers 'onMountPointChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Object} offsets the set of offsets from the transform
+ *
+ * @return {undefined} undefined
+ */
+function mountPointChanged (node, components, offsets) {
+    var x = offsets.mountPoint[0];
+    var y = offsets.mountPoint[1];
+    var z = offsets.mountPoint[2];
+    if (node.onMountPointChange) node.onMountPointChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onMountPointChange)
+            components[i].onMountPointChange(x, y, z);
+    offsets.mountPointChanged = false;
+}
+
+/**
+ * Private method to call when Origin changes. Triggers 'onOriginChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Object} offsets the set of offsets from the transform
+ *
+ * @return {undefined} undefined
+ */
+function originChanged (node, components, offsets) {
+    var x = offsets.origin[0];
+    var y = offsets.origin[1];
+    var z = offsets.origin[2];
+    if (node.onOriginChange) node.onOriginChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onOriginChange)
+            components[i].onOriginChange(x, y, z);
+    offsets.originChanged = false;
+}
+
+/**
+ * Private method to call when Position changes. Triggers 'onPositionChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Object} vectors the set of vectors from the transform
+ *
+ * @return {undefined} undefined
+ */
+function positionChanged (node, components, vectors) {
+    var x = vectors.position[0];
+    var y = vectors.position[1];
+    var z = vectors.position[2];
+    if (node.onPositionChange) node.onPositionChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onPositionChange)
+            components[i].onPositionChange(x, y, z);
+    vectors.positionChanged = false;
+}
+
+/**
+ * Private method to call when Rotation changes. Triggers 'onRotationChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Object} vectors the set of vectors from the transform
+ *
+ * @return {undefined} undefined
+ */
+function rotationChanged (node, components, vectors) {
+    var x = vectors.rotation[0];
+    var y = vectors.rotation[1];
+    var z = vectors.rotation[2];
+    var w = vectors.rotation[3];
+    if (node.onRotationChange) node.onRotationChange(x, y, z, w);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onRotationChange)
+            components[i].onRotationChange(x, y, z, w);
+    vectors.rotationChanged = false;
+}
+
+/**
+ * Private method to call when Scale changes. Triggers 'onScaleChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Object} vectors the set of vectors from the transform
+ *
+ * @return {undefined} undefined
+ */
+function scaleChanged (node, components, vectors) {
+    var x = vectors.scale[0];
+    var y = vectors.scale[1];
+    var z = vectors.scale[2];
+    if (node.onScaleChange) node.onScaleChange(x, y, z);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onScaleChange)
+            components[i].onScaleChange(x, y, z);
+    vectors.scaleChanged = false;
+}
+
+/**
+ * Private method to call when either the Local or World Transform changes.
+ * Triggers 'onTransformChange' methods on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Transform} transform the transform class that changed
+ *
+ * @return {undefined} undefined
+ */
+function transformChanged (node, components, transform) {
+    if (node.onTransformChange) node.onTransformChange(transform);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onTransformChange)
+            components[i].onTransformChange(transform);
+}
+
+/**
+ * Private method to call when the local transform changes. Triggers 'onLocalTransformChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Array} transform the local transform
+ *
+ * @return {undefined} undefined
+ */
+function localTransformChanged (node, components, transform) {
+    if (node.onLocalTransformChange) node.onLocalTransformChange(transform);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onLocalTransformChange)
+            components[i].onLocalTransformChange(transform);
+}
+
+/**
+ * Private method to call when the world transform changes. Triggers 'onWorldTransformChange' methods
+ * on the node and all of the node's components
+ *
+ * @method
+ * @private
+ *
+ * @param {Node} node the node on which to trigger a change event if necessary
+ * @param {Array} components the components on which to trigger a change event if necessary
+ * @param {Array} transform the world transform
+ *
+ * @return {undefined} undefined
+ */
+function worldTransformChanged (node, components, transform) {
+    if (node.onWorldTransformChange) node.onWorldTransformChange(transform);
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onWorldTransformChange)
+            components[i].onWorldTransformChange(transform);
+}
+
+module.exports = new TransformSystem();
+
+},{"./Dispatch":16,"./Path":20,"./PathStore":21,"./Transform":25}],27:[function(require,module,exports){
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Famous Industries Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -5529,17 +7538,23 @@ module.exports = Transform;
 'use strict';
 
 module.exports = {
+    Channel: require('./Channel'),
     Clock: require('./Clock'),
-    Event: require('./Event'),
-    Scene: require('./Scene'),
-    FamousEngine: require('./FamousEngine'),
+    Commands: require('./Commands'),
     Dispatch: require('./Dispatch'),
+    Event: require('./Event'),
+    FamousEngine: require('./FamousEngine'),
     Node: require('./Node'),
+    Path: require('./Path'),
+    PathStore: require('./PathStore'),
+    Scene: require('./Scene'),
     Size: require('./Size'),
-    Transform: require('./Transform')
+    SizeSystem: require('./SizeSystem'),
+    Transform: require('./Transform'),
+    TransformSystem: require('./TransformSystem')
 };
 
-},{"./Clock":14,"./Dispatch":15,"./Event":16,"./FamousEngine":17,"./Node":18,"./Scene":19,"./Size":20,"./Transform":21}],23:[function(require,module,exports){
+},{"./Channel":13,"./Clock":14,"./Commands":15,"./Dispatch":16,"./Event":17,"./FamousEngine":18,"./Node":19,"./Path":20,"./PathStore":21,"./Scene":22,"./Size":23,"./SizeSystem":24,"./Transform":25,"./TransformSystem":26}],28:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5567,8 +7582,9 @@ module.exports = {
 'use strict';
 
 var CallbackStore = require('../utilities/CallbackStore');
-
-var RENDER_SIZE = 2;
+var TransformSystem = require('../core/TransformSystem');
+var Commands = require('../core/Commands');
+var Size = require('../core/Size');
 
 /**
  * A DOMElement is a component that can be added to a Node with the
@@ -5596,31 +7612,30 @@ var RENDER_SIZE = 2;
 function DOMElement(node, options) {
     if (!node) throw new Error('DOMElement must be instantiated on a node');
 
-    this._node = node;
+    this._changeQueue = [];
 
     this._requestingUpdate = false;
     this._renderSized = false;
     this._requestRenderSize = false;
-
-    this._changeQueue = [];
 
     this._UIEvents = node.getUIEvents().slice(0);
     this._classes = ['famous-dom-element'];
     this._requestingEventListeners = [];
     this._styles = {};
 
-    this.setProperty('display', node.isShown() ? 'none' : 'block');
-    this.onOpacityChange(node.getOpacity());
-
     this._attributes = {};
     this._content = '';
 
     this._tagName = options && options.tagName ? options.tagName : 'div';
-    this._id = node.addComponent(this);
-
     this._renderSize = [0, 0, 0];
 
+    this._node = node;
+    if (node) node.addComponent(this);
+
     this._callbacks = new CallbackStore();
+
+    this.setProperty('display', node.isShown() ? 'block' : 'none');
+    this.onOpacityChange(node.getOpacity());
 
     if (!options) return;
 
@@ -5673,18 +7688,18 @@ DOMElement.prototype.getValue = function getValue() {
  *
  * @return {undefined} undefined
  */
-DOMElement.prototype.onUpdate = function onUpdate() {
+DOMElement.prototype.onUpdate = function onUpdate () {
     var node = this._node;
     var queue = this._changeQueue;
     var len = queue.length;
 
     if (len && node) {
-        node.sendDrawCommand('WITH');
+        node.sendDrawCommand(Commands.WITH);
         node.sendDrawCommand(node.getLocation());
 
         while (len--) node.sendDrawCommand(queue.shift());
         if (this._requestRenderSize) {
-            node.sendDrawCommand('DOM_RENDER_SIZE');
+            node.sendDrawCommand(Commands.DOM_RENDER_SIZE);
             node.sendDrawCommand(node.getLocation());
             this._requestRenderSize = false;
         }
@@ -5711,6 +7726,8 @@ DOMElement.prototype.onMount = function onMount(node, id) {
     this._node = node;
     this._id = id;
     this._UIEvents = node.getUIEvents().slice(0);
+    TransformSystem.makeBreakPointAt(node.getLocation());
+    this.onSizeModeChange.apply(this, node.getSizeMode());
     this.draw();
     this.setAttribute('data-fa-path', node.getLocation());
 };
@@ -5726,6 +7743,9 @@ DOMElement.prototype.onMount = function onMount(node, id) {
 DOMElement.prototype.onDismount = function onDismount() {
     this.setProperty('display', 'none');
     this.setAttribute('data-fa-path', '');
+    this.setCutoutState(false);
+
+    this.onUpdate();
     this._initialized = false;
 };
 
@@ -5757,19 +7777,20 @@ DOMElement.prototype.onHide = function onHide() {
 
 /**
  * Enables or disables WebGL 'cutout' for this element, which affects
- * how the element is layered with WebGL objects in the scene.  This is designed
- * mainly as a way to acheive
+ * how the element is layered with WebGL objects in the scene.
  *
  * @method
  *
  * @param {Boolean} usesCutout  The presence of a WebGL 'cutout' for this element.
  *
- * @return {undefined} undefined
+ * @return {DOMElement} this
  */
-DOMElement.prototype.setCutoutState = function setCutoutState(usesCutout) {
-    this._changeQueue.push('GL_CUTOUT_STATE', usesCutout);
+DOMElement.prototype.setCutoutState = function setCutoutState (usesCutout) {
+    if (this._initialized)
+        this._changeQueue.push(Commands.GL_CUTOUT_STATE, usesCutout);
 
-    if (this._initialized) this._requestUpdate();
+    if (!this._requestingUpdate) this._requestUpdate();
+    return this;
 };
 
 /**
@@ -5784,11 +7805,13 @@ DOMElement.prototype.setCutoutState = function setCutoutState(usesCutout) {
  * @return {undefined} undefined
  */
 DOMElement.prototype.onTransformChange = function onTransformChange (transform) {
-    this._changeQueue.push('CHANGE_TRANSFORM');
+    this._changeQueue.push(Commands.CHANGE_TRANSFORM);
+    transform = transform.getLocalTransform();
+
     for (var i = 0, len = transform.length ; i < len ; i++)
         this._changeQueue.push(transform[i]);
 
-    this.onUpdate();
+    if (!this._requestingUpdate) this._requestUpdate();
 };
 
 /**
@@ -5796,18 +7819,19 @@ DOMElement.prototype.onTransformChange = function onTransformChange (transform) 
  *
  * @method
  *
- * @param {Float32Array} size Size of the Node in pixels
+ * @param {Number} x width of the Node the DOMElement is attached to
+ * @param {Number} y height of the Node the DOMElement is attached to
  *
  * @return {DOMElement} this
  */
-DOMElement.prototype.onSizeChange = function onSizeChange(size) {
+DOMElement.prototype.onSizeChange = function onSizeChange(x, y) {
     var sizeMode = this._node.getSizeMode();
-    var sizedX = sizeMode[0] !== RENDER_SIZE;
-    var sizedY = sizeMode[1] !== RENDER_SIZE;
+    var sizedX = sizeMode[0] !== Size.RENDER;
+    var sizedY = sizeMode[1] !== Size.RENDER;
     if (this._initialized)
-        this._changeQueue.push('CHANGE_SIZE',
-            sizedX ? size[0] : sizedX,
-            sizedY ? size[1] : sizedY);
+        this._changeQueue.push(Commands.CHANGE_SIZE,
+            sizedX ? x : sizedX,
+            sizedY ? y : sizedY);
 
     if (!this._requestingUpdate) this._requestUpdate();
     return this;
@@ -5830,23 +7854,99 @@ DOMElement.prototype.onOpacityChange = function onOpacityChange(opacity) {
  * Method to be invoked by the node as soon as a new UIEvent is being added.
  * This results into an `ADD_EVENT_LISTENER` command being sent.
  *
- * @param {String} UIEvent UIEvent to be subscribed to (e.g. `click`)
+ * @param {String} uiEvent uiEvent to be subscribed to (e.g. `click`)
  *
  * @return {undefined} undefined
  */
-DOMElement.prototype.onAddUIEvent = function onAddUIEvent(UIEvent) {
-    if (this._UIEvents.indexOf(UIEvent) === -1) {
-        this._subscribe(UIEvent);
-        this._UIEvents.push(UIEvent);
+DOMElement.prototype.onAddUIEvent = function onAddUIEvent(uiEvent) {
+    if (this._UIEvents.indexOf(uiEvent) === -1) {
+        this._subscribe(uiEvent);
+        this._UIEvents.push(uiEvent);
     }
     else if (this._inDraw) {
-        this._subscribe(UIEvent);
+        this._subscribe(uiEvent);
     }
     return this;
 };
 
 /**
- * Appends an `ADD_EVENT_LISTENER` command to the command queue.
+ * Method to be invoked by the node as soon as a UIEvent is removed from
+ * the node.  This results into an `UNSUBSCRIBE` command being sent.
+ *
+ * @param {String} UIEvent UIEvent to be removed (e.g. `mousedown`)
+ *
+ * @return {undefined} undefined
+ */
+DOMElement.prototype.onRemoveUIEvent = function onRemoveUIEvent(UIEvent) {
+    var index = this._UIEvents.indexOf(UIEvent);
+    if (index !== -1) {
+        this._unsubscribe(UIEvent);
+        this._UIEvents.splice(index, 1);
+    }
+    else if (this._inDraw) {
+        this._unsubscribe(UIEvent);
+    }
+    return this;
+};
+
+/**
+ * Appends an `SUBSCRIBE` command to the command queue.
+ *
+ * @method
+ * @private
+ *
+ * @param {String} uiEvent Event type (e.g. `click`)
+ *
+ * @return {undefined} undefined
+ */
+DOMElement.prototype._subscribe = function _subscribe (uiEvent) {
+    if (this._initialized) {
+        this._changeQueue.push(Commands.SUBSCRIBE, uiEvent);
+    }
+
+    if (!this._requestingUpdate) this._requestUpdate();
+};
+
+/**
+ * When running in a worker, the browser's default action for specific events
+ * can't be prevented on a case by case basis (via `e.preventDefault()`).
+ * Instead this function should be used to register an event to be prevented by
+ * default.
+ *
+ * @method
+ *
+ * @param  {String} uiEvent     UI Event (e.g. wheel) for which to prevent the
+ *                              browser's default action (e.g. form submission,
+ *                              scrolling)
+ * @return {undefined}          undefined
+ */
+DOMElement.prototype.preventDefault = function preventDefault (uiEvent) {
+    if (this._initialized) {
+        this._changeQueue.push(Commands.PREVENT_DEFAULT, uiEvent);
+    }
+    if (!this._requestingUpdate) this._requestUpdate();
+};
+
+/**
+ * Opposite of {@link DOMElement#preventDefault}. No longer prevent the
+ * browser's default action on subsequent events of this type.
+ *
+ * @method
+ *
+ * @param  {type} uiEvent       UI Event previously registered using
+ *                              {@link DOMElement#preventDefault}.
+ * @return {undefined}          undefined
+ */
+DOMElement.prototype.allowDefault = function allowDefault (uiEvent) {
+    if (this._initialized) {
+        this._changeQueue.push(Commands.ALLOW_DEFAULT, uiEvent);
+    }
+
+    if (!this._requestingUpdate) this._requestUpdate();
+};
+
+/**
+ * Appends an `UNSUBSCRIBE` command to the command queue.
  *
  * @method
  * @private
@@ -5855,10 +7955,11 @@ DOMElement.prototype.onAddUIEvent = function onAddUIEvent(UIEvent) {
  *
  * @return {undefined} undefined
  */
-DOMElement.prototype._subscribe = function _subscribe (UIEvent) {
+DOMElement.prototype._unsubscribe = function _unsubscribe (UIEvent) {
     if (this._initialized) {
-        this._changeQueue.push('SUBSCRIBE', UIEvent, true);
+        this._changeQueue.push(Commands.UNSUBSCRIBE, UIEvent);
     }
+
     if (!this._requestingUpdate) this._requestUpdate();
 };
 
@@ -5876,11 +7977,12 @@ DOMElement.prototype._subscribe = function _subscribe (UIEvent) {
  * @return {undefined} undefined
  */
 DOMElement.prototype.onSizeModeChange = function onSizeModeChange(x, y, z) {
-    if (x === RENDER_SIZE || y === RENDER_SIZE || z === RENDER_SIZE) {
+    if (x === Size.RENDER || y === Size.RENDER || z === Size.RENDER) {
         this._renderSized = true;
         this._requestRenderSize = true;
     }
-    this.onSizeChange(this._node.getSize());
+    var size = this._node.getSize();
+    this.onSizeChange(size[0], size[1]);
 };
 
 /**
@@ -5904,7 +8006,7 @@ DOMElement.prototype.getRenderSize = function getRenderSize() {
  * @return {undefined} undefined
  */
 DOMElement.prototype._requestUpdate = function _requestUpdate() {
-    if (!this._requestingUpdate) {
+    if (!this._requestingUpdate && this._id) {
         this._node.requestUpdate(this._id);
         this._requestingUpdate = true;
     }
@@ -5918,11 +8020,12 @@ DOMElement.prototype._requestUpdate = function _requestUpdate() {
  *
  * @return {undefined} undefined
  */
-DOMElement.prototype.init = function init() {
-    this._changeQueue.push('INIT_DOM', this._tagName);
+DOMElement.prototype.init = function init () {
+    this._changeQueue.push(Commands.INIT_DOM, this._tagName);
     this._initialized = true;
-    this.onTransformChange(this._node.getTransform());
-    this.onSizeChange(this._node.getSize());
+    this.onTransformChange(TransformSystem.get(this._node.getLocation()));
+    var size = this._node.getSize();
+    this.onSizeChange(size[0], size[1]);
     if (!this._requestingUpdate) this._requestUpdate();
 };
 
@@ -5952,7 +8055,7 @@ DOMElement.prototype.setId = function setId (id) {
  */
 DOMElement.prototype.addClass = function addClass (value) {
     if (this._classes.indexOf(value) < 0) {
-        if (this._initialized) this._changeQueue.push('ADD_CLASS', value);
+        if (this._initialized) this._changeQueue.push(Commands.ADD_CLASS, value);
         this._classes.push(value);
         if (!this._requestingUpdate) this._requestUpdate();
         if (this._renderSized) this._requestRenderSize = true;
@@ -5960,7 +8063,7 @@ DOMElement.prototype.addClass = function addClass (value) {
     }
 
     if (this._inDraw) {
-        if (this._initialized) this._changeQueue.push('ADD_CLASS', value);
+        if (this._initialized) this._changeQueue.push(Commands.ADD_CLASS, value);
         if (!this._requestingUpdate) this._requestUpdate();
     }
     return this;
@@ -5980,7 +8083,7 @@ DOMElement.prototype.removeClass = function removeClass (value) {
 
     if (index < 0) return this;
 
-    this._changeQueue.push('REMOVE_CLASS', value);
+    this._changeQueue.push(Commands.REMOVE_CLASS, value);
 
     this._classes.splice(index, 1);
 
@@ -6015,7 +8118,7 @@ DOMElement.prototype.hasClass = function hasClass (value) {
 DOMElement.prototype.setAttribute = function setAttribute (name, value) {
     if (this._attributes[name] !== value || this._inDraw) {
         this._attributes[name] = value;
-        if (this._initialized) this._changeQueue.push('CHANGE_ATTRIBUTE', name, value);
+        if (this._initialized) this._changeQueue.push(Commands.CHANGE_ATTRIBUTE, name, value);
         if (!this._requestUpdate) this._requestUpdate();
     }
 
@@ -6035,7 +8138,7 @@ DOMElement.prototype.setAttribute = function setAttribute (name, value) {
 DOMElement.prototype.setProperty = function setProperty (name, value) {
     if (this._styles[name] !== value || this._inDraw) {
         this._styles[name] = value;
-        if (this._initialized) this._changeQueue.push('CHANGE_PROPERTY', name, value);
+        if (this._initialized) this._changeQueue.push(Commands.CHANGE_PROPERTY, name, value);
         if (!this._requestingUpdate) this._requestUpdate();
         if (this._renderSized) this._requestRenderSize = true;
     }
@@ -6056,7 +8159,7 @@ DOMElement.prototype.setProperty = function setProperty (name, value) {
 DOMElement.prototype.setContent = function setContent (content) {
     if (this._content !== content || this._inDraw) {
         this._content = content;
-        if (this._initialized) this._changeQueue.push('CHANGE_CONTENT', content);
+        if (this._initialized) this._changeQueue.push(Commands.CHANGE_CONTENT, content);
         if (!this._requestingUpdate) this._requestUpdate();
         if (this._renderSized) this._requestRenderSize = true;
     }
@@ -6128,11 +8231,11 @@ DOMElement.prototype.draw = function draw() {
     if (this._content) this.setContent(this._content);
 
     for (key in this._styles)
-        if (this._styles[key])
+        if (this._styles[key] != null)
             this.setProperty(key, this._styles[key]);
 
     for (key in this._attributes)
-        if (this._attributes[key])
+        if (this._attributes[key] != null)
             this.setAttribute(key, this._attributes[key]);
 
     for (i = 0, len = this._UIEvents.length ; i < len ; i++)
@@ -6143,7 +8246,7 @@ DOMElement.prototype.draw = function draw() {
 
 module.exports = DOMElement;
 
-},{"../utilities/CallbackStore":90}],24:[function(require,module,exports){
+},{"../core/Commands":15,"../core/Size":23,"../core/TransformSystem":26,"../utilities/CallbackStore":94}],29:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -6174,7 +8277,7 @@ module.exports = {
     DOMElement: require('./DOMElement')
 };
 
-},{"./DOMElement":23}],25:[function(require,module,exports){
+},{"./DOMElement":28}],30:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -6203,7 +8306,9 @@ module.exports = {
 
 var ElementCache = require('./ElementCache');
 var math = require('./Math');
+var PathUtils = require('../core/Path');
 var vendorPrefix = require('../utilities/vendorPrefix');
+var CallbackStore = require('../utilities/CallbackStore');
 var eventMap = require('./events/EventMap');
 
 var TRANSFORM = null;
@@ -6244,6 +8349,9 @@ function DOMRenderer (element, selector, compositor) {
     this._children = []; // a register for holding the children of the
                          // current target.
 
+     this._insertElCallbackStore = new CallbackStore();
+     this._removeElCallbackStore = new CallbackStore();
+
     this._root = new ElementCache(element, selector); // the root
                                                       // of the dom tree that this
                                                       // renderer is responsible
@@ -6262,7 +8370,7 @@ function DOMRenderer (element, selector, compositor) {
     this.perspectiveTransform = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
     this._VPtransform = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
-    this._size = [null, null];
+    this._lastEv = null;
 }
 
 
@@ -6281,20 +8389,83 @@ function DOMRenderer (element, selector, compositor) {
  *
  * @return {undefined} undefined
  */
-DOMRenderer.prototype.subscribe = function subscribe(type, preventDefault) {
-    // TODO preventDefault should be a separate command
+DOMRenderer.prototype.subscribe = function subscribe(type) {
     this._assertTargetLoaded();
-
-    this._target.preventDefault[type] = preventDefault;
+    this._listen(type);
     this._target.subscribe[type] = true;
+};
+
+/**
+ * Used to preventDefault if an event of the specified type is being emitted on
+ * the currently loaded target.
+ *
+ * @method
+ *
+ * @param  {String} type    The type of events that should be prevented.
+ * @return {undefined}      undefined
+ */
+DOMRenderer.prototype.preventDefault = function preventDefault(type) {
+    this._assertTargetLoaded();
+    this._listen(type);
+    this._target.preventDefault[type] = true;
+};
+
+/**
+ * Used to undo a previous call to preventDefault. No longer `preventDefault`
+ * for this event on the loaded target.
+ *
+ * @method
+ * @private
+ *
+ * @param  {String} type    The event type that should no longer be affected by
+ *                          `preventDefault`.
+ * @return {undefined}      undefined
+ */
+DOMRenderer.prototype.allowDefault = function allowDefault(type) {
+    this._assertTargetLoaded();
+    this._listen(type);
+    this._target.preventDefault[type] = false;
+};
+
+/**
+ * Internal helper function used for adding an event listener for the the
+ * currently loaded ElementCache.
+ *
+ * If the event can be delegated as specified in the {@link EventMap}, the
+ * bound {@link _triggerEvent} function will be added as a listener on the
+ * root element. Otherwise, the listener will be added directly to the target
+ * element.
+ *
+ * @private
+ * @method
+ *
+ * @param  {String} type    The event type to listen to (e.g. click).
+ * @return {undefined}      undefined
+ */
+DOMRenderer.prototype._listen = function _listen(type) {
+    this._assertTargetLoaded();
 
     if (
         !this._target.listeners[type] && !this._root.listeners[type]
     ) {
+        // FIXME Add to content DIV if available
         var target = eventMap[type][1] ? this._root : this._target;
         target.listeners[type] = this._boundTriggerEvent;
         target.element.addEventListener(type, this._boundTriggerEvent);
     }
+};
+
+/**
+ * Unsubscribes from all events that are of the specified type.
+ *
+ * @method
+ *
+ * @param {String} type DOM event type (e.g. click, mouseover).
+ * @return {undefined} undefined
+ */
+DOMRenderer.prototype.unsubscribe = function unsubscribe(type) {
+    this._assertTargetLoaded();
+    this._target.subscribe[type] = false;
 };
 
 /**
@@ -6309,6 +8480,8 @@ DOMRenderer.prototype.subscribe = function subscribe(type, preventDefault) {
  * @return {undefined} undefined
  */
 DOMRenderer.prototype._triggerEvent = function _triggerEvent(ev) {
+    if (this._lastEv === ev) return;
+
     // Use ev.path, which is an array of Elements (polyfilled if needed).
     var evPath = ev.path ? ev.path : _getPath(ev);
     // First element in the path is the element on which the event has actually
@@ -6320,17 +8493,17 @@ DOMRenderer.prototype._triggerEvent = function _triggerEvent(ev) {
         var path = evPath[i].dataset.faPath;
         if (!path) continue;
 
+        // Optionally preventDefault. This needs forther consideration and
+        // should be optional. Eventually this should be a separate command/
+        // method.
+        if (this._elements[path].preventDefault[ev.type]) {
+            ev.preventDefault();
+        }
+
         // Stop further event propogation and path traversal as soon as the
         // first ElementCache subscribing for the emitted event has been found.
         if (this._elements[path] && this._elements[path].subscribe[ev.type]) {
-            ev.stopPropagation();
-
-            // Optionally preventDefault. This needs forther consideration and
-            // should be optional. Eventually this should be a separate command/
-            // method.
-            if (this._elements[path].preventDefault[ev.type]) {
-                ev.preventDefault();
-            }
+            this._lastEv = ev;
 
             var NormalizedEventConstructor = eventMap[ev.type][0];
 
@@ -6373,24 +8546,6 @@ function _getPath(ev) {
     }
     return path;
 }
-
-
-/**
- * Determines the size of the context by querying the DOM for `offsetWidth` and
- * `offsetHeight`.
- *
- * @method
- *
- * @return {Array} Offset size.
- */
-DOMRenderer.prototype.getSize = function getSize() {
-    this._size[0] = this._root.element.offsetWidth;
-    this._size[1] = this._root.element.offsetHeight;
-    return this._size;
-};
-
-DOMRenderer.prototype._getSize = DOMRenderer.prototype.getSize;
-
 
 /**
  * Executes the retrieved draw commands. Draw commands only refer to the
@@ -6504,55 +8659,11 @@ DOMRenderer.prototype.findParent = function findParent () {
     return parent;
 };
 
-
-/**
- * Finds all children of the currently loaded element.
- *
- * @method
- * @private
- *
- * @param {Array} array Output-Array used for writing to (subsequently appending children)
- *
- * @return {Array} array of children elements
- */
-DOMRenderer.prototype.findChildren = function findChildren(array) {
-    // TODO: Optimize me.
-    this._assertPathLoaded();
-
-    var path = this._path + '/';
-    var keys = Object.keys(this._elements);
-    var i = 0;
-    var len;
-    array = array ? array : this._children;
-
-    this._children.length = 0;
-
-    while (i < keys.length) {
-        if (keys[i].indexOf(path) === -1 || keys[i] === path) keys.splice(i, 1);
-        else i++;
-    }
-    var currentPath;
-    var j = 0;
-    for (i = 0 ; i < keys.length ; i++) {
-        currentPath = keys[i];
-        for (j = 0 ; j < keys.length ; j++) {
-            if (i !== j && keys[j].indexOf(currentPath) !== -1) {
-                keys.splice(j, 1);
-                i--;
-            }
-        }
-    }
-    for (i = 0, len = keys.length ; i < len ; i++)
-        array[i] = this._elements[keys[i]];
-
-    return array;
-};
-
-
 /**
  * Used for determining the target loaded under the current path.
  *
  * @method
+ * @deprecated
  *
  * @return {ElementCache|undefined} Element loaded under defined path.
  */
@@ -6561,9 +8672,8 @@ DOMRenderer.prototype.findTarget = function findTarget() {
     return this._target;
 };
 
-
 /**
- * Loads the passed in path.
+ * Loads the passed in path into the DOMRenderer.
  *
  * @method
  *
@@ -6573,9 +8683,40 @@ DOMRenderer.prototype.findTarget = function findTarget() {
  */
 DOMRenderer.prototype.loadPath = function loadPath (path) {
     this._path = path;
+    this._target = this._elements[this._path];
     return this._path;
 };
 
+/**
+ * Finds children of a parent element that are descendents of a inserted element in the scene
+ * graph. Appends those children to the inserted element.
+ *
+ * @method resolveChildren
+ * @return {void}
+ *
+ * @param {HTMLElement} element the inserted element
+ * @param {HTMLElement} parent the parent of the inserted element
+ */
+DOMRenderer.prototype.resolveChildren = function resolveChildren (element, parent) {
+    var i = 0;
+    var childNode;
+    var path = this._path;
+    var childPath;
+
+    while ((childNode = parent.childNodes[i])) {
+        if (!childNode.dataset) {
+            i++;
+            continue;
+        }
+        childPath = childNode.dataset.faPath;
+        if (!childPath) {
+            i++;
+            continue;
+        }
+        if (PathUtils.isDescendentOf(childPath, path)) element.appendChild(childNode);
+        else i++;
+    }
+};
 
 /**
  * Inserts a DOMElement at the currently loaded path, assuming no target is
@@ -6592,20 +8733,31 @@ DOMRenderer.prototype.insertEl = function insertEl (tagName) {
         this._target.element.tagName.toLowerCase() !== tagName.toLowerCase()) {
 
         this.findParent();
-        this.findChildren();
 
         this._assertParentLoaded();
-        this._assertChildrenLoaded();
 
-        if (this._target) this._parent.element.removeChild(this._target.element);
+        if (this._parent.void)
+            throw new Error(
+                this._parent.path + ' is a void element. ' +
+                'Void elements are not allowed to have children.'
+            );
+
+        if (this._target) {
+            this._parent.element.removeChild(this._target.element);
+            this._removeElCallbackStore.trigger(this._path, this._target);
+        }
 
         this._target = new ElementCache(document.createElement(tagName), this._path);
+
+        var el = this._target.element;
+        var parent = this._parent.element;
+
+        this.resolveChildren(el, parent);
+
         this._parent.element.appendChild(this._target.element);
         this._elements[this._path] = this._target;
 
-        for (var i = 0, len = this._children.length ; i < len ; i++) {
-            this._target.element.appendChild(this._children[i].element);
-        }
+        this._insertElCallbackStore.trigger(this._path, this._target);
     }
 };
 
@@ -6631,6 +8783,9 @@ DOMRenderer.prototype.setProperty = function setProperty (name, value) {
  * Removes any explicit sizing constraints when passed in `false`
  * ("true-sizing").
  *
+ * Invoking setSize is equivalent to a manual invocation of `setWidth` followed
+ * by `setHeight`.
+ *
  * @method
  *
  * @param {Number|false} width   Width to be set.
@@ -6646,13 +8801,15 @@ DOMRenderer.prototype.setSize = function setSize (width, height) {
 };
 
 /**
- * Sets the width of the currently loaded target.
- * Removes any explicit sizing constraints when passed in `false`
- * ("true-sizing").
+ * Sets the width of the currently loaded ElementCache.
  *
  * @method
  *
- * @param {Number|false} width Width to be set.
+ * @param  {Number|false} width     The explicit width to be set on the
+ *                                  ElementCache's target (and content) element.
+ *                                  `false` removes any explicit sizing
+ *                                  constraints from the underlying DOM
+ *                                  Elements.
  *
  * @return {undefined} undefined
  */
@@ -6677,13 +8834,15 @@ DOMRenderer.prototype.setWidth = function setWidth(width) {
 };
 
 /**
- * Sets the height of the currently loaded target.
- * Removes any explicit sizing constraints when passed in `false`
- * ("true-sizing").
+ * Sets the height of the currently loaded ElementCache.
  *
- * @method
+ * @method  setHeight
  *
- * @param {Number|false} height Height to be set.
+ * @param  {Number|false} height    The explicit height to be set on the
+ *                                  ElementCache's target (and content) element.
+ *                                  `false` removes any explicit sizing
+ *                                  constraints from the underlying DOM
+ *                                  Elements.
  *
  * @return {undefined} undefined
  */
@@ -6733,17 +8892,22 @@ DOMRenderer.prototype.setAttribute = function setAttribute(name, value) {
  */
 DOMRenderer.prototype.setContent = function setContent(content) {
     this._assertTargetLoaded();
-    this.findChildren();
 
-    if (!this._target.content) {
-        this._target.content = document.createElement('div');
-        this._target.content.classList.add('famous-dom-element-content');
-        this._target.element.insertBefore(
-            this._target.content,
-            this._target.element.firstChild
-        );
+    if (this._target.formElement) {
+        this._target.element.value = content;
     }
-    this._target.content.innerHTML = content;
+    else {
+        if (!this._target.content) {
+            this._target.content = document.createElement('div');
+            this._target.content.classList.add('famous-dom-element-content');
+            this._target.element.insertBefore(
+                this._target.content,
+                this._target.element.firstChild
+            );
+        }
+        this._target.content.innerHTML = content;
+    }
+
 
     this.setSize(
         this._target.explicitWidth ? false : this._target.size[0],
@@ -6762,42 +8926,9 @@ DOMRenderer.prototype.setContent = function setContent(content) {
  *
  * @return {undefined} undefined
  */
-DOMRenderer.prototype.setMatrix = function setMatrix(transform) {
-    // TODO Don't multiply matrics in the first place.
+DOMRenderer.prototype.setMatrix = function setMatrix (transform) {
     this._assertTargetLoaded();
-    this.findParent();
-    var worldTransform = this._target.worldTransform;
-    var changed = false;
-
-    var i;
-    var len;
-
-    if (transform)
-        for (i = 0, len = 16 ; i < len ; i++) {
-            changed = changed ? changed : worldTransform[i] === transform[i];
-            worldTransform[i] = transform[i];
-        }
-    else changed = true;
-
-    if (changed) {
-        math.invert(this._target.invertedParent, this._parent.worldTransform);
-        math.multiply(this._target.finalTransform, this._target.invertedParent, worldTransform);
-
-        // TODO: this is a temporary fix for draw commands
-        // coming in out of order
-        var children = this.findChildren([]);
-        var previousPath = this._path;
-        var previousTarget = this._target;
-        for (i = 0, len = children.length ; i < len ; i++) {
-            this._target = children[i];
-            this._path = this._target.path;
-            this.setMatrix();
-        }
-        this._path = previousPath;
-        this._target = previousTarget;
-    }
-
-    this._target.element.style[TRANSFORM] = this._stringifyMatrix(this._target.finalTransform);
+    this._target.element.style[TRANSFORM] = this._stringifyMatrix(transform);
 };
 
 
@@ -6864,24 +8995,89 @@ DOMRenderer.prototype._stringifyMatrix = function _stringifyMatrix(m) {
     return r;
 };
 
+/**
+ * Registers a function to be executed when a new element is being inserted at
+ * the specified path.
+ *
+ * @method
+ *
+ * @param  {String}   path      Path at which to listen for element insertion.
+ * @param  {Function} callback  Function to be executed when an insertion
+ *                              occurs.
+ * @return {DOMRenderer}        this
+ */
+DOMRenderer.prototype.onInsertEl = function onInsertEl(path, callback) {
+    this._insertElCallbackStore.on(path, callback);
+    return this;
+};
+
+/**
+ * Deregisters a listener function to be no longer executed on future element
+ * insertions at the specified path.
+ *
+ * @method
+ *
+ * @param  {String}   path      Path at which the listener function has been
+ *                              registered.
+ * @param  {Function} callback  Callback function to be deregistered.
+ * @return {DOMRenderer}        this
+ */
+DOMRenderer.prototype.offInsertEl = function offInsertEl(path, callback) {
+    this._insertElCallbackStore.off(path, callback);
+    return this;
+};
+
+/**
+ * Registers an event handler to be triggered as soon as an element at the
+ * specified path is being removed.
+ *
+ * @method
+ *
+ * @param  {String}   path      Path at which to listen for the removal of an
+ *                              element.
+ * @param  {Function} callback  Function to be executed when an element is
+ *                              being removed at the specified path.
+ * @return {DOMRenderer}        this
+ */
+DOMRenderer.prototype.onRemoveEl = function onRemoveEl(path, callback) {
+    this._removeElCallbackStore.on(path, callback);
+    return this;
+};
+
+/**
+ * Deregisters a listener function to be no longer executed when an element is
+ * being removed from the specified path.
+ *
+ * @method
+ *
+ * @param  {String}   path      Path at which the listener function has been
+ *                              registered.
+ * @param  {Function} callback  Callback function to be deregistered.
+ * @return {DOMRenderer}        this
+ */
+DOMRenderer.prototype.offRemoveEl = function offRemoveEl(path, callback) {
+    this._removeElCallbackStore.off(path, callback);
+    return this;
+};
+
 module.exports = DOMRenderer;
 
-},{"../utilities/vendorPrefix":100,"./ElementCache":26,"./Math":27,"./events/EventMap":30}],26:[function(require,module,exports){
+},{"../core/Path":20,"../utilities/CallbackStore":94,"../utilities/vendorPrefix":104,"./ElementCache":31,"./Math":32,"./events/EventMap":36}],31:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2015 Famous Industries Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -6893,35 +9089,36 @@ module.exports = DOMRenderer;
 
 'use strict';
 
-// Transform identity matrix. 
-var ident = [
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-];
+var VoidElements = require('./VoidElements');
 
 /**
  * ElementCache is being used for keeping track of an element's DOM Element,
  * path, world transform, inverted parent, final transform (as being used for
  * setting the actual `transform`-property) and post render size (final size as
  * being rendered to the DOM).
- * 
+ *
  * @class ElementCache
- *  
+ *
  * @param {Element} element DOMElement
- * @param {String} path Path used for uniquely identifying the location in the scene graph.
- */ 
+ * @param {String} path Path used for uniquely identifying the location in the
+ *                      scene graph.
+ */
 function ElementCache (element, path) {
+    this.tagName = element.tagName.toLowerCase();
+    this.void = VoidElements[this.tagName];
+
+    var constructor = element.constructor;
+
+    this.formElement = constructor === HTMLInputElement ||
+        constructor === HTMLTextAreaElement ||
+        constructor === HTMLSelectElement;
+
     this.element = element;
     this.path = path;
     this.content = null;
     this.size = new Int16Array(3);
     this.explicitHeight = false;
     this.explicitWidth = false;
-    this.worldTransform = new Float32Array(ident);
-    this.invertedParent = new Float32Array(ident);
-    this.finalTransform = new Float32Array(ident);
     this.postRenderSize = new Float32Array(2);
     this.listeners = {};
     this.preventDefault = {};
@@ -6930,7 +9127,7 @@ function ElementCache (element, path) {
 
 module.exports = ElementCache;
 
-},{}],27:[function(require,module,exports){
+},{"./VoidElements":33}],32:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7116,7 +9313,60 @@ module.exports = {
     invert: invert
 };
 
-},{}],28:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Famous Industries Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+'use strict';
+
+/**
+ * Map of void elements as defined by the
+ * [HTML5 spec](http://www.w3.org/TR/html5/syntax.html#elements-0).
+ *
+ * @type {Object}
+ */
+var VoidElements = {
+    area  : true,
+    base  : true,
+    br    : true,
+    col   : true,
+    embed : true,
+    hr    : true,
+    img   : true,
+    input : true,
+    keygen: true,
+    link  : true,
+    meta  : true,
+    param : true,
+    source: true,
+    track : true,
+    wbr   : true
+};
+
+module.exports = VoidElements;
+
+},{}],34:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7184,7 +9434,7 @@ CompositionEvent.prototype.toString = function toString () {
 
 module.exports = CompositionEvent;
 
-},{"./UIEvent":36}],29:[function(require,module,exports){
+},{"./UIEvent":42}],35:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7304,7 +9554,7 @@ Event.prototype.toString = function toString () {
 
 module.exports = Event;
 
-},{}],30:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7377,6 +9627,7 @@ var EventMap = {
     mouseout                       : [MouseEvent, true],
     mouseover                      : [MouseEvent, true],
     mouseup                        : [MouseEvent, true],
+    contextMenu                    : [MouseEvent, true],
     resize                         : [UIEvent, false],
 
     // might bubble
@@ -7395,7 +9646,7 @@ var EventMap = {
 
 module.exports = EventMap;
 
-},{"./CompositionEvent":28,"./Event":29,"./FocusEvent":31,"./InputEvent":32,"./KeyboardEvent":33,"./MouseEvent":34,"./TouchEvent":35,"./UIEvent":36,"./WheelEvent":37}],31:[function(require,module,exports){
+},{"./CompositionEvent":34,"./Event":35,"./FocusEvent":37,"./InputEvent":38,"./KeyboardEvent":39,"./MouseEvent":40,"./TouchEvent":41,"./UIEvent":42,"./WheelEvent":43}],37:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7457,7 +9708,7 @@ FocusEvent.prototype.toString = function toString () {
 
 module.exports = FocusEvent;
 
-},{"./UIEvent":36}],32:[function(require,module,exports){
+},{"./UIEvent":42}],38:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7548,7 +9799,7 @@ InputEvent.prototype.toString = function toString () {
 
 module.exports = InputEvent;
 
-},{"./UIEvent":36}],33:[function(require,module,exports){
+},{"./UIEvent":42}],39:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7709,7 +9960,7 @@ KeyboardEvent.prototype.toString = function toString () {
 
 module.exports = KeyboardEvent;
 
-},{"./UIEvent":36}],34:[function(require,module,exports){
+},{"./UIEvent":42}],40:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7879,7 +10130,7 @@ MouseEvent.prototype.toString = function toString () {
 
 module.exports = MouseEvent;
 
-},{"./UIEvent":36}],35:[function(require,module,exports){
+},{"./UIEvent":42}],41:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -8077,7 +10328,7 @@ TouchEvent.prototype.toString = function toString () {
 
 module.exports = TouchEvent;
 
-},{"./UIEvent":36}],36:[function(require,module,exports){
+},{"./UIEvent":42}],42:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -8145,7 +10396,7 @@ UIEvent.prototype.toString = function toString () {
 
 module.exports = UIEvent;
 
-},{"./Event":29}],37:[function(require,module,exports){
+},{"./Event":35}],43:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -8256,7 +10507,7 @@ WheelEvent.prototype.toString = function toString () {
 
 module.exports = WheelEvent;
 
-},{"./MouseEvent":34}],38:[function(require,module,exports){
+},{"./MouseEvent":40}],44:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -8297,22 +10548,22 @@ module.exports = {
 };
 
 
-},{"./CompositionEvent":28,"./Event":29,"./EventMap":30,"./FocusEvent":31,"./InputEvent":32,"./KeyboardEvent":33,"./MouseEvent":34,"./TouchEvent":35,"./UIEvent":36,"./WheelEvent":37}],39:[function(require,module,exports){
+},{"./CompositionEvent":34,"./Event":35,"./EventMap":36,"./FocusEvent":37,"./InputEvent":38,"./KeyboardEvent":39,"./MouseEvent":40,"./TouchEvent":41,"./UIEvent":42,"./WheelEvent":43}],45:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2015 Famous Industries Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -8328,10 +10579,11 @@ module.exports = {
     DOMRenderer: require('./DOMRenderer'),
     ElementCache: require('./ElementCache'),
     Events: require('./events'),
-    Math: require('./Math')
+    Math: require('./Math'),
+    VoidElements: require('./VoidElements')
 };
 
-},{"./DOMRenderer":25,"./ElementCache":26,"./Math":27,"./events":38}],40:[function(require,module,exports){
+},{"./DOMRenderer":30,"./ElementCache":31,"./Math":32,"./VoidElements":33,"./events":44}],46:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -8375,7 +10627,7 @@ module.exports = {
     polyfills: require('./polyfills')
 };
 
-},{"./components":12,"./core":22,"./dom-renderables":24,"./dom-renderers":39,"./math":45,"./physics":75,"./polyfills":77,"./render-loops":80,"./renderers":85,"./transitions":89,"./utilities":96,"./webgl-geometries":105,"./webgl-materials":119,"./webgl-renderables":121,"./webgl-renderers":134,"./webgl-shaders":136}],41:[function(require,module,exports){
+},{"./components":12,"./core":27,"./dom-renderables":29,"./dom-renderers":45,"./math":51,"./physics":79,"./polyfills":81,"./render-loops":84,"./renderers":89,"./transitions":93,"./utilities":100,"./webgl-geometries":109,"./webgl-materials":123,"./webgl-renderables":125,"./webgl-renderers":138,"./webgl-shaders":140}],47:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -8867,7 +11119,7 @@ Mat33.multiply = function multiply(matrix1, matrix2, output) {
 
 module.exports = Mat33;
 
-},{}],42:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9417,7 +11669,7 @@ Quaternion.dot = function dot(q1, q2) {
 
 module.exports = Quaternion;
 
-},{}],43:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9788,7 +12040,7 @@ Vec2.cross = function(v1,v2) {
 
 module.exports = Vec2;
 
-},{}],44:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10396,7 +12648,7 @@ Vec3.project = function project(v1, v2, output) {
 
 module.exports = Vec3;
 
-},{}],45:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -10429,29 +12681,7 @@ module.exports = {
 };
 
 
-},{"./Mat33":41,"./Quaternion":42,"./Vec2":43,"./Vec3":44}],46:[function(require,module,exports){
-module.exports = noop
-
-function noop() {
-  throw new Error(
-      'You should bundle your code ' +
-      'using `glslify` as a transform.'
-  )
-}
-
-},{}],47:[function(require,module,exports){
-module.exports = programify
-
-function programify(vertex, fragment, uniforms, attributes) {
-  return {
-    vertex: vertex, 
-    fragment: fragment,
-    uniforms: uniforms, 
-    attributes: attributes
-  };
-}
-
-},{}],48:[function(require,module,exports){
+},{"./Mat33":47,"./Quaternion":48,"./Vec2":49,"./Vec3":50}],52:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -11252,7 +13482,7 @@ module.exports = {
     ConvexHull: ConvexHull
 };
 
-},{"../math/Mat33":41,"../math/Vec3":44,"../utilities/ObjectManager":93}],49:[function(require,module,exports){
+},{"../math/Mat33":47,"../math/Vec3":50,"../utilities/ObjectManager":97}],53:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -11752,7 +13982,7 @@ function _integratePose(body, dt) {
 
 module.exports = PhysicsEngine;
 
-},{"../math/Quaternion":42,"../math/Vec3":44,"../utilities/CallbackStore":90,"./bodies/Particle":51,"./constraints/Constraint":58,"./forces/Force":69}],50:[function(require,module,exports){
+},{"../math/Quaternion":48,"../math/Vec3":50,"../utilities/CallbackStore":94,"./bodies/Particle":55,"./constraints/Constraint":62,"./forces/Force":73}],54:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -11818,7 +14048,7 @@ Box.prototype.constructor = Box;
 
 module.exports = Box;
 
-},{"../../math/Vec3":44,"./convexBodyFactory":54}],51:[function(require,module,exports){
+},{"../../math/Vec3":50,"./convexBodyFactory":58}],55:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12322,7 +14552,7 @@ Particle.prototype.updateShape = function updateShape() {};
 
 module.exports = Particle;
 
-},{"../../math/Mat33":41,"../../math/Quaternion":42,"../../math/Vec3":44,"../../utilities/CallbackStore":90}],52:[function(require,module,exports){
+},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"../../utilities/CallbackStore":94}],56:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12444,7 +14674,7 @@ Sphere.prototype.support = function support(direction) {
  */
 module.exports = Sphere;
 
-},{"../../math/Vec3":44,"./Particle":51}],53:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Particle":55}],57:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12533,7 +14763,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{"../../math/Vec3":44,"./Particle":51}],54:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Particle":55}],58:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12788,7 +15018,7 @@ function _computeInertiaProperties(T) {
 
 module.exports = convexBodyFactory;
 
-},{"../../math/Mat33":41,"../../math/Vec3":44,"../Geometry":48,"./Particle":51}],55:[function(require,module,exports){
+},{"../../math/Mat33":47,"../../math/Vec3":50,"../Geometry":52,"./Particle":55}],59:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12912,7 +15142,7 @@ Angle.prototype.resolve = function update() {
 
 module.exports = Angle;
 
-},{"../../math/Mat33":41,"../../math/Vec3":44,"./Constraint":58}],56:[function(require,module,exports){
+},{"../../math/Mat33":47,"../../math/Vec3":50,"./Constraint":62}],60:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13083,7 +15313,7 @@ BallAndSocket.prototype.resolve = function resolve() {
 
 module.exports = BallAndSocket;
 
-},{"../../math/Mat33":41,"../../math/Quaternion":42,"../../math/Vec3":44,"./Constraint":58}],57:[function(require,module,exports){
+},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Constraint":62}],61:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13493,7 +15723,7 @@ Collision.BruteForceAABB = BruteForce.BruteForceAABB;
 
 module.exports = Collision;
 
-},{"../../math/Vec3":44,"../../utilities/ObjectManager":93,"./Constraint":58,"./collision/BruteForce":64,"./collision/ContactManifold":65,"./collision/ConvexCollisionDetection":66,"./collision/SweepAndPrune":67}],58:[function(require,module,exports){
+},{"../../math/Vec3":50,"../../utilities/ObjectManager":97,"./Constraint":62,"./collision/BruteForce":68,"./collision/ContactManifold":69,"./collision/ConvexCollisionDetection":70,"./collision/SweepAndPrune":71}],62:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13579,7 +15809,7 @@ Constraint.prototype.resolve = function resolve(time, dt) {};
 
 module.exports = Constraint;
 
-},{}],59:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13780,7 +16010,7 @@ Curve.prototype.resolve = function resolve() {
 
 module.exports = Curve;
 
-},{"../../math/Vec3":44,"./Constraint":58}],60:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Constraint":62}],64:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13960,7 +16190,7 @@ Direction.prototype.resolve = function update() {
 
 module.exports = Direction;
 
-},{"../../math/Vec3":44,"./Constraint":58}],61:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Constraint":62}],65:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14137,7 +16367,7 @@ Distance.prototype.resolve = function resolve() {
 
 module.exports = Distance;
 
-},{"../../math/Vec3":44,"./Constraint":58}],62:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Constraint":62}],66:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14389,7 +16619,7 @@ Hinge.prototype.resolve = function resolve() {
 
 module.exports = Hinge;
 
-},{"../../math/Mat33":41,"../../math/Quaternion":42,"../../math/Vec3":44,"./Constraint":58}],63:[function(require,module,exports){
+},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Constraint":62}],67:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14561,7 +16791,7 @@ AABB.vertexThreshold = 100;
 
 module.exports = AABB;
 
-},{}],64:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14679,7 +16909,7 @@ BruteForce.prototype.update = function update() {
 module.exports.BruteForceAABB = BruteForceAABB;
 module.exports.BruteForce = BruteForce;
 
-},{"./AABB":63}],65:[function(require,module,exports){
+},{"./AABB":67}],69:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15278,7 +17508,7 @@ Contact.prototype.resolve = function resolve() {
 
 module.exports = ContactManifoldTable;
 
-},{"../../../math/Vec3":44,"../../../utilities/ObjectManager":93}],66:[function(require,module,exports){
+},{"../../../math/Vec3":50,"../../../utilities/ObjectManager":97}],70:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15504,7 +17734,7 @@ function epa(body1, body2, polytope) {
 module.exports.gjk = gjk;
 module.exports.epa = epa;
 
-},{"../../../math/Vec3":44,"../../../utilities/ObjectManager":93}],67:[function(require,module,exports){
+},{"../../../math/Vec3":50,"../../../utilities/ObjectManager":97}],71:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15748,7 +17978,7 @@ SweepVolume.prototype.update = function() {
 
 module.exports = SweepAndPrune;
 
-},{"./AABB":63}],68:[function(require,module,exports){
+},{"./AABB":67}],72:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15857,7 +18087,7 @@ Drag.prototype.update = function update() {
 
 module.exports = Drag;
 
-},{"../../math/Vec3":44,"./Force":69}],69:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Force":73}],73:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15963,7 +18193,7 @@ Force.prototype.update = function update(time, dt) {};
 
 module.exports = Force;
 
-},{}],70:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16086,7 +18316,7 @@ Gravity1D.prototype.update = function() {
 
 module.exports = Gravity1D;
 
-},{"../../math/Vec3":44,"./Force":69}],71:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Force":73}],75:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16182,7 +18412,7 @@ Gravity3D.prototype.update = function() {
 
 module.exports = Gravity3D;
 
-},{"../../math/Vec3":44,"./Force":69}],72:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Force":73}],76:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16287,7 +18517,7 @@ RotationalDrag.prototype.update = function update() {
 
 module.exports = RotationalDrag;
 
-},{"../../math/Vec3":44,"./Force":69}],73:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Force":73}],77:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16431,7 +18661,7 @@ RotationalSpring.prototype.update = function update() {
 
 module.exports = RotationalSpring;
 
-},{"../../math/Mat33":41,"../../math/Quaternion":42,"../../math/Vec3":44,"./Force":69}],74:[function(require,module,exports){
+},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Force":73}],78:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16597,7 +18827,7 @@ Spring.prototype.update = function() {
 
 module.exports = Spring;
 
-},{"../../math/Vec3":44,"./Force":69}],75:[function(require,module,exports){
+},{"../../math/Vec3":50,"./Force":73}],79:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16652,7 +18882,7 @@ module.exports = {
     Geometry: require('./Geometry')
 };
 
-},{"./Geometry":48,"./PhysicsEngine":49,"./bodies/Box":50,"./bodies/Particle":51,"./bodies/Sphere":52,"./bodies/Wall":53,"./bodies/convexBodyFactory":54,"./constraints/Angle":55,"./constraints/BallAndSocket":56,"./constraints/Collision":57,"./constraints/Constraint":58,"./constraints/Curve":59,"./constraints/Direction":60,"./constraints/Distance":61,"./constraints/Hinge":62,"./forces/Drag":68,"./forces/Force":69,"./forces/Gravity1D":70,"./forces/Gravity3D":71,"./forces/RotationalDrag":72,"./forces/RotationalSpring":73,"./forces/Spring":74}],76:[function(require,module,exports){
+},{"./Geometry":52,"./PhysicsEngine":53,"./bodies/Box":54,"./bodies/Particle":55,"./bodies/Sphere":56,"./bodies/Wall":57,"./bodies/convexBodyFactory":58,"./constraints/Angle":59,"./constraints/BallAndSocket":60,"./constraints/Collision":61,"./constraints/Constraint":62,"./constraints/Curve":63,"./constraints/Direction":64,"./constraints/Distance":65,"./constraints/Hinge":66,"./forces/Drag":72,"./forces/Force":73,"./forces/Gravity1D":74,"./forces/Gravity3D":75,"./forces/RotationalDrag":76,"./forces/RotationalSpring":77,"./forces/Spring":78}],80:[function(require,module,exports){
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 // requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
@@ -16737,7 +18967,7 @@ var animationFrame = {
 
 module.exports = animationFrame;
 
-},{}],77:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -16769,7 +18999,7 @@ module.exports = {
     cancelAnimationFrame: require('./animationFrame').cancelAnimationFrame
 };
 
-},{"./animationFrame":76}],78:[function(require,module,exports){
+},{"./animationFrame":80}],82:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -16930,7 +19160,7 @@ ContainerLoop.prototype.noLongerUpdate = function noLongerUpdate(updateable) {
 
 module.exports = ContainerLoop;
 
-},{"./now":81}],79:[function(require,module,exports){
+},{"./now":85}],83:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17242,7 +19472,7 @@ RequestAnimationFrameLoop.prototype.noLongerUpdate = function noLongerUpdate(upd
 
 module.exports = RequestAnimationFrameLoop;
 
-},{"../polyfills":77}],80:[function(require,module,exports){
+},{"../polyfills":81}],84:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -17275,7 +19505,7 @@ module.exports = {
     now: require('./now')
 };
 
-},{"./ContainerLoop":78,"./RequestAnimationFrameLoop":79,"./now":81}],81:[function(require,module,exports){
+},{"./ContainerLoop":82,"./RequestAnimationFrameLoop":83,"./now":85}],85:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17308,7 +19538,7 @@ var now = (window.performance && window.performance.now) ? function() {
 
 module.exports = now;
 
-},{}],82:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17337,6 +19567,7 @@ module.exports = now;
 
 var Context = require('./Context');
 var injectCSS = require('./inject-css');
+var Commands = require('../core/Commands');
 
 /**
  * Instantiates a new Compositor.
@@ -17362,9 +19593,16 @@ function Compositor() {
 
     var _this = this;
     window.addEventListener('resize', function() {
-        _this._resized = true;
+        _this.onResize();
     });
 }
+
+Compositor.prototype.onResize = function onResize () {
+    this._resized = true;
+    for (var selector in this._contexts) {
+        this._contexts[selector].updateSize();
+    }
+};
 
 /**
  * Retrieves the time being used by the internal clock managed by
@@ -17398,7 +19636,7 @@ Compositor.prototype.getTime = function getTime() {
  * @return {undefined} undefined
  */
 Compositor.prototype.sendEvent = function sendEvent(path, ev, payload) {
-    this._outCommands.push('WITH', path, 'TRIGGER', ev, payload);
+    this._outCommands.push(Commands.WITH, path, Commands.TRIGGER, ev, payload);
 };
 
 /**
@@ -17444,10 +19682,9 @@ Compositor.prototype.handleWith = function handleWith (iterator, commands) {
  * query selector. If no such Context exists, a new one will be instantiated.
  *
  * @method
- * @private
  *
  * @param  {String} selector document query selector used for retrieving the
- * DOM node the VirtualElement should be attached to
+ * DOM node that should be used as a root element by the Context
  *
  * @return {Context} context
  */
@@ -17463,21 +19700,17 @@ Compositor.prototype.getOrSetContext = function getOrSetContext(selector) {
 };
 
 /**
- * Internal helper method used by `drawCommands`.
+ * Retrieves a context object registered under the passed in selector.
  *
  * @method
- * @private
  *
- * @param  {Number} iterator position index within the command queue
- * @param  {Array} commands remaining message queue received, used to
- * shift single messages
- *
- * @return {undefined} undefined
+ * @param  {String} selector    Query selector that has previously been used to
+ *                              register the context.
+ * @return {Context}            The repsective context.
  */
-Compositor.prototype.giveSizeFor = function giveSizeFor(iterator, commands) {
-    var selector = commands[iterator];
-    var size = this.getOrSetContext(selector).getRootSize();
-    this.sendResize(selector, size);
+Compositor.prototype.getContext = function getContext(selector) {
+    if (this._contexts[selector])
+        return this._contexts[selector];
 };
 
 /**
@@ -17495,13 +19728,13 @@ Compositor.prototype.drawCommands = function drawCommands() {
     var command = commands[localIterator];
     while (command) {
         switch (command) {
-            case 'TIME':
+            case Commands.TIME:
                 this._time = commands[++localIterator];
                 break;
-            case 'WITH':
+            case Commands.WITH:
                 localIterator = this.handleWith(++localIterator, commands);
                 break;
-            case 'NEED_SIZE_FOR':
+            case Commands.NEED_SIZE_FOR:
                 this.giveSizeFor(++localIterator, commands);
                 break;
         }
@@ -17554,6 +19787,28 @@ Compositor.prototype.receiveCommands = function receiveCommands(commands) {
     for (var i = 0; i < len; i++) {
         this._inCommands.push(commands[i]);
     }
+
+    for (var selector in this._contexts) {
+        this._contexts[selector].checkInit();
+    }
+};
+
+/**
+ * Internal helper method used by `drawCommands`.
+ *
+ * @method
+ * @private
+ *
+ * @param  {Number} iterator position index within the command queue
+ * @param  {Array} commands remaining message queue received, used to
+ * shift single messages
+ *
+ * @return {undefined} undefined
+ */
+Compositor.prototype.giveSizeFor = function giveSizeFor(iterator, commands) {
+    var selector = commands[iterator];
+    var size = this.getOrSetContext(selector).getRootSize();
+    this.sendResize(selector, size);
 };
 
 /**
@@ -17572,7 +19827,7 @@ Compositor.prototype.clearCommands = function clearCommands() {
 
 module.exports = Compositor;
 
-},{"./Context":83,"./inject-css":86}],83:[function(require,module,exports){
+},{"../core/Commands":15,"./Context":87,"./inject-css":90}],87:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17602,6 +19857,7 @@ module.exports = Compositor;
 var WebGLRenderer = require('../webgl-renderers/WebGLRenderer');
 var Camera = require('../components/Camera');
 var DOMRenderer = require('../dom-renderers/DOMRenderer');
+var Commands = require('../core/Commands');
 
 /**
  * Context is a render layer with its own WebGLRenderer and DOMRenderer.
@@ -17621,26 +19877,29 @@ var DOMRenderer = require('../dom-renderers/DOMRenderer');
  * context layer.
  * @param {Compositor} compositor Compositor reference to pass down to
  * WebGLRenderer.
- *
- * @return {undefined} undefined
  */
 function Context(selector, compositor) {
     this._compositor = compositor;
     this._rootEl = document.querySelector(selector);
+    this._selector = selector;
+
+    if (this._rootEl === null) {
+        throw new Error(
+            'Failed to create Context: ' +
+            'No matches for "' + selector + '" found.'
+        );
+    }
 
     this._selector = selector;
 
-    // Create DOM element to be used as root for all famous DOM
-    // rendering and append element to the root element.
+    // Initializes the DOMRenderer.
+    // Every Context has at least a DOMRenderer for now.
+    this._initDOMRenderer();
 
-    var DOMLayerEl = document.createElement('div');
-    this._rootEl.appendChild(DOMLayerEl);
-
-    // Instantiate renderers
-
-    this.DOMRenderer = new DOMRenderer(DOMLayerEl, selector, compositor);
-    this.WebGLRenderer = null;
-    this.canvas = null;
+    // WebGLRenderer will be instantiated when needed.
+    this._webGLRenderer = null;
+    this._domRenderer = new DOMRenderer(this._domRendererRootEl, selector, compositor);
+    this._canvasEl = null;
 
     // State holders
 
@@ -17653,26 +19912,36 @@ function Context(selector, compositor) {
     };
 
     this._size = [];
-    this._children = {};
-    this._elementHash = {};
 
-    this._meshTransform = [];
+    this._meshTransform = new Float32Array(16);
     this._meshSize = [0, 0, 0];
+
+    this._initDOM = false;
+
+    this._commandCallbacks = [];
+    this.initCommandCallbacks();
+
+    this.updateSize();
 }
 
 /**
  * Queries DOMRenderer size and updates canvas size. Relays size information to
  * WebGLRenderer.
  *
+ * @method
+ *
  * @return {Context} this
  */
 Context.prototype.updateSize = function () {
-    var newSize = this.DOMRenderer.getSize();
-    this._compositor.sendResize(this._selector, newSize);
+    var width = this._rootEl.offsetWidth;
+    var height = this._rootEl.offsetHeight;
 
-    if (this.canvas && this.WebGLRenderer) {
-        this.WebGLRenderer.updateSize(newSize);
-    }
+    this._size[0] = width;
+    this._size[1] = height;
+    this._size[2] = (width > height) ? width : height;
+
+    this._compositor.sendResize(this._selector, this._size);
+    if (this._webGLRenderer) this._webGLRenderer.updateSize(this._size);
 
     return this;
 };
@@ -17686,11 +19955,90 @@ Context.prototype.updateSize = function () {
  * @return {undefined} undefined
  */
 Context.prototype.draw = function draw() {
-    this.DOMRenderer.draw(this._renderState);
-    if (this.WebGLRenderer) this.WebGLRenderer.draw(this._renderState);
+    this._domRenderer.draw(this._renderState);
+    if (this._webGLRenderer) this._webGLRenderer.draw(this._renderState);
 
     if (this._renderState.perspectiveDirty) this._renderState.perspectiveDirty = false;
     if (this._renderState.viewDirty) this._renderState.viewDirty = false;
+};
+
+/**
+ * Initializes the DOMRenderer by creating a root DIV element and appending it
+ * to the context.
+ *
+ * @method
+ * @private
+ *
+ * @return {undefined} undefined
+ */
+Context.prototype._initDOMRenderer = function _initDOMRenderer() {
+    this._domRendererRootEl = document.createElement('div');
+    this._rootEl.appendChild(this._domRendererRootEl);
+    this._domRendererRootEl.style.visibility = 'hidden';
+
+    this._domRenderer = new DOMRenderer(
+        this._domRendererRootEl,
+        this._selector,
+        this._compositor
+    );
+};
+
+Context.prototype.initCommandCallbacks = function initCommandCallbacks () {
+    this._commandCallbacks[Commands.INIT_DOM] = initDOM;
+    this._commandCallbacks[Commands.DOM_RENDER_SIZE] = domRenderSize;
+    this._commandCallbacks[Commands.CHANGE_TRANSFORM] = changeTransform;
+    this._commandCallbacks[Commands.CHANGE_SIZE] = changeSize;
+    this._commandCallbacks[Commands.CHANGE_PROPERTY] = changeProperty;
+    this._commandCallbacks[Commands.CHANGE_CONTENT] = changeContent;
+    this._commandCallbacks[Commands.CHANGE_ATTRIBUTE] = changeAttribute;
+    this._commandCallbacks[Commands.ADD_CLASS] = addClass;
+    this._commandCallbacks[Commands.REMOVE_CLASS] = removeClass;
+    this._commandCallbacks[Commands.SUBSCRIBE] = subscribe;
+    this._commandCallbacks[Commands.UNSUBSCRIBE] = unsubscribe;
+    this._commandCallbacks[Commands.GL_SET_DRAW_OPTIONS] = glSetDrawOptions;
+    this._commandCallbacks[Commands.GL_AMBIENT_LIGHT] = glAmbientLight;
+    this._commandCallbacks[Commands.GL_LIGHT_POSITION] = glLightPosition;
+    this._commandCallbacks[Commands.GL_LIGHT_COLOR] = glLightColor;
+    this._commandCallbacks[Commands.MATERIAL_INPUT] = materialInput;
+    this._commandCallbacks[Commands.GL_SET_GEOMETRY] = glSetGeometry;
+    this._commandCallbacks[Commands.GL_UNIFORMS] = glUniforms;
+    this._commandCallbacks[Commands.GL_BUFFER_DATA] = glBufferData;
+    this._commandCallbacks[Commands.GL_CUTOUT_STATE] = glCutoutState;
+    this._commandCallbacks[Commands.GL_MESH_VISIBILITY] = glMeshVisibility;
+    this._commandCallbacks[Commands.GL_REMOVE_MESH] = glRemoveMesh;
+    this._commandCallbacks[Commands.PINHOLE_PROJECTION] = pinholeProjection;
+    this._commandCallbacks[Commands.ORTHOGRAPHIC_PROJECTION] = orthographicProjection;
+    this._commandCallbacks[Commands.CHANGE_VIEW_TRANSFORM] = changeViewTransform;
+    this._commandCallbacks[Commands.PREVENT_DEFAULT] = preventDefault;
+    this._commandCallbacks[Commands.ALLOW_DEFAULT] = allowDefault;
+    this._commandCallbacks[Commands.READY] = ready;
+};
+
+/**
+ * Initializes the WebGLRenderer and updates it initial size.
+ *
+ * The Initialization process consists of the following steps:
+ *
+ * 1. A new `<canvas>` element is being created and appended to the root element.
+ * 2. The WebGLRenderer is being instantiated.
+ * 3. The size of the WebGLRenderer is being updated.
+ *
+ * @method
+ * @private
+ *
+ * @return {undefined} undefined
+ */
+Context.prototype._initWebGLRenderer = function _initWebGLRenderer() {
+    this._webGLRendererRootEl = document.createElement('canvas');
+    this._rootEl.appendChild(this._webGLRendererRootEl);
+
+    this._webGLRenderer = new WebGLRenderer(
+        this._webGLRendererRootEl,
+        this._compositor
+    );
+
+    // Don't read offset width and height.
+    this._webGLRenderer.updateSize(this._size);
 };
 
 /**
@@ -17701,23 +20049,23 @@ Context.prototype.draw = function draw() {
  * @return {undefined} undefined
  */
 Context.prototype.getRootSize = function getRootSize() {
-    return this.DOMRenderer.getSize();
+    return [
+        this._rootEl.offsetWidth,
+        this._rootEl.offsetHeight
+    ];
 };
 
+
 /**
- * Handles initialization of WebGLRenderer when necessary, including creation
- * of the canvas element and instantiation of the renderer. Also updates size
- * to pass size information to the renderer.
- *
- * @method
+ * Initializes the context if the `READY` command has been received earlier.
  *
  * @return {undefined} undefined
  */
-Context.prototype.initWebGL = function initWebGL() {
-    this.canvas = document.createElement('canvas');
-    this._rootEl.appendChild(this.canvas);
-    this.WebGLRenderer = new WebGLRenderer(this.canvas, this._compositor);
-    this.updateSize();
+Context.prototype.checkInit = function checkInit () {
+    if (this._initDOM) {
+        this._domRendererRootEl.style.visibility = 'visible';
+        this._initDOM = false;
+    }
 };
 
 /**
@@ -17737,211 +20085,295 @@ Context.prototype.receive = function receive(path, commands, iterator) {
     var localIterator = iterator;
 
     var command = commands[++localIterator];
-    this.DOMRenderer.loadPath(path);
-    this.DOMRenderer.findTarget();
-    while (command) {
 
-        switch (command) {
-            case 'INIT_DOM':
-                this.DOMRenderer.insertEl(commands[++localIterator]);
-                break;
+    this._domRenderer.loadPath(path);
 
-            case 'DOM_RENDER_SIZE':
-                this.DOMRenderer.getSizeOf(commands[++localIterator]);
-                break;
-
-            case 'CHANGE_TRANSFORM':
-                for (var i = 0 ; i < 16 ; i++) this._meshTransform[i] = commands[++localIterator];
-
-                this.DOMRenderer.setMatrix(this._meshTransform);
-
-                if (this.WebGLRenderer)
-                    this.WebGLRenderer.setCutoutUniform(path, 'u_transform', this._meshTransform);
-
-                break;
-
-            case 'CHANGE_SIZE':
-                var width = commands[++localIterator];
-                var height = commands[++localIterator];
-
-                this.DOMRenderer.setSize(width, height);
-                if (this.WebGLRenderer) {
-                    this._meshSize[0] = width;
-                    this._meshSize[1] = height;
-                    this.WebGLRenderer.setCutoutUniform(path, 'u_size', this._meshSize);
-                }
-                break;
-
-            case 'CHANGE_PROPERTY':
-                if (this.WebGLRenderer) this.WebGLRenderer.getOrSetCutout(path);
-                this.DOMRenderer.setProperty(commands[++localIterator], commands[++localIterator]);
-                break;
-
-            case 'CHANGE_CONTENT':
-                if (this.WebGLRenderer) this.WebGLRenderer.getOrSetCutout(path);
-                this.DOMRenderer.setContent(commands[++localIterator]);
-                break;
-
-            case 'CHANGE_ATTRIBUTE':
-                if (this.WebGLRenderer) this.WebGLRenderer.getOrSetCutout(path);
-                this.DOMRenderer.setAttribute(commands[++localIterator], commands[++localIterator]);
-                break;
-
-            case 'ADD_CLASS':
-                if (this.WebGLRenderer) this.WebGLRenderer.getOrSetCutout(path);
-                this.DOMRenderer.addClass(commands[++localIterator]);
-                break;
-
-            case 'REMOVE_CLASS':
-                if (this.WebGLRenderer) this.WebGLRenderer.getOrSetCutout(path);
-                this.DOMRenderer.removeClass(commands[++localIterator]);
-                break;
-
-            case 'SUBSCRIBE':
-                if (this.WebGLRenderer) this.WebGLRenderer.getOrSetCutout(path);
-                this.DOMRenderer.subscribe(commands[++localIterator], commands[++localIterator]);
-                break;
-
-            case 'GL_SET_DRAW_OPTIONS':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setMeshOptions(path, commands[++localIterator]);
-                break;
-
-            case 'GL_AMBIENT_LIGHT':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setAmbientLightColor(
-                    path,
-                    commands[++localIterator],
-                    commands[++localIterator],
-                    commands[++localIterator]
-                );
-                break;
-
-            case 'GL_LIGHT_POSITION':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setLightPosition(
-                    path,
-                    commands[++localIterator],
-                    commands[++localIterator],
-                    commands[++localIterator]
-                );
-                break;
-
-            case 'GL_LIGHT_COLOR':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setLightColor(
-                    path,
-                    commands[++localIterator],
-                    commands[++localIterator],
-                    commands[++localIterator]
-                );
-                break;
-
-            case 'MATERIAL_INPUT':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.handleMaterialInput(
-                    path,
-                    commands[++localIterator],
-                    commands[++localIterator]
-                );
-                break;
-
-            case 'GL_SET_GEOMETRY':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setGeometry(
-                    path,
-                    commands[++localIterator],
-                    commands[++localIterator],
-                    commands[++localIterator]
-                );
-                break;
-
-            case 'GL_UNIFORMS':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setMeshUniform(
-                    path,
-                    commands[++localIterator],
-                    commands[++localIterator]
-                );
-                break;
-
-            case 'GL_BUFFER_DATA':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.bufferData(
-                    path,
-                    commands[++localIterator],
-                    commands[++localIterator],
-                    commands[++localIterator],
-                    commands[++localIterator],
-                    commands[++localIterator]
-                );
-                break;
-
-            case 'GL_CUTOUT_STATE':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setCutoutState(path, commands[++localIterator]);
-                break;
-
-            case 'GL_MESH_VISIBILITY':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.setMeshVisibility(path, commands[++localIterator]);
-                break;
-
-            case 'GL_REMOVE_MESH':
-                if (!this.WebGLRenderer) this.initWebGL();
-                this.WebGLRenderer.removeMesh(path);
-                break;
-
-            case 'PINHOLE_PROJECTION':
-                this._renderState.projectionType = Camera.PINHOLE_PROJECTION;
-                this._renderState.perspectiveTransform[11] = -1 / commands[++localIterator];
-
-                this._renderState.perspectiveDirty = true;
-                break;
-
-            case 'ORTHOGRAPHIC_PROJECTION':
-                this._renderState.projectionType = Camera.ORTHOGRAPHIC_PROJECTION;
-                this._renderState.perspectiveTransform[11] = 0;
-
-                this._renderState.perspectiveDirty = true;
-                break;
-
-            case 'CHANGE_VIEW_TRANSFORM':
-                this._renderState.viewTransform[0] = commands[++localIterator];
-                this._renderState.viewTransform[1] = commands[++localIterator];
-                this._renderState.viewTransform[2] = commands[++localIterator];
-                this._renderState.viewTransform[3] = commands[++localIterator];
-
-                this._renderState.viewTransform[4] = commands[++localIterator];
-                this._renderState.viewTransform[5] = commands[++localIterator];
-                this._renderState.viewTransform[6] = commands[++localIterator];
-                this._renderState.viewTransform[7] = commands[++localIterator];
-
-                this._renderState.viewTransform[8] = commands[++localIterator];
-                this._renderState.viewTransform[9] = commands[++localIterator];
-                this._renderState.viewTransform[10] = commands[++localIterator];
-                this._renderState.viewTransform[11] = commands[++localIterator];
-
-                this._renderState.viewTransform[12] = commands[++localIterator];
-                this._renderState.viewTransform[13] = commands[++localIterator];
-                this._renderState.viewTransform[14] = commands[++localIterator];
-                this._renderState.viewTransform[15] = commands[++localIterator];
-
-                this._renderState.viewDirty = true;
-                break;
-
-            case 'WITH': return localIterator - 1;
-        }
-
-        command = commands[++localIterator];
+    while (command != null) {
+        if (command === Commands.WITH || command === Commands.TIME) return localIterator - 1;
+        else localIterator = this._commandCallbacks[command](this, path, commands, localIterator) + 1;
+        command = commands[localIterator];
     }
 
     return localIterator;
 };
 
+/**
+ * Getter method used for retrieving the used DOMRenderer.
+ *
+ * @method
+ *
+ * @return {DOMRenderer}    The DOMRenderer being used by the Context.
+ */
+Context.prototype.getDOMRenderer = function getDOMRenderer() {
+    return this._domRenderer;
+};
+
+/**
+ * Getter method used for retrieving the used WebGLRenderer (if any).
+ *
+ * @method
+ *
+ * @return {WebGLRenderer|null}    The WebGLRenderer being used by the Context.
+ */
+Context.prototype.getWebGLRenderer = function getWebGLRenderer() {
+    return this._webGLRenderer;
+};
+
+// Command Callbacks
+function preventDefault (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.preventDefault(commands[++iterator]);
+    return iterator;
+}
+
+function allowDefault (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.allowDefault(commands[++iterator]);
+    return iterator;
+}
+
+function ready (context, path, commands, iterator) {
+    context._initDOM = true;
+    return iterator;
+}
+
+function initDOM (context, path, commands, iterator) {
+    context._domRenderer.insertEl(commands[++iterator]);
+    return iterator;
+}
+
+function domRenderSize (context, path, commands, iterator) {
+    context._domRenderer.getSizeOf(commands[++iterator]);
+    return iterator;
+}
+
+function changeTransform (context, path, commands, iterator) {
+    var temp = context._meshTransform;
+
+    temp[0] = commands[++iterator];
+    temp[1] = commands[++iterator];
+    temp[2] = commands[++iterator];
+    temp[3] = commands[++iterator];
+    temp[4] = commands[++iterator];
+    temp[5] = commands[++iterator];
+    temp[6] = commands[++iterator];
+    temp[7] = commands[++iterator];
+    temp[8] = commands[++iterator];
+    temp[9] = commands[++iterator];
+    temp[10] = commands[++iterator];
+    temp[11] = commands[++iterator];
+    temp[12] = commands[++iterator];
+    temp[13] = commands[++iterator];
+    temp[14] = commands[++iterator];
+    temp[15] = commands[++iterator];
+
+    context._domRenderer.setMatrix(temp);
+
+    if (context._webGLRenderer)
+        context._webGLRenderer.setCutoutUniform(path, 'u_transform', temp);
+
+    return iterator;
+}
+
+function changeSize (context, path, commands, iterator) {
+    var width = commands[++iterator];
+    var height = commands[++iterator];
+
+    context._domRenderer.setSize(width, height);
+    if (context._webGLRenderer) {
+        context._meshSize[0] = width;
+        context._meshSize[1] = height;
+        context._webGLRenderer.setCutoutUniform(path, 'u_size', context._meshSize);
+    }
+
+    return iterator;
+}
+
+function changeProperty (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.setProperty(commands[++iterator], commands[++iterator]);
+    return iterator;
+}
+
+function changeContent (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.setContent(commands[++iterator]);
+    return iterator;
+}
+
+function changeAttribute (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.setAttribute(commands[++iterator], commands[++iterator]);
+    return iterator;
+}
+
+function addClass (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.addClass(commands[++iterator]);
+    return iterator;
+}
+
+function removeClass (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.removeClass(commands[++iterator]);
+    return iterator;
+}
+
+function subscribe (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.subscribe(commands[++iterator]);
+    return iterator;
+}
+
+function unsubscribe (context, path, commands, iterator) {
+    if (context._webGLRenderer) context._webGLRenderer.getOrSetCutout(path);
+    context._domRenderer.unsubscribe(commands[++iterator]);
+    return iterator;
+}
+
+function glSetDrawOptions (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setMeshOptions(path, commands[++iterator]);
+    return iterator;
+}
+
+function glAmbientLight (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setAmbientLightColor(
+        path,
+        commands[++iterator],
+        commands[++iterator],
+        commands[++iterator]
+    );
+    return iterator;
+}
+
+function glLightPosition (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setLightPosition(
+        path,
+        commands[++iterator],
+        commands[++iterator],
+        commands[++iterator]
+    );
+    return iterator;
+}
+
+function glLightColor (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setLightColor(
+        path,
+        commands[++iterator],
+        commands[++iterator],
+        commands[++iterator]
+    );
+    return iterator;
+}
+
+function materialInput (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.handleMaterialInput(
+        path,
+        commands[++iterator],
+        commands[++iterator]
+    );
+    return iterator;
+}
+
+function glSetGeometry (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setGeometry(
+        path,
+        commands[++iterator],
+        commands[++iterator],
+        commands[++iterator]
+    );
+    return iterator;
+}
+
+function glUniforms (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setMeshUniform(
+        path,
+        commands[++iterator],
+        commands[++iterator]
+    );
+    return iterator;
+}
+
+function glBufferData (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.bufferData(
+        path,
+        commands[++iterator],
+        commands[++iterator],
+        commands[++iterator],
+        commands[++iterator],
+        commands[++iterator]
+    );
+    return iterator;
+}
+
+function glCutoutState (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setCutoutState(path, commands[++iterator]);
+    return iterator;
+}
+
+function glMeshVisibility (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.setMeshVisibility(path, commands[++iterator]);
+    return iterator;
+}
+
+function glRemoveMesh (context, path, commands, iterator) {
+    if (!context._webGLRenderer) context._initWebGLRenderer();
+    context._webGLRenderer.removeMesh(path);
+    return iterator;
+}
+
+function pinholeProjection (context, path, commands, iterator) {
+    context._renderState.projectionType = Camera.PINHOLE_PROJECTION;
+    context._renderState.perspectiveTransform[11] = -1 / commands[++iterator];
+    context._renderState.perspectiveDirty = true;
+    return iterator;
+}
+
+function orthographicProjection (context, path, commands, iterator) {
+    context._renderState.projectionType = Camera.ORTHOGRAPHIC_PROJECTION;
+    context._renderState.perspectiveTransform[11] = 0;
+    context._renderState.perspectiveDirty = true;
+    return iterator;
+}
+
+function changeViewTransform (context, path, commands, iterator) {
+    context._renderState.viewTransform[0] = commands[++iterator];
+    context._renderState.viewTransform[1] = commands[++iterator];
+    context._renderState.viewTransform[2] = commands[++iterator];
+    context._renderState.viewTransform[3] = commands[++iterator];
+
+    context._renderState.viewTransform[4] = commands[++iterator];
+    context._renderState.viewTransform[5] = commands[++iterator];
+    context._renderState.viewTransform[6] = commands[++iterator];
+    context._renderState.viewTransform[7] = commands[++iterator];
+
+    context._renderState.viewTransform[8] = commands[++iterator];
+    context._renderState.viewTransform[9] = commands[++iterator];
+    context._renderState.viewTransform[10] = commands[++iterator];
+    context._renderState.viewTransform[11] = commands[++iterator];
+
+    context._renderState.viewTransform[12] = commands[++iterator];
+    context._renderState.viewTransform[13] = commands[++iterator];
+    context._renderState.viewTransform[14] = commands[++iterator];
+    context._renderState.viewTransform[15] = commands[++iterator];
+
+    context._renderState.viewDirty = true;
+    return iterator;
+}
+
 module.exports = Context;
 
-},{"../components/Camera":2,"../dom-renderers/DOMRenderer":25,"../webgl-renderers/WebGLRenderer":131}],84:[function(require,module,exports){
+},{"../components/Camera":2,"../core/Commands":15,"../dom-renderers/DOMRenderer":30,"../webgl-renderers/WebGLRenderer":135}],88:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17967,6 +20399,8 @@ module.exports = Context;
  */
 
 'use strict';
+
+var Commands = require('../core/Commands');
 
 /**
  * The UIManager is being updated by an Engine by consecutively calling its
@@ -18006,13 +20440,13 @@ function UIManager (thread, compositor, renderLoop) {
     var _this = this;
     this._thread.onmessage = function (ev) {
         var message = ev.data ? ev.data : ev;
-        if (message[0] === 'ENGINE') {
+        if (message[0] === Commands.ENGINE) {
             switch (message[1]) {
-                case 'START':
-                    _this._renderLoop.start();
+                case Commands.START:
+                    _this._engine.start();
                     break;
-                case 'STOP':
-                    _this._renderLoop.stop();
+                case Commands.STOP:
+                    _this._engine.stop();
                     break;
                 default:
                     console.error(
@@ -18057,10 +20491,24 @@ UIManager.prototype.getCompositor = function getCompositor() {
  * Returns the engine being used by this UIManager.
  *
  * @method
+ * @deprecated Use {@link UIManager#getRenderLoop instead!}
  *
  * @return {Engine} The engine used by the UIManager.
  */
 UIManager.prototype.getEngine = function getEngine() {
+    return this._renderLoop;
+};
+
+
+/**
+ * Returns the render loop currently being used by the UIManager.
+ *
+ * @method
+ *
+ * @return {RenderLoop}  The registered render loop used for updating the
+ * UIManager.
+ */
+UIManager.prototype.getRenderLoop = function getRenderLoop() {
     return this._renderLoop;
 };
 
@@ -18076,7 +20524,7 @@ UIManager.prototype.getEngine = function getEngine() {
  * @return {undefined} undefined
  */
 UIManager.prototype.update = function update (time) {
-    this._thread.postMessage(['FRAME', time]);
+    this._thread.postMessage([Commands.FRAME, time]);
     var threadMessages = this._compositor.drawCommands();
     this._thread.postMessage(threadMessages);
     this._compositor.clearCommands();
@@ -18084,7 +20532,7 @@ UIManager.prototype.update = function update (time) {
 
 module.exports = UIManager;
 
-},{}],85:[function(require,module,exports){
+},{"../core/Commands":15}],89:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18118,7 +20566,7 @@ module.exports = {
     injectCSS: require('./inject-css')
 };
 
-},{"./Compositor":82,"./Context":83,"./UIManager":84,"./inject-css":86}],86:[function(require,module,exports){
+},{"./Compositor":86,"./Context":87,"./UIManager":88,"./inject-css":90}],90:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18209,7 +20657,7 @@ function injectCSS() {
 
 module.exports = injectCSS;
 
-},{}],87:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18246,11 +20694,11 @@ module.exports = injectCSS;
  * @property {Function} easeIn
  * @property {Function} easeOut
  * @property {Function} easeInOut
- * @property {Function} easeOutBounc
+ * @property {Function} easeOutBounce
  * @property {Function} spring
  * @property {Function} inQuad
  * @property {Function} outQuad
- * @property {Function} inOutQua
+ * @property {Function} inOutQuad
  * @property {Function} inCubic
  * @property {Function} outCubic
  * @property {Function} inOutCubic
@@ -18273,7 +20721,7 @@ module.exports = injectCSS;
  * @property {Function} outElastic
  * @property {Function} inOutElastic
  * @property {Function} inBounce
- * @property {Function} outBounc
+ * @property {Function} outBounce
  * @property {Function} inOutBounce
  * @property {Function} flat            - Useful for delaying the execution of
  *                                        a subsequent transition.
@@ -18465,7 +20913,7 @@ var Curves = {
 
 module.exports = Curves;
 
-},{}],88:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18923,7 +21371,7 @@ Transitionable.prototype.set = function(state, transition, callback) {
 
 module.exports = Transitionable;
 
-},{"../core/FamousEngine":17,"./Curves":87}],89:[function(require,module,exports){
+},{"../core/FamousEngine":18,"./Curves":91}],93:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -18955,7 +21403,7 @@ module.exports = {
     Transitionable: require('./Transitionable')
 };
 
-},{"./Curves":87,"./Transitionable":88}],90:[function(require,module,exports){
+},{"./Curves":91,"./Transitionable":92}],94:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19053,7 +21501,7 @@ CallbackStore.prototype.trigger = function trigger (key, payload) {
 
 module.exports = CallbackStore;
 
-},{}],91:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19503,7 +21951,7 @@ var colorNames = { aliceblue: '#f0f8ff', antiquewhite: '#faebd7', aqua: '#00ffff
 
 module.exports = Color;
 
-},{"../transitions/Transitionable":88}],92:[function(require,module,exports){
+},{"../transitions/Transitionable":92}],96:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19610,7 +22058,7 @@ module.exports = {
 };
 
 
-},{}],93:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19703,7 +22151,7 @@ ObjectManager.disposeOf = function(type) {
 
 module.exports = ObjectManager;
 
-},{}],94:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19747,7 +22195,7 @@ function clamp(value, lower, upper) {
 module.exports = clamp;
 
 
-},{}],95:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19811,7 +22259,7 @@ var clone = function clone(b) {
 
 module.exports = clone;
 
-},{}],96:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19852,7 +22300,7 @@ module.exports = {
 };
 
 
-},{"./CallbackStore":90,"./Color":91,"./KeyCodes":92,"./ObjectManager":93,"./clamp":94,"./clone":95,"./keyValueToArrays":97,"./loadURL":98,"./strip":99,"./vendorPrefix":100}],97:[function(require,module,exports){
+},{"./CallbackStore":94,"./Color":95,"./KeyCodes":96,"./ObjectManager":97,"./clamp":98,"./clone":99,"./keyValueToArrays":101,"./loadURL":102,"./strip":103,"./vendorPrefix":104}],101:[function(require,module,exports){
 'use strict';
 
 /**
@@ -19909,7 +22357,7 @@ module.exports = function keyValuesToArrays(obj) {
     };
 };
 
-},{}],98:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19960,7 +22408,7 @@ var loadURL = function loadURL(url, callback) {
 
 module.exports = loadURL;
 
-},{}],99:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20026,7 +22474,7 @@ function strip(obj) {
 
 module.exports = strip;
 
-},{}],100:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20086,7 +22534,7 @@ function vendorPrefix(property) {
 
 module.exports = vendorPrefix;
 
-},{}],101:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20293,7 +22741,7 @@ DynamicGeometry.prototype.getTextureCoords = function () {
 
 module.exports = DynamicGeometry;
 
-},{"./Geometry":102}],102:[function(require,module,exports){
+},{"./Geometry":106}],106:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20359,7 +22807,7 @@ function Geometry(options) {
 
 module.exports = Geometry;
 
-},{}],103:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20431,11 +22879,13 @@ GeometryHelper.generateParametric = function generateParametric(detailX, detailY
 
     // We can wrap around slightly more than once for uv coordinates to look correct.
 
-    var Xrange = wrap ? Math.PI + (Math.PI / (detailX - 1)) : Math.PI;
+    var offset = (Math.PI / (detailX - 1));
+    var Xrange = wrap ? Math.PI + offset : Math.PI;
+
     var out = [];
 
     for (i = 0; i < detailX + 1; i++) {
-        theta = i * Xrange / detailX;
+        theta = (i === 0 ? 0.0001 : i) * Math.PI / detailX;
         for (j = 0; j < detailY; j++) {
             phi = j * 2.0 * Xrange / detailY;
             func(theta, phi, out);
@@ -20710,8 +23160,11 @@ GeometryHelper.getSpheroidUV = function getSpheroidUV(vertices, out) {
         .normalize()
         .toArray();
 
-        uv[0] = this.getAzimuth(vertex) * 0.5 / Math.PI + 0.5;
-        uv[1] = this.getAltitude(vertex) / Math.PI + 0.5;
+        var azimuth = this.getAzimuth(vertex);
+        var altitude = this.getAltitude(vertex);
+
+        uv[0] = azimuth * 0.5 / Math.PI + 0.5;
+        uv[1] = altitude / Math.PI + 0.5;
 
         out.push.apply(out, uv);
     }
@@ -20922,7 +23375,7 @@ GeometryHelper.addBackfaceTriangles = function addBackfaceTriangles(vertices, in
 
 module.exports = GeometryHelper;
 
-},{"../math/Vec2":43,"../math/Vec3":44}],104:[function(require,module,exports){
+},{"../math/Vec2":49,"../math/Vec3":50}],108:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21416,7 +23869,7 @@ function flatten(arr) {
 
 module.exports = OBJLoader;
 
-},{"../utilities/loadURL":98,"./GeometryHelper":103}],105:[function(require,module,exports){
+},{"../utilities/loadURL":102,"./GeometryHelper":107}],109:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21461,7 +23914,7 @@ module.exports = {
     OBJLoader: require('./OBJLoader')
 };
 
-},{"./DynamicGeometry":101,"./Geometry":102,"./GeometryHelper":103,"./OBJLoader":104,"./primitives/Box":106,"./primitives/Circle":107,"./primitives/Cylinder":108,"./primitives/GeodesicSphere":109,"./primitives/Icosahedron":110,"./primitives/ParametricCone":111,"./primitives/Plane":112,"./primitives/Sphere":113,"./primitives/Tetrahedron":114,"./primitives/Torus":115,"./primitives/Triangle":116}],106:[function(require,module,exports){
+},{"./DynamicGeometry":105,"./Geometry":106,"./GeometryHelper":107,"./OBJLoader":108,"./primitives/Box":110,"./primitives/Circle":111,"./primitives/Cylinder":112,"./primitives/GeodesicSphere":113,"./primitives/Icosahedron":114,"./primitives/ParametricCone":115,"./primitives/Plane":116,"./primitives/Sphere":117,"./primitives/Tetrahedron":118,"./primitives/Torus":119,"./primitives/Triangle":120}],110:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21556,7 +24009,7 @@ function BoxGeometry(options) {
 
 module.exports = BoxGeometry;
 
-},{"../Geometry":102}],107:[function(require,module,exports){
+},{"../Geometry":106}],111:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21672,7 +24125,7 @@ function getCircleBuffers(detail) {
 
 module.exports = Circle;
 
-},{"../Geometry":102,"../GeometryHelper":103}],108:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],112:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21761,7 +24214,7 @@ Cylinder.generator = function generator(r, u, v, pos) {
 
 module.exports = Cylinder;
 
-},{"../Geometry":102,"../GeometryHelper":103}],109:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],113:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -21841,7 +24294,7 @@ function GeodesicSphere (options) {
 
 module.exports = GeodesicSphere;
 
-},{"../Geometry":102,"../GeometryHelper":103}],110:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],114:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -21917,7 +24370,7 @@ function Icosahedron() {
 
 module.exports = Icosahedron;
 
-},{"../Geometry":102,"../GeometryHelper":103}],111:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],115:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22003,7 +24456,7 @@ ParametricCone.generator = function generator(r, u, v, pos) {
 
 module.exports = ParametricCone;
 
-},{"../Geometry":102,"../GeometryHelper":103}],112:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],116:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22094,7 +24547,7 @@ function Plane(options) {
 
 module.exports = Plane;
 
-},{"../Geometry":102,"../GeometryHelper":103}],113:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],117:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22149,8 +24602,6 @@ function ParametricSphere (options) {
         true
     );
 
-    GeometryHelper.getUniqueFaces(buffers.vertices, buffers.indices);
-
     return new Geometry({
         buffers: [
             { name: 'a_pos', data: buffers.vertices },
@@ -22184,7 +24635,7 @@ ParametricSphere.generator = function generator(u, v, pos) {
 
 module.exports = ParametricSphere;
 
-},{"../Geometry":102,"../GeometryHelper":103}],114:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],118:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22287,7 +24738,7 @@ function Tetrahedron(options) {
 
 module.exports = Tetrahedron;
 
-},{"../Geometry":102,"../GeometryHelper":103}],115:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],119:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22373,7 +24824,7 @@ Torus.generator = function generator(c, a, u, v, pos) {
 
 module.exports = Torus;
 
-},{"../Geometry":102,"../GeometryHelper":103}],116:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],120:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22453,7 +24904,7 @@ function Triangle (options) {
 
 module.exports = Triangle;
 
-},{"../Geometry":102,"../GeometryHelper":103}],117:[function(require,module,exports){
+},{"../Geometry":106,"../GeometryHelper":107}],121:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -22530,7 +24981,6 @@ var snippets = {
 
     smoothstep: {glsl: 'smoothstep(%1);', output: { '1,1,1':1, '2,2,2':2, '3,3,3':3, '4,4,4':4 }},
 
-
     /* fragCoord - The fragCoord function returns the fragment's position in screenspace. */
 
     fragCoord: {glsl: 'gl_FragColor;', output: 4 },
@@ -22554,7 +25004,7 @@ var snippets = {
 
     /* time - The time function returns the elapsed time in the unix epoch in milliseconds.*/
 
-    time: {glsl: 'time;', output: 1},
+    time: {glsl: 'u_time;', output: 1},
 
     /* The Add function takes two inputs, adds them together and outputs the result. This addition operation is performed on a per channel basis, meaning that the inputs' R channels get added, G channels get added, B channels get added, etc. Both inputs must have the same number of channels unless one of them is a single Constant value. Constants can be added to a vector with any number of inputs. */
 
@@ -22634,6 +25084,8 @@ function Material(name, chunk, inputs, options) {
     this.varyings = options.varyings;
     this.attributes = options.attributes;
 
+    this.meshes = [];
+
     if (options.texture) {
         this.texture = options.texture.__isATexture__ ? options.texture : TextureRegistry.register(null, options.texture);
     }
@@ -22650,6 +25102,8 @@ Material.prototype.setUniform = function setUniform(name, value) {
     this.uniforms[name] = value;
 
     this.invalidations.push(name);
+
+    for(var i = 0; i < this.meshes.length; i++) this.meshes[i]._requestUpdate();
 };
 
 module.exports = expressions;
@@ -22664,7 +25118,20 @@ expressions.Custom = function (schema, inputs, uniforms) {
     return new Material('custom', {glsl: schema, output: 1, uniforms: uniforms || {}} , inputs);
 };
 
-},{"./TextureRegistry":118}],118:[function(require,module,exports){
+// Recursively iterates over a material's inputs, invoking a given callback
+// with the current material
+Material.prototype.traverse = function traverse(callback) {
+	var inputs = this.inputs;
+    var len = inputs && inputs.length;
+    var idx = -1;
+
+    while (++idx < len) inputs[idx].traverse(callback);
+
+    callback(this);
+};
+
+
+},{"./TextureRegistry":122}],122:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22749,7 +25216,7 @@ TextureRegistry.get = function get(accessor) {
 
 module.exports = TextureRegistry;
 
-},{}],119:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22781,7 +25248,7 @@ module.exports = {
     TextureRegistry: require('./TextureRegistry')
 };
 
-},{"./Material":117,"./TextureRegistry":118}],120:[function(require,module,exports){
+},{"./Material":121,"./TextureRegistry":122}],124:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22808,6 +25275,9 @@ module.exports = {
 
 'use strict';
 var Geometry = require('../webgl-geometries');
+var Commands = require('../core/Commands');
+var TransformSystem = require('../core/TransformSystem');
+var defaultGeometry = new Geometry.Plane();
 
 /**
  * The Mesh class is responsible for providing the API for how
@@ -22823,6 +25293,9 @@ var Geometry = require('../webgl-geometries');
  *
  * @return {undefined} undefined
  */
+
+var INPUTS = ['baseColor', 'normals', 'glossiness', 'positionOffset'];
+
 function Mesh (node, options) {
     this._node = node;
     this._changeQueue = [];
@@ -22830,10 +25303,10 @@ function Mesh (node, options) {
     this._requestingUpdate = false;
     this._inDraw = false;
     this.value = {
-        drawOptions: {},
+        geometry: defaultGeometry,
+        drawOptions: null,
         color: null,
         expressions: {},
-        geometry: null,
         flatShading: null,
         glossiness: null,
         positionOffset: null,
@@ -22843,7 +25316,6 @@ function Mesh (node, options) {
     if (options) this.setDrawOptions(options);
     this._id = node.addComponent(this);
 }
-
 /**
  * Pass custom options to Mesh, such as a 3 element map
  * which displaces the position of each vertex in world space.
@@ -22853,9 +25325,11 @@ function Mesh (node, options) {
  * @param {Object} options Draw options
  * @return {Mesh} Current mesh
  */
-Mesh.prototype.setDrawOptions = function setDrawOptions (options) {
-    this._changeQueue.push('GL_SET_DRAW_OPTIONS');
+Mesh.prototype.setDrawOptions = function setOptions (options) {
+    this._changeQueue.push(Commands.GL_SET_DRAW_OPTIONS);
     this._changeQueue.push(options);
+
+    this.value.drawOptions = options;
     return this;
 };
 
@@ -22890,7 +25364,7 @@ Mesh.prototype.setGeometry = function setGeometry (geometry, options) {
 
     if (this.value.geometry !== geometry || this._inDraw) {
         if (this._initialized) {
-            this._changeQueue.push('GL_SET_GEOMETRY');
+            this._changeQueue.push(Commands.GL_SET_GEOMETRY);
             this._changeQueue.push(geometry.spec.id);
             this._changeQueue.push(geometry.spec.type);
             this._changeQueue.push(geometry.spec.dynamic);
@@ -22904,7 +25378,7 @@ Mesh.prototype.setGeometry = function setGeometry (geometry, options) {
             var i = this.value.geometry.spec.invalidations.length;
             while (i--) {
                 this.value.geometry.spec.invalidations.pop();
-                this._changeQueue.push('GL_BUFFER_DATA');
+                this._changeQueue.push(Commands.GL_BUFFER_DATA);
                 this._changeQueue.push(this.value.geometry.spec.id);
                 this._changeQueue.push(this.value.geometry.spec.bufferNames[i]);
                 this._changeQueue.push(this.value.geometry.spec.bufferValues[i]);
@@ -22944,6 +25418,7 @@ Mesh.prototype.setBaseColor = function setBaseColor (color) {
     var isColor = !!color.getNormalizedRGBA;
 
     if (isMaterial) {
+        addMeshToMaterial(this, color, 'baseColor');
         this.value.color = null;
         this.value.expressions.baseColor = color;
         uniformValue = color;
@@ -22957,13 +25432,15 @@ Mesh.prototype.setBaseColor = function setBaseColor (color) {
     if (this._initialized) {
 
         // If a material expression
-        if (isMaterial) {
-            this._changeQueue.push('MATERIAL_INPUT');
+
+        if (color.__isAMaterial__) {
+            this._changeQueue.push(Commands.MATERIAL_INPUT);
         }
 
         // If a color component
-        else if (isColor) {
-            this._changeQueue.push('GL_UNIFORMS');
+
+        else if (color.getNormalizedRGB) {
+            this._changeQueue.push(Commands.GL_UNIFORMS);
         }
 
         this._changeQueue.push('u_baseColor');
@@ -22999,7 +25476,7 @@ Mesh.prototype.setFlatShading = function setFlatShading (bool) {
     if (this._inDraw || this.value.flatShading !== bool) {
         this.value.flatShading = bool;
         if (this._initialized) {
-            this._changeQueue.push('GL_UNIFORMS');
+            this._changeQueue.push(Commands.GL_UNIFORMS);
             this._changeQueue.push('u_flatShading');
             this._changeQueue.push(bool ? 1 : 0);
         }
@@ -23036,11 +25513,12 @@ Mesh.prototype.setNormals = function setNormals (materialExpression) {
     var isMaterial = materialExpression.__isAMaterial__;
 
     if (isMaterial) {
+        addMeshToMaterial(this, materialExpression, 'normals');
         this.value.expressions.normals = materialExpression;
     }
 
     if (this._initialized) {
-        this._changeQueue.push(isMaterial ? 'MATERIAL_INPUT' : 'UNIFORM_INPUT');
+        this._changeQueue.push(materialExpression.__isAMaterial__ ? Commands.MATERIAL_INPUT : Commands.GL_UNIFORMS);
         this._changeQueue.push('u_normals');
         this._changeQueue.push(materialExpression);
     }
@@ -23079,6 +25557,7 @@ Mesh.prototype.setGlossiness = function setGlossiness(glossiness, strength) {
     var isColor = !!glossiness.getNormalizedRGB;
 
     if (isMaterial) {
+        addMeshToMaterial(this, glossiness, 'glossiness');
         this.value.glossiness = [null, null];
         this.value.expressions.glossiness = glossiness;
     }
@@ -23090,7 +25569,7 @@ Mesh.prototype.setGlossiness = function setGlossiness(glossiness, strength) {
     }
 
     if (this._initialized) {
-        this._changeQueue.push(isMaterial ? 'MATERIAL_INPUT' : 'GL_UNIFORMS');
+        this._changeQueue.push(glossiness.__isAMaterial__ ? Commands.MATERIAL_INPUT : Commands.GL_UNIFORMS);
         this._changeQueue.push('u_glossiness');
         this._changeQueue.push(glossiness);
     }
@@ -23125,6 +25604,7 @@ Mesh.prototype.setPositionOffset = function positionOffset(materialExpression) {
     var isMaterial = materialExpression.__isAMaterial__;
 
     if (isMaterial) {
+        addMeshToMaterial(this, materialExpression, 'positionOffset');
         this.value.expressions.positionOffset = materialExpression;
         uniformValue = materialExpression;
     }
@@ -23135,7 +25615,7 @@ Mesh.prototype.setPositionOffset = function positionOffset(materialExpression) {
     }
 
     if (this._initialized) {
-        this._changeQueue.push(isMaterial ? 'MATERIAL_INPUT' : 'GL_UNIFORMS');
+        this._changeQueue.push(materialExpression.__isAMaterial__ ? Commands.MATERIAL_INPUT : Commands.GL_UNIFORMS);
         this._changeQueue.push('u_positionOffset');
         this._changeQueue.push(uniformValue);
     }
@@ -23188,14 +25668,17 @@ Mesh.prototype.getValue = function getValue () {
 Mesh.prototype._pushInvalidations = function _pushInvalidations (expressionName) {
     var uniformKey;
     var expression = this.value.expressions[expressionName];
+    var sender = this._node;
     if (expression) {
-        var i = expression.invalidations.length;
-        while (i--) {
-            uniformKey = expression.invalidations.pop();
-            this._node.sendDrawCommand('GL_UNIFORMS');
-            this._node.sendDrawCommand(uniformKey);
-            this._node.sendDrawCommand(expression.uniforms[uniformKey]);
-        }
+        expression.traverse(function (node) {
+            var i = node.invalidations.length;
+            while (i--) {
+                uniformKey = node.invalidations.pop();
+                sender.sendDrawCommand(Commands.GL_UNIFORMS);
+                sender.sendDrawCommand(uniformKey);
+                sender.sendDrawCommand(node.uniforms[uniformKey]);
+            }
+        });
     }
     return this;
 };
@@ -23213,18 +25696,18 @@ Mesh.prototype.onUpdate = function onUpdate() {
     var queue = this._changeQueue;
 
     if (node) {
-        node.sendDrawCommand('WITH');
+        node.sendDrawCommand(Commands.WITH);
         node.sendDrawCommand(node.getLocation());
 
         // If any invalidations exist, push them into the queue
         if (this.value.color && this.value.color.isActive()) {
-            this._node.sendDrawCommand('GL_UNIFORMS');
+            this._node.sendDrawCommand(Commands.GL_UNIFORMS);
             this._node.sendDrawCommand('u_baseColor');
             this._node.sendDrawCommand(this.value.color.getNormalizedRGBA());
             this._node.requestUpdateOnNextTick(this._id);
         }
         if (this.value.glossiness && this.value.glossiness[0] && this.value.glossiness[0].isActive()) {
-            this._node.sendDrawCommand('GL_UNIFORMS');
+            this._node.sendDrawCommand(Commands.GL_UNIFORMS);
             this._node.sendDrawCommand('u_glossiness');
             var glossiness = this.value.glossiness[0].getNormalizedRGB();
             glossiness.push(this.value.glossiness[1]);
@@ -23238,6 +25721,8 @@ Mesh.prototype.onUpdate = function onUpdate() {
         // If any invalidations exist, push them into the queue
         this._pushInvalidations('baseColor');
         this._pushInvalidations('positionOffset');
+        this._pushInvalidations('normals');
+        this._pushInvalidations('glossiness');
 
         for (var i = 0; i < queue.length; i++) {
             node.sendDrawCommand(queue[i]);
@@ -23261,6 +25746,8 @@ Mesh.prototype.onMount = function onMount (node, id) {
     this._node = node;
     this._id = id;
 
+    TransformSystem.makeCalculateWorldMatrixAt(node.getLocation());
+
     this.draw();
 };
 
@@ -23273,7 +25760,7 @@ Mesh.prototype.onMount = function onMount (node, id) {
  */
 Mesh.prototype.onDismount = function onDismount () {
     this._initialized = false;
-    this._changeQueue.push('GL_REMOVE_MESH');
+    this._changeQueue.push(Commands.GL_REMOVE_MESH);
 
     this._requestUpdate();
 };
@@ -23286,7 +25773,7 @@ Mesh.prototype.onDismount = function onDismount () {
  * @return {undefined} undefined
  */
 Mesh.prototype.onShow = function onShow () {
-    this._changeQueue.push('GL_MESH_VISIBILITY', true);
+    this._changeQueue.push(Commands.GL_MESH_VISIBILITY, true);
 
     this._requestUpdate();
 };
@@ -23299,7 +25786,7 @@ Mesh.prototype.onShow = function onShow () {
  * @return {undefined} undefined
  */
 Mesh.prototype.onHide = function onHide () {
-    this._changeQueue.push('GL_MESH_VISIBILITY', false);
+    this._changeQueue.push(Commands.GL_MESH_VISIBILITY, false);
 
     this._requestUpdate();
 };
@@ -23316,9 +25803,9 @@ Mesh.prototype.onHide = function onHide () {
  */
 Mesh.prototype.onTransformChange = function onTransformChange (transform) {
     if (this._initialized) {
-        this._changeQueue.push('GL_UNIFORMS');
+        this._changeQueue.push(Commands.GL_UNIFORMS);
         this._changeQueue.push('u_transform');
-        this._changeQueue.push(transform);
+        this._changeQueue.push(transform.getWorldTransform());
     }
 
     this._requestUpdate();
@@ -23330,15 +25817,17 @@ Mesh.prototype.onTransformChange = function onTransformChange (transform) {
  * @method
  * @private
  *
- * @param {Array} size Size
+ * @param {Number} x width of the Node the Mesh is attached to
+ * @param {Number} y height of the Node the Mesh is attached to
+ * @param {Number} z depth of the Node the Mesh is attached to
  *
  * @return {undefined} undefined
  */
-Mesh.prototype.onSizeChange = function onSizeChange (size) {
+Mesh.prototype.onSizeChange = function onSizeChange (x, y, z) {
     if (this._initialized) {
-        this._changeQueue.push('GL_UNIFORMS');
+        this._changeQueue.push(Commands.GL_UNIFORMS);
         this._changeQueue.push('u_size');
-        this._changeQueue.push(size);
+        this._changeQueue.push([x, y, z]);
     }
 
     this._requestUpdate();
@@ -23356,7 +25845,7 @@ Mesh.prototype.onSizeChange = function onSizeChange (size) {
  */
 Mesh.prototype.onOpacityChange = function onOpacityChange (opacity) {
     if (this._initialized) {
-        this._changeQueue.push('GL_UNIFORMS');
+        this._changeQueue.push(Commands.GL_UNIFORMS);
         this._changeQueue.push('u_opacity');
         this._changeQueue.push(opacity);
     }
@@ -23400,8 +25889,9 @@ Mesh.prototype._requestUpdate = function _requestUpdate () {
  */
 Mesh.prototype.init = function init () {
     this._initialized = true;
-    this.onTransformChange(this._node.getTransform());
-    this.onSizeChange(this._node.getSize());
+    this.onTransformChange(TransformSystem.get(this._node.getLocation()));
+    var size = this._node.getSize();
+    this.onSizeChange(size[0], size[1], size[2]);
     this.onOpacityChange(this._node.getOpacity());
     this._requestUpdate();
 };
@@ -23434,9 +25924,32 @@ Mesh.prototype.draw = function draw () {
     this._inDraw = false;
 };
 
+
+function addMeshToMaterial(mesh, material, name) {
+    var expressions = mesh.value.expressions;
+    var previous = expressions[name];
+    var shouldRemove = true;
+    var len = material.inputs;
+
+    while(len--)
+        addMeshToMaterial(mesh, material.inputs[len], name);
+
+    len = INPUTS.length;
+
+    while (len--)
+        shouldRemove |= (name !== INPUTS[len] && previous !== expressions[INPUTS[len]]);
+
+    if (shouldRemove)
+        material.meshes.splice(material.meshes.indexOf(previous), 1);
+
+    if (material.meshes.indexOf(mesh) === -1)
+        material.meshes.push(mesh);
+}
+
 module.exports = Mesh;
 
-},{"../webgl-geometries":105}],121:[function(require,module,exports){
+
+},{"../core/Commands":15,"../core/TransformSystem":26,"../webgl-geometries":109}],125:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23469,7 +25982,7 @@ module.exports = {
     AmbientLight: require('./lights/AmbientLight')
 };
 
-},{"./Mesh":120,"./lights/AmbientLight":122,"./lights/PointLight":124}],122:[function(require,module,exports){
+},{"./Mesh":124,"./lights/AmbientLight":126,"./lights/PointLight":128}],126:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23497,6 +26010,7 @@ module.exports = {
 'use strict';
 
 var Light = require('./Light');
+var Commands = require('../../core/Commands');
 
 /**
  * AmbientLight extends the functionality of Light. It sets the ambience in
@@ -23505,7 +26019,6 @@ var Light = require('./Light');
  *
  * @class AmbientLight
  * @constructor
- * @component
  * @augments Light
  *
  * @param {Node} node LocalDispatch to be retrieved from the corresponding Render Node
@@ -23514,7 +26027,7 @@ var Light = require('./Light');
  */
 function AmbientLight(node) {
     Light.call(this, node);
-    this.commands.color = 'GL_AMBIENT_LIGHT';
+    this.commands.color = Commands.GL_AMBIENT_LIGHT;
 }
 
 /**
@@ -23529,7 +26042,7 @@ AmbientLight.prototype.constructor = AmbientLight;
 
 module.exports = AmbientLight;
 
-},{"./Light":123}],123:[function(require,module,exports){
+},{"../../core/Commands":15,"./Light":127}],127:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23556,12 +26069,14 @@ module.exports = AmbientLight;
 
 'use strict';
 
+var Commands = require('../../core/Commands');
+
 /**
  * The blueprint for all light components.
  *
  * @class Light
  * @constructor
- * @component
+ * @abstract
  *
  * @param {Node} node The controlling node from the corresponding Render Node
  *
@@ -23569,11 +26084,14 @@ module.exports = AmbientLight;
  */
 function Light(node) {
     this._node = node;
-    this._id = node.addComponent(this);
     this._requestingUpdate = false;
-    this.queue = [];
     this._color = null;
-    this.commands = { color: 'GL_LIGHT_COLOR' };
+    this.queue = [];
+    this.commands = {
+        color: Commands.GL_LIGHT_COLOR,
+        position: Commands.GL_LIGHT_POSITION
+    };
+    this._id = node.addComponent(this);
 }
 
 /**
@@ -23623,7 +26141,7 @@ Light.prototype.onUpdate = function onUpdate() {
     var path = this._node.getLocation();
 
     this._node
-        .sendDrawCommand('WITH')
+        .sendDrawCommand(Commands.WITH)
         .sendDrawCommand(path);
 
     var i = this.queue.length;
@@ -23646,7 +26164,7 @@ Light.prototype.onUpdate = function onUpdate() {
 
 module.exports = Light;
 
-},{}],124:[function(require,module,exports){
+},{"../../core/Commands":15}],128:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23674,6 +26192,7 @@ module.exports = Light;
 'use strict';
 
 var Light = require('./Light');
+var TransformSystem = require('../../core/TransformSystem');
 
 /**
  * PointLight extends the functionality of Light. PointLight is a light source
@@ -23681,7 +26200,6 @@ var Light = require('./Light');
  *
  * @class PointLight
  * @constructor
- * @component
  * @augments Light
  *
  * @param {Node} node LocalDispatch to be retrieved from the corresponding Render Node
@@ -23690,8 +26208,6 @@ var Light = require('./Light');
  */
 function PointLight(node) {
     Light.call(this, node);
-    this.commands.position = 'GL_LIGHT_POSITION';
-    this.onTransformChange(node.getTransform());
 }
 
 /**
@@ -23703,6 +26219,20 @@ PointLight.prototype = Object.create(Light.prototype);
  * Sets PointLight as the constructor
  */
 PointLight.prototype.constructor = PointLight;
+
+/**
+ * Receive the notice that the node you are on has been mounted.
+ *
+ * @param {Node} node Node that the component has been associated with
+ * @param {Number} id ID associated with the node
+ *
+ * @return {undefined} undefined
+ */
+PointLight.prototype.onMount = function onMount(node, id) {
+    this._id = id;
+    TransformSystem.makeBreakPointAt(this._node.getLocation());
+    this.onTransformChange(TransformSystem.get(this._node.getLocation()));
+};
 
 /**
  * Receives transform change updates from the scene graph.
@@ -23718,6 +26248,7 @@ PointLight.prototype.onTransformChange = function onTransformChange (transform) 
         this._node.requestUpdate(this._id);
         this._requestingUpdate = true;
     }
+    transform = transform.getWorldTransform();
     this.queue.push(this.commands.position);
     this.queue.push(transform[12]);
     this.queue.push(transform[13]);
@@ -23726,7 +26257,7 @@ PointLight.prototype.onTransformChange = function onTransformChange (transform) 
 
 module.exports = PointLight;
 
-},{"./Light":123}],125:[function(require,module,exports){
+},{"../../core/TransformSystem":26,"./Light":127}],129:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23798,7 +26329,7 @@ Buffer.prototype.subData = function subData() {
 
 module.exports = Buffer;
 
-},{}],126:[function(require,module,exports){
+},{}],130:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23945,7 +26476,7 @@ BufferRegistry.prototype.allocate = function allocate(geometryId, name, value, s
 
 module.exports = BufferRegistry;
 
-},{"./Buffer":125}],127:[function(require,module,exports){
+},{"./Buffer":129}],131:[function(require,module,exports){
 'use strict';
 
 /**
@@ -23981,7 +26512,7 @@ module.exports = BufferRegistry;
  *
  * @returns {Function} Augmented function
  */
-module.exports = function Debug() {
+function Debug() {
     return _augmentFunction(
         this.gl.compileShader,
         function(shader) {
@@ -23992,7 +26523,7 @@ module.exports = function Debug() {
             }
         }
     );
-};
+}
 
 // Takes a function, keeps the reference and replaces it by a closure that
 // executes the original function and the provided callback.
@@ -24040,7 +26571,9 @@ function _processErrors(errors, source) {
     }
 }
 
-},{}],128:[function(require,module,exports){
+module.exports = Debug;
+
+},{}],132:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24161,11 +26694,9 @@ var varyings = keyValueToArrays({
  */
 function Program(gl, options) {
     this.gl = gl;
-    this.textureSlots = 1;
     this.options = options || {};
 
     this.registeredMaterials = {};
-    this.flaggedUniforms = [];
     this.cachedUniforms  = {};
     this.uniformTypes = [];
 
@@ -24177,6 +26708,10 @@ function Program(gl, options) {
     this.applicationFloat = [];
     this.applicationVert = [];
     this.definitionVert = [];
+
+    if (this.options.debug) {
+        this.gl.compileShader = Debug.call(this);
+    }
 
     this.resetProgram();
 }
@@ -24287,7 +26822,6 @@ Program.prototype.resetProgram = function resetProgram() {
     this.uniformNames = clone(uniforms.keys);
     this.uniformValues = clone(uniforms.values);
 
-    this.flaggedUniforms = [];
     this.cachedUniforms = {};
 
     fragmentHeader.push('uniform sampler2D u_textures[7];\n');
@@ -24510,10 +27044,6 @@ Program.prototype.getUniformTypeFromValue = function getUniformTypeFromValue(val
 Program.prototype.compileShader = function compileShader(shader, source) {
     var i = 1;
 
-    if (this.options.debug) {
-        this.gl.compileShader = Debug.call(this);
-    }
-
     this.gl.shaderSource(shader, source);
     this.gl.compileShader(shader);
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
@@ -24528,7 +27058,7 @@ Program.prototype.compileShader = function compileShader(shader, source) {
 
 module.exports = Program;
 
-},{"../utilities/clone":95,"../utilities/keyValueToArrays":97,"../webgl-shaders":136,"./Debug":127}],129:[function(require,module,exports){
+},{"../utilities/clone":99,"../utilities/keyValueToArrays":101,"../webgl-shaders":140,"./Debug":131}],133:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24669,7 +27199,7 @@ Texture.prototype.readBack = function readBack(x, y, width, height) {
 
 module.exports = Texture;
 
-},{}],130:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24793,7 +27323,7 @@ TextureManager.prototype.register = function register(input, slot) {
 
         // Handle video
 
-        else if (window && source instanceof window.HTMLVideoElement) {
+        else if (source instanceof HTMLVideoElement) {
             source.addEventListener('loadeddata', function() {
                 _this.bindTexture(textureId);
                 texture.setImage(source);
@@ -24881,7 +27411,7 @@ TextureManager.prototype.bindTexture = function bindTexture(id) {
 
 module.exports = TextureManager;
 
-},{"./Texture":129,"./createCheckerboard":133}],131:[function(require,module,exports){
+},{"./Texture":133,"./createCheckerboard":137}],135:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24910,7 +27440,6 @@ module.exports = TextureManager;
 
 var Program = require('./Program');
 var BufferRegistry = require('./BufferRegistry');
-var Plane = require('../webgl-geometries/primitives/Plane');
 var sorter = require('./radixSort');
 var keyValueToArrays = require('../utilities/keyValueToArrays');
 var TextureManager = require('./TextureManager');
@@ -24978,7 +27507,6 @@ function WebGLRenderer(canvas, compositor) {
     this.lightColors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     this.textureManager = new TextureManager(gl);
-    this.texCache = {};
     this.bufferRegistry = new BufferRegistry(gl);
     this.program = new Program(gl, { debug: true });
 
@@ -24991,7 +27519,7 @@ function WebGLRenderer(canvas, compositor) {
     };
 
     this.resolutionName = ['u_resolution'];
-    this.resolutionValues = [];
+    this.resolutionValues = [[0, 0, 0]];
 
     this.cachedSize = [];
 
@@ -25012,12 +27540,21 @@ function WebGLRenderer(canvas, compositor) {
 
     // TODO: remove this hack
 
-    var cutout = this.cutoutGeometry = new Plane();
+    var cutout = this.cutoutGeometry = {
+        spec: {
+            id: -1,
+            bufferValues: [[-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0]],
+            bufferNames: ['a_pos'],
+            type: 'TRIANGLE_STRIP'
+        }
+    };
 
-    this.bufferRegistry.allocate(cutout.spec.id, 'a_pos', cutout.spec.bufferValues[0], 3);
-    this.bufferRegistry.allocate(cutout.spec.id, 'a_texCoord', cutout.spec.bufferValues[1], 2);
-    this.bufferRegistry.allocate(cutout.spec.id, 'a_normals', cutout.spec.bufferValues[2], 3);
-    this.bufferRegistry.allocate(cutout.spec.id, 'indices', cutout.spec.bufferValues[3], 1);
+    this.bufferRegistry.allocate(
+        this.cutoutGeometry.spec.id,
+        cutout.spec.bufferNames[0],
+        cutout.spec.bufferValues[0],
+        3
+    );
 }
 
 /**
@@ -25028,24 +27565,27 @@ function WebGLRenderer(canvas, compositor) {
  *
  * @param {Object} canvas Canvas element from which the context is retreived
  *
- * @return {Object} WebGLContext of canvas element
+ * @return {Object} WebGLContext WebGL context
  */
 WebGLRenderer.prototype.getWebGLContext = function getWebGLContext(canvas) {
     var names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'];
-    var context = null;
-    for (var i = 0; i < names.length; i++) {
+    var context;
+
+    for (var i = 0, len = names.length; i < len; i++) {
         try {
             context = canvas.getContext(names[i]);
         }
         catch (error) {
-            var msg = 'Error creating WebGL context: ' + error.prototype.toString();
-            console.error(msg);
+            console.error('Error creating WebGL context: ' + error.toString());
         }
-        if (context) {
-            break;
-        }
+        if (context) return context;
     }
-    return context ? context : false;
+
+    if (!context) {
+        console.error('Could not retrieve WebGL context. Please refer to https://www.khronos.org/webgl/ for requirements');
+        return false;
+    }
+
 };
 
 /**
@@ -25200,7 +27740,7 @@ WebGLRenderer.prototype.setCutoutUniform = function setCutoutUniform(path, unifo
 
     var index = cutout.uniformKeys.indexOf(uniformName);
 
-    if (Array.isArray(uniformValue)) {
+    if (uniformValue.length) {
         for (var i = 0, len = uniformValue.length; i < len; i++) {
             cutout.uniformValues[index][i] = uniformValue[i];
         }
@@ -25469,10 +28009,11 @@ WebGLRenderer.prototype.drawCutouts = function drawCutouts() {
     var buffers;
     var len = this.cutoutRegistryKeys.length;
 
-    if (len) {
-        this.gl.enable(this.gl.BLEND);
-        this.gl.depthMask(true);
-    }
+    if (!len) return;
+
+    this.gl.disable(this.gl.CULL_FACE);
+    this.gl.enable(this.gl.BLEND);
+    this.gl.depthMask(true);
 
     for (var i = 0; i < len; i++) {
         cutout = this.cutoutRegistry[this.cutoutRegistryKeys[i]];
@@ -25483,6 +28024,8 @@ WebGLRenderer.prototype.drawCutouts = function drawCutouts() {
         this.program.setUniforms(cutout.uniformKeys, cutout.uniformValues);
         this.drawBuffers(buffers, cutout.drawType, cutout.geometry);
     }
+
+    this.gl.enable(this.gl.CULL_FACE);
 };
 
 /**
@@ -25648,6 +28191,7 @@ WebGLRenderer.prototype.drawBuffers = function drawBuffers(vertexBuffers, mode, 
     this.state.lastDrawn = id;
 };
 
+
 /**
  * Updates the width and height of parent canvas, sets the viewport size on
  * the WebGL context and updates the resolution uniform for the shader program.
@@ -25694,14 +28238,18 @@ WebGLRenderer.prototype.handleOptions = function handleOptions(options, mesh) {
     var gl = this.gl;
     if (!options) return;
 
-    if (options.side === 'double') {
-        this.gl.cullFace(this.gl.FRONT);
-        this.drawBuffers(this.bufferRegistry.registry[mesh.geometry], mesh.drawType, mesh.geometry);
-        this.gl.cullFace(this.gl.BACK);
-    }
+    if (options.blending) gl.enable(gl.BLEND);
 
-    if (options.blending) gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    if (options.side === 'back') gl.cullFace(gl.FRONT);
+    switch (options.side) {
+        case 'double':
+            this.gl.cullFace(this.gl.FRONT);
+            this.drawBuffers(this.bufferRegistry.registry[mesh.geometry], mesh.drawType, mesh.geometry);
+            this.gl.cullFace(this.gl.BACK);
+            break;
+        case 'back':
+            gl.cullFace(gl.FRONT);
+            break;
+    }
 };
 
 /**
@@ -25716,13 +28264,13 @@ WebGLRenderer.prototype.handleOptions = function handleOptions(options, mesh) {
 WebGLRenderer.prototype.resetOptions = function resetOptions(options) {
     var gl = this.gl;
     if (!options) return;
-    if (options.blending) gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    if (options.blending) gl.disable(gl.BLEND);
     if (options.side === 'back') gl.cullFace(gl.BACK);
 };
 
 module.exports = WebGLRenderer;
 
-},{"../utilities/keyValueToArrays":97,"../webgl-geometries/primitives/Plane":112,"./BufferRegistry":126,"./Program":128,"./TextureManager":130,"./compileMaterial":132,"./radixSort":135}],132:[function(require,module,exports){
+},{"../utilities/keyValueToArrays":101,"./BufferRegistry":130,"./Program":132,"./TextureManager":134,"./compileMaterial":136,"./radixSort":139}],136:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25760,7 +28308,6 @@ var types = {
  * the vertex or fragment shader.
  *
  * @method
- * @protected
  *
  * @param {Object} material Material to be compiled.
  * @param {Number} textureSlot Next available texture slot for Mesh.
@@ -25775,7 +28322,7 @@ function compileMaterial(material, textureSlot) {
     var defines = [];
     var textures = [];
 
-    _traverse(material, function (node, depth) {
+    material.traverse(function (node, depth) {
         if (! node.chunk) return;
 
         var type = types[_getOutputLength(node)];
@@ -25791,6 +28338,7 @@ function compileMaterial(material, textureSlot) {
         if (node.texture) textures.push(node.texture);
     });
 
+    console.log(uniforms);
     return {
         _id: material._id,
         glsl: glsl + 'return ' + _makeLabel(material) + ';',
@@ -25800,20 +28348,6 @@ function compileMaterial(material, textureSlot) {
         attributes: attributes,
         textures: textures
     };
-}
-
-// Recursively iterates over a material's inputs, invoking a given callback
-// with the current material
-function _traverse(material, callback) {
-	var inputs = material.inputs;
-    var len = inputs && inputs.length;
-    var idx = -1;
-
-    while (++idx < len) _traverse(inputs[idx], callback);
-
-    callback(material);
-
-    return material;
 }
 
 // Helper function used to infer length of the output
@@ -25870,7 +28404,7 @@ function _arrayToVec(array) {
 
 module.exports = compileMaterial;
 
-},{}],133:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25897,8 +28431,15 @@ module.exports = compileMaterial;
 
 'use strict';
 
-// Generates a checkerboard pattern to be used as a placeholder texture while an
-// image loads over the network.
+/**
+ * Generates a checkerboard pattern to be used as a placeholder texture while
+ * an image loads over the network.
+ *
+ * @method  createCheckerBoard
+ *
+ * @return {HTMLCanvasElement} The `canvas` element that has been used in order
+ *                             to generate the pattern.
+ */
 function createCheckerBoard() {
     var context = document.createElement('canvas').getContext('2d');
     context.canvas.width = context.canvas.height = 128;
@@ -25914,7 +28455,7 @@ function createCheckerBoard() {
 
 module.exports = createCheckerBoard;
 
-},{}],134:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -25944,13 +28485,17 @@ module.exports = createCheckerBoard;
 module.exports = {
     Buffer: require('./Buffer'),
     BufferRegistry: require('./BufferRegistry'),
+    compileMaterial: require('./compileMaterial'),
     createCheckerboard: require('./createCheckerboard'),
+    Debug: require('./Debug'),
     Program: require('./Program'),
-    WebGLRenderer: require('./WebGLRenderer'),
-    Texture: require('./Texture')
+    radixSort: require('./radixSort'),
+    Texture: require('./Texture'),
+    TextureManager: require('./TextureManager'),
+    WebGLRenderer: require('./WebGLRenderer')
 };
 
-},{"./Buffer":125,"./BufferRegistry":126,"./Program":128,"./Texture":129,"./WebGLRenderer":131,"./createCheckerboard":133}],135:[function(require,module,exports){
+},{"./Buffer":129,"./BufferRegistry":130,"./Debug":131,"./Program":132,"./Texture":133,"./TextureManager":134,"./WebGLRenderer":135,"./compileMaterial":136,"./createCheckerboard":137,"./radixSort":139}],139:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26022,7 +28567,13 @@ function intToFloat(k) {
     return floatView[0];
 }
 
-//sorts a list of mesh IDs according to their z-depth
+/**
+ * Sorts an array of mesh IDs according to their z-depth.
+ *
+ * @param  {Array} list         An array of meshes.
+ * @param  {Object} registry    A registry mapping the path names to meshes.
+ * @return {Array}              An array of the meshes sorted by z-depth.
+ */
 function radixSort(list, registry) {
     var pass = 0;
     var out = [];
@@ -26081,12 +28632,43 @@ function radixSort(list, registry) {
 
 module.exports = radixSort;
 
-},{}],136:[function(require,module,exports){
-"use strict";
-var glslify = require("glslify");
-var shaders = require("glslify/simple-adapter.js")("\n#define GLSLIFY 1\n\nmat3 a_x_getNormalMatrix(in mat4 t) {\n  mat3 matNorm;\n  mat4 a = t;\n  float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3], a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3], a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3], a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3], b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10, b02 = a00 * a13 - a03 * a10, b03 = a01 * a12 - a02 * a11, b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12, b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30, b08 = a20 * a33 - a23 * a30, b09 = a21 * a32 - a22 * a31, b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32, det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n  det = 1.0 / det;\n  matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n  matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n  matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n  matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n  matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n  matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n  matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n  matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n  matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n  return matNorm;\n}\nfloat b_x_inverse(float m) {\n  return 1.0 / m;\n}\nmat2 b_x_inverse(mat2 m) {\n  return mat2(m[1][1], -m[0][1], -m[1][0], m[0][0]) / (m[0][0] * m[1][1] - m[0][1] * m[1][0]);\n}\nmat3 b_x_inverse(mat3 m) {\n  float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n  float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n  float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n  float b01 = a22 * a11 - a12 * a21;\n  float b11 = -a22 * a10 + a12 * a20;\n  float b21 = a21 * a10 - a11 * a20;\n  float det = a00 * b01 + a01 * b11 + a02 * b21;\n  return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11), b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10), b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\nmat4 b_x_inverse(mat4 m) {\n  float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3], a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3], a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3], a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3], b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10, b02 = a00 * a13 - a03 * a10, b03 = a01 * a12 - a02 * a11, b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12, b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30, b08 = a20 * a33 - a23 * a30, b09 = a21 * a32 - a22 * a31, b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32, det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n  return mat4(a11 * b11 - a12 * b10 + a13 * b09, a02 * b10 - a01 * b11 - a03 * b09, a31 * b05 - a32 * b04 + a33 * b03, a22 * b04 - a21 * b05 - a23 * b03, a12 * b08 - a10 * b11 - a13 * b07, a00 * b11 - a02 * b08 + a03 * b07, a32 * b02 - a30 * b05 - a33 * b01, a20 * b05 - a22 * b02 + a23 * b01, a10 * b10 - a11 * b08 + a13 * b06, a01 * b08 - a00 * b10 - a03 * b06, a30 * b04 - a31 * b02 + a33 * b00, a21 * b02 - a20 * b04 - a23 * b00, a11 * b07 - a10 * b09 - a12 * b06, a00 * b09 - a01 * b07 + a02 * b06, a31 * b01 - a30 * b03 - a32 * b00, a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\nfloat c_x_transpose(float m) {\n  return m;\n}\nmat2 c_x_transpose(mat2 m) {\n  return mat2(m[0][0], m[1][0], m[0][1], m[1][1]);\n}\nmat3 c_x_transpose(mat3 m) {\n  return mat3(m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2]);\n}\nmat4 c_x_transpose(mat4 m) {\n  return mat4(m[0][0], m[1][0], m[2][0], m[3][0], m[0][1], m[1][1], m[2][1], m[3][1], m[0][2], m[1][2], m[2][2], m[3][2], m[0][3], m[1][3], m[2][3], m[3][3]);\n}\nvec4 applyTransform(vec4 pos) {\n  mat4 MVMatrix = u_view * u_transform;\n  pos.x += 1.0;\n  pos.y -= 1.0;\n  pos.xyz *= u_size * 0.5;\n  pos.y *= -1.0;\n  v_position = (MVMatrix * pos).xyz;\n  v_eyeVector = (u_resolution * 0.5) - v_position;\n  pos = u_perspective * MVMatrix * pos;\n  return pos;\n}\n#vert_definitions\n\nvec3 calculateOffset(vec3 ID) {\n  \n  #vert_applications\n  return vec3(0.0);\n}\nvoid main() {\n  v_textureCoordinate = a_texCoord;\n  vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n  invertedNormals.y *= -1.0;\n  v_normal = c_x_transpose(mat3(b_x_inverse(u_transform))) * invertedNormals;\n  vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n  gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}", "\n#define GLSLIFY 1\n\n#float_definitions\n\nfloat a_x_applyMaterial(float ID) {\n  \n  #float_applications\n  return 1.;\n}\n#vec3_definitions\n\nvec3 a_x_applyMaterial(vec3 ID) {\n  \n  #vec3_applications\n  return vec3(0);\n}\n#vec4_definitions\n\nvec4 a_x_applyMaterial(vec4 ID) {\n  \n  #vec4_applications\n  return vec4(0);\n}\nvec4 b_x_applyLight(in vec4 baseColor, in vec3 normal, in vec4 glossiness) {\n  int numLights = int(u_numLights);\n  vec3 ambientColor = u_ambientLight * baseColor.rgb;\n  vec3 eyeVector = normalize(v_eyeVector);\n  vec3 diffuse = vec3(0.0);\n  bool hasGlossiness = glossiness.a > 0.0;\n  bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n  for(int i = 0; i < 4; i++) {\n    if(i >= numLights)\n      break;\n    vec3 lightDirection = normalize(u_lightPosition[i].xyz - v_position);\n    float lambertian = max(dot(lightDirection, normal), 0.0);\n    if(lambertian > 0.0) {\n      diffuse += u_lightColor[i].rgb * baseColor.rgb * lambertian;\n      if(hasGlossiness) {\n        vec3 halfVector = normalize(lightDirection + eyeVector);\n        float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n        vec3 specularColor = hasSpecularColor ? glossiness.rgb : u_lightColor[i].rgb;\n        diffuse += specularColor * specularWeight * lambertian;\n      }\n    }\n  }\n  return vec4(ambientColor + diffuse, baseColor.a);\n}\nvoid main() {\n  vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : a_x_applyMaterial(u_baseColor);\n  bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n  vec3 normal = normalize(v_normal);\n  vec4 glossiness = u_glossiness.x < 0.0 ? a_x_applyMaterial(u_glossiness) : u_glossiness;\n  vec4 color = lightsEnabled ? b_x_applyLight(material, normalize(v_normal), glossiness) : material;\n  gl_FragColor = color;\n  gl_FragColor.a *= u_opacity;\n}", [], []);
+},{}],140:[function(require,module,exports){
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Famous Industries Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+'use strict';
+
+
+
+var shaders = {
+    vertex: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates transpose inverse matrix from transform\n * \n * @method random\n * @private\n *\n *\n */\n\n\nmat3 getNormalMatrix_1_0(in mat4 t) {\n   mat3 matNorm;\n   mat4 a = t;\n\n   float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3],\n   a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3],\n   a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3],\n   a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3],\n   b00 = a00 * a11 - a01 * a10,\n   b01 = a00 * a12 - a02 * a10,\n   b02 = a00 * a13 - a03 * a10,\n   b03 = a01 * a12 - a02 * a11,\n   b04 = a01 * a13 - a03 * a11,\n   b05 = a02 * a13 - a03 * a12,\n   b06 = a20 * a31 - a21 * a30,\n   b07 = a20 * a32 - a22 * a30,\n   b08 = a20 * a33 - a23 * a30,\n   b09 = a21 * a32 - a22 * a31,\n   b10 = a21 * a33 - a23 * a31,\n   b11 = a22 * a33 - a23 * a32,\n\n   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n   det = 1.0 / det;\n\n   matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n   matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n   matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n\n   matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n   matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n   matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n\n   matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n   matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n   matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n\n   return matNorm;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates a matrix that creates the identity when multiplied by m\n * \n * @method inverse\n * @private\n *\n *\n */\n\n\nfloat inverse_2_1(float m) {\n    return 1.0 / m;\n}\n\nmat2 inverse_2_1(mat2 m) {\n    return mat2(m[1][1],-m[0][1],\n               -m[1][0], m[0][0]) / (m[0][0]*m[1][1] - m[0][1]*m[1][0]);\n}\n\nmat3 inverse_2_1(mat3 m) {\n    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n\n    float b01 =  a22 * a11 - a12 * a21;\n    float b11 = -a22 * a10 + a12 * a20;\n    float b21 =  a21 * a10 - a11 * a20;\n\n    float det = a00 * b01 + a01 * b11 + a02 * b21;\n\n    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),\n                b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),\n                b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\n\nmat4 inverse_2_1(mat4 m) {\n    float\n        a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n        a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n        a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n        a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n\n        b00 = a00 * a11 - a01 * a10,\n        b01 = a00 * a12 - a02 * a10,\n        b02 = a00 * a13 - a03 * a10,\n        b03 = a01 * a12 - a02 * a11,\n        b04 = a01 * a13 - a03 * a11,\n        b05 = a02 * a13 - a03 * a12,\n        b06 = a20 * a31 - a21 * a30,\n        b07 = a20 * a32 - a22 * a30,\n        b08 = a20 * a33 - a23 * a30,\n        b09 = a21 * a32 - a22 * a31,\n        b10 = a21 * a33 - a23 * a31,\n        b11 = a22 * a33 - a23 * a32,\n\n        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Reflects a matrix over its main diagonal.\n * \n * @method transpose\n * @private\n *\n *\n */\n\n\nfloat transpose_3_2(float m) {\n    return m;\n}\n\nmat2 transpose_3_2(mat2 m) {\n    return mat2(m[0][0], m[1][0],\n                m[0][1], m[1][1]);\n}\n\nmat3 transpose_3_2(mat3 m) {\n    return mat3(m[0][0], m[1][0], m[2][0],\n                m[0][1], m[1][1], m[2][1],\n                m[0][2], m[1][2], m[2][2]);\n}\n\nmat4 transpose_3_2(mat4 m) {\n    return mat4(m[0][0], m[1][0], m[2][0], m[3][0],\n                m[0][1], m[1][1], m[2][1], m[3][1],\n                m[0][2], m[1][2], m[2][2], m[3][2],\n                m[0][3], m[1][3], m[2][3], m[3][3]);\n}\n\n\n\n\n/**\n * Converts vertex from modelspace to screenspace using transform\n * information from context.\n *\n * @method applyTransform\n * @private\n *\n *\n */\n\nvec4 applyTransform(vec4 pos) {\n    //TODO: move this multiplication to application code. \n\n    /**\n     * Currently multiplied in the vertex shader to avoid consuming the complexity of holding an additional\n     * transform as state on the mesh object in WebGLRenderer. Multiplies the object's transformation from object space\n     * to world space with its transformation from world space to eye space.\n     */\n    mat4 MVMatrix = u_view * u_transform;\n\n    //TODO: move the origin, sizeScale and y axis inversion to application code in order to amortize redundant per-vertex calculations.\n\n    /**\n     * The transform uniform should be changed to the result of the transformation chain:\n     *\n     * view * modelTransform * invertYAxis * sizeScale * origin\n     *\n     * which could be simplified to:\n     *\n     * view * modelTransform * convertToDOMSpace\n     *\n     * where convertToDOMSpace represents the transform matrix:\n     *\n     *                           size.x 0       0       size.x \n     *                           0      -size.y 0       size.y\n     *                           0      0       1       0\n     *                           0      0       0       1\n     *\n     */\n\n    /**\n     * Assuming a unit volume, moves the object space origin [0, 0, 0] to the \"top left\" [1, -1, 0], the DOM space origin.\n     * Later in the transformation chain, the projection transform negates the rigidbody translation.\n     * Equivalent to (but much faster than) multiplying a translation matrix \"origin\"\n     *\n     *                           1 0 0 1 \n     *                           0 1 0 -1\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.x += 1.0;\n    pos.y -= 1.0;\n\n    /**\n     * Assuming a unit volume, scales an object to the amount of pixels in the size uniform vector's specified dimensions.\n     * Later in the transformation chain, the projection transform transforms the point into clip space by scaling\n     * by the inverse of the canvas' resolution.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"sizeScale\"\n     *\n     *                           size.x 0      0      0 \n     *                           0      size.y 0      0\n     *                           0      0      size.z 0\n     *                           0      0      0      1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.xyz *= u_size * 0.5;\n\n    /**\n     * Inverts the object space's y axis in order to match DOM space conventions. \n     * Later in the transformation chain, the projection transform reinverts the y axis to convert to clip space.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"invertYAxis\"\n     *\n     *                           1 0 0 0 \n     *                           0 -1 0 0\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.y *= -1.0;\n\n    /**\n     * Exporting the vertex's position as a varying, in DOM space, to be used for lighting calculations. This has to be in DOM space\n     * since light position and direction is derived from the scene graph, calculated in DOM space.\n     */\n\n    v_position = (MVMatrix * pos).xyz;\n\n    /**\n    * Exporting the eye vector (a vector from the center of the screen) as a varying, to be used for lighting calculations.\n    * In clip space deriving the eye vector is a matter of simply taking the inverse of the position, as the position is a vector\n    * from the center of the screen. However, since our points are represented in DOM space,\n    * the position is a vector from the top left corner of the screen, so some additional math is needed (specifically, subtracting\n    * the position from the center of the screen, i.e. half the resolution of the canvas).\n    */\n\n    v_eyeVector = (u_resolution * 0.5) - v_position;\n\n    /**\n     * Transforming the position (currently represented in dom space) into view space (with our dom space view transform)\n     * and then projecting the point into raster both by applying a perspective transformation and converting to clip space\n     * (the perspective matrix is a combination of both transformations, therefore it's probably more apt to refer to it as a\n     * projection transform).\n     */\n\n    pos = u_perspective * MVMatrix * pos;\n\n    return pos;\n}\n\n/**\n * Placeholder for positionOffset chunks to be templated in.\n * Used for mesh deformation.\n *\n * @method calculateOffset\n * @private\n *\n *\n */\n#vert_definitions\nvec3 calculateOffset(vec3 ID) {\n    #vert_applications\n    return vec3(0.0);\n}\n\n/**\n * Writes the position of the vertex onto the screen.\n * Passes texture coordinate and normal attributes as varyings\n * and passes the position attribute through position pipeline.\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    v_textureCoordinate = a_texCoord;\n    vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n    invertedNormals.y *= -1.0;\n    v_normal = transpose_3_2(mat3(inverse_2_1(u_transform))) * invertedNormals;\n    vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n    gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}\n",
+    fragment: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Placeholder for fragmentShader  chunks to be templated in.\n * Used for normal mapping, gloss mapping and colors.\n * \n * @method applyMaterial\n * @private\n *\n *\n */\n\n#float_definitions\nfloat applyMaterial_1_0(float ID) {\n    #float_applications\n    return 1.;\n}\n\n#vec3_definitions\nvec3 applyMaterial_1_0(vec3 ID) {\n    #vec3_applications\n    return vec3(0);\n}\n\n#vec4_definitions\nvec4 applyMaterial_1_0(vec4 ID) {\n    #vec4_applications\n\n    return vec4(0);\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates the intensity of light on a surface.\n *\n * @method applyLight\n * @private\n *\n */\nvec4 applyLight_2_1(in vec4 baseColor, in vec3 normal, in vec4 glossiness, int numLights, vec3 ambientColor, vec3 eyeVector, mat4 lightPosition, mat4 lightColor, vec3 v_position) {\n    vec3 diffuse = vec3(0.0);\n    bool hasGlossiness = glossiness.a > 0.0;\n    bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n\n    for(int i = 0; i < 4; i++) {\n        if (i >= numLights) break;\n        vec3 lightDirection = normalize(lightPosition[i].xyz - v_position);\n        float lambertian = max(dot(lightDirection, normal), 0.0);\n\n        if (lambertian > 0.0) {\n            diffuse += lightColor[i].rgb * baseColor.rgb * lambertian;\n            if (hasGlossiness) {\n                vec3 halfVector = normalize(lightDirection + eyeVector);\n                float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n                vec3 specularColor = hasSpecularColor ? glossiness.rgb : lightColor[i].rgb;\n                diffuse += specularColor * specularWeight * lambertian;\n            }\n        }\n\n    }\n\n    return vec4(ambientColor + diffuse, baseColor.a);\n}\n\n\n\n\n\n/**\n * Writes the color of the pixel onto the screen\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : applyMaterial_1_0(u_baseColor);\n\n    /**\n     * Apply lights only if flat shading is false\n     * and at least one light is added to the scene\n     */\n    bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n\n    vec3 normal = normalize(v_normal);\n    vec4 glossiness = u_glossiness.x < 0.0 ? applyMaterial_1_0(u_glossiness) : u_glossiness;\n\n    vec4 color = lightsEnabled ?\n    applyLight_2_1(material, normalize(v_normal), glossiness,\n               int(u_numLights),\n               u_ambientLight * u_baseColor.rgb,\n               normalize(v_eyeVector),\n               u_lightPosition,\n               u_lightColor,   \n               v_position)\n    : material;\n\n    gl_FragColor = color;\n    gl_FragColor.a *= u_opacity;   \n}\n"
+};
+
 module.exports = shaders;
-},{"glslify":46,"glslify/simple-adapter.js":47}],137:[function(require,module,exports){
+
+},{}],141:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -26116,292 +28698,293 @@ var CURVE = 'outBounce'; //outQuint outElastic inElastic inOutEase inBounce outB
  * @param {number} length - Length of array
  */
 if (!Array.prototype.initialize) {
-  Array.prototype.initialize = function (value, length) {
-    var arr = [];
-    while (length--) {
-      arr.push(value);
-    }
-    return arr;
-  };
+	Array.prototype.initialize = function (value, length) {
+		var arr = [];
+		while (length--) {
+			arr.push(value);
+		}
+		return arr;
+	};
 }
 
 function Background(rows, cols) {
-  Node.call(this);
-  this._domElement = new DOMElement(this, {
-    properties: {
-      backgroundColor: '#333'
-    }
-  });
+	Node.call(this);
+	this._domElement = new DOMElement(this, {
+		properties: {
+			backgroundColor: '#333'
+		}
+	});
 
-  var count = 0;
-  this.dots = [];
-  for (var row = 0; row < rows; row++) {
-    for (var col = 0; col < cols; col++) {
-      var dot = new Dot(count++);
-      this.addChild(dot);
-      this.dots.push(dot);
-    }
-  }
+	var count = 0;
+	this.dots = [];
+	for (var row = 0; row < rows; row++) {
+		for (var col = 0; col < cols; col++) {
+			var dot = new Dot(count++);
+			this.addChild(dot);
+			this.dots.push(dot);
+		}
+	}
 
-  this.mousing = 0;
-  /**
-   * Allow selecting dots by mousemoving
-   * @param {number} id - Id of dot
-   */
-  this.mousingDown = function (id) {
-    this.mousing = this.dots[id].fill ? -1 : +1;
-  };
-  this.mousingUp = function (id) {
-    this.mousing = 0;
-  };
+	this.mousing = 0;
+	/**
+  * Allow selecting dots by mousemoving
+  * @param {number} id - Id of dot
+  */
+	this.mousingDown = function (id) {
+		this.mousing = this.dots[id].fill ? -1 : +1;
+	};
+	this.mousingUp = function (id) {
+		this.mousing = 0;
+	};
 
-  this.hoverDots = [];
+	this.hoverDots = [];
 
-  /**
-   * Check dot for selectability
-   * @param {number} id - Id of dot
-   */
-  this.hoverDot = function (id) {
-    if (id !== undefined) {
-      if (!this.hoverDots.includes(id)) {
-        if (this.hoverDots.length < 12) {
-          this.hoverDots.push(id);
-          return true;
-        } else {
-          this.dots[this.hoverDots[0]].toggleFill();
-          this.hoverDots.shift();
-          this.hoverDots.push(id);
-          return true;
-        }
-      }
-    }
-  };
+	/**
+  * Check dot for selectability
+  * @param {number} id - Id of dot
+  */
+	this.hoverDot = function (id) {
+		if (id !== undefined) {
+			if (!this.hoverDots.includes(id)) {
+				if (this.hoverDots.length < 12) {
+					this.hoverDots.push(id);
+					return true;
+				} else {
+					this.dots[this.hoverDots[0]].toggleFill();
+					this.hoverDots.shift();
+					this.hoverDots.push(id);
+					return true;
+				}
+			}
+		}
+	};
 
-  this.filledRows = [].initialize(false, ROWS);
-  this.filledColumns = [].initialize(false, COLUMNS);
+	this.orderRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+	this.orderColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+	this.filledRows = [].initialize(false, ROWS);
+	this.filledColumns = [].initialize(false, COLUMNS);
 
-  /**
-   * Get filled rows and columns
-   * @param {number} id - Id of selected dot
-   */
-  this.defineFilledLine = function defineFilledLine(id) {
-    var dots = this.dots;
-    var offsetLine = this.offsetLine;
-    var filledRows = this.filledRows;
-    var filledColumns = this.filledColumns;
+	/**
+  * Get filled rows and columns
+  * @param {number} id - Id of selected dot
+  */
+	this.defineFilledLine = function defineFilledLine(id) {
+		var dots = this.dots;
+		var offsetLine = this.offsetLine;
+		var filledRows = this.filledRows;
+		var filledColumns = this.filledColumns;
 
-    var column = id % COLUMNS;
-    var columns = this.filledColumns.length;
-    var row = (id - column) / COLUMNS;
-    var rows = this.filledRows.length;
-    while (rows--) {
-      if (!this.dots[row * ROWS + rows].fill) {
-        rows = false;
-      }
-      if (rows === 0) {
-        this.filledRows[row] = row;
-        console.log('Fill Row: ' + row);
-      }
-    }
+		var column = id % COLUMNS;
+		var columns = this.filledColumns.length;
+		var row = (id - column) / COLUMNS;
+		var rows = this.filledRows.length;
+		while (rows--) {
+			if (!this.dots[row * ROWS + rows].fill) {
+				rows = false;
+			}
+			if (rows === 0) {
+				this.filledRows[row] = row;
+				console.log('Fill Row: ' + row);
+			}
+		}
 
-    while (columns--) {
-      if (!this.dots[columns * COLUMNS + column].fill) {
-        columns = false;
-      }
-      if (columns === 0) {
-        this.filledColumns[column] = column;
-        console.log('Fill Column: ' + column);
-      }
-    }
-    var _rowsAnimation = this.filledRows.filter(function (value) {
-      return value !== false;
-    });
-    var _columnsAnimation = this.filledColumns.filter(function (value) {
-      return value !== false;
-    });
-    this.offsetLines(_rowsAnimation, _columnsAnimation);
-  };
+		while (columns--) {
+			if (!this.dots[columns * COLUMNS + column].fill) {
+				columns = false;
+			}
+			if (columns === 0) {
+				this.filledColumns[column] = column;
+				console.log('Fill Column: ' + column);
+			}
+		}
+		var _rowsAnimation = this.filledRows.filter(function (value) {
+			return value !== false;
+		});
+		var _columnsAnimation = this.filledColumns.filter(function (value) {
+			return value !== false;
+		});
+		this.offsetLines(_rowsAnimation, _columnsAnimation);
+	};
 
-  /**
-   * Move lines (rows and columns)
-   * @param {string} type - Type - 'row' or 'column'
-   */
-  this.offsetLines = function offsetLines(rows, columns) {
-    for (var row = 0; row < rows.length; row++) {
-      this.offsetLine(rows[row], 'row');
-    }
-    for (var column = 0; column < columns.length; column++) {
-      this.offsetLine(columns[column], 'column');
-    }
-  };
+	/**
+  * Move lines (rows and columns)
+  * @param {string} type - Type - 'row' or 'column'
+  */
+	this.offsetLines = function offsetLines(rows, columns) {
+		for (var row = 0; row < rows.length; row++) {
+			this.offsetLine(rows[row], 'row');
+		}
+		for (var column = 0; column < columns.length; column++) {
+			this.offsetLine(columns[column], 'column');
+		}
+	};
 
-  /**
-   * Move line (row or column)
-   * @param {number} line - Which line we should move.
-   * @param {boolean} offsetX - Moving line along the X-axis
-   * @param {boolean} offsetY - Moving line along the Y-axis
-   */
-  this.offsetLine = function offsetLine(line, type) {
-    if (type === 'row') {
-      if (line < COLUMNS / 2) {
-        for (var row = line; row >= 0; row--) {
-          for (var column = 0; column < COLUMNS; column++) {
-            var dot = this.dots[row * ROWS + column];
-            var position = dot.position;
-            var y = position.getY();
-            position.setY(y + DOT_SIDE, {
-              duration: DURATION,
-              curve: CURVE
-            });
-          }
-        }
-        for (var column = 0; column < COLUMNS; column++) {
-          var dot = this.dots[line * COLUMNS + column];
-          var position = dot.position;
-          var y = position.getY();
-          position.setY(y - line * DOT_SIDE, {
-            duration: DURATION,
-            curve: CURVE
-          });
-          dot.deselect();
-          this.filledRows[line] = false;
-        }
-      } else {
-        for (var row = line + 1; row < ROWS; row++) {
-          for (var column = 0; column < COLUMNS; column++) {
-            var dot = this.dots[row * ROWS + column];
-            var position = dot.position;
-            var y = position.getY();
-            position.setY(y - DOT_SIDE, {
-              duration: DURATION,
-              curve: CURVE
-            });
-          }
-        }
-        for (var column = 0; column < COLUMNS; column++) {
-          var dot = this.dots[line * ROWS + column];
-          var position = dot.position;
-          var y = position.getY();
-          position.setY(y + (ROWS - 1 - line) * DOT_SIDE, {
-            duration: DURATION,
-            curve: CURVE
-          });
-          dot.deselect();
-          this.filledRows[line] = false;
-        }
-      }
-    } else if (type === 'column') {
-      if (line < ROWS / 2) {
-        for (var column = 0; column < COLUMNS; column++) {
-          for (var row = line; row >= 0; row--) {
-            var dot = this.dots[column * COLUMNS + row];
-            var position = dot.position;
-            var x = position.getX();
-            position.setX(x + DOT_SIDE, {
-              duration: DURATION,
-              curve: CURVE
-            });
-          }
-        }
-        for (var column = 0; column < COLUMNS; column++) {
-          var dot = this.dots[column * COLUMNS + line];
-          var position = dot.position;
-          var x = position.getX();
-          position.setX(x - line * DOT_SIDE, {
-            duration: DURATION,
-            curve: CURVE
-          });
-          dot.deselect();
-          this.filledColumns[line] = false;
-        }
-      } else {
-        for (var row = line + 1; row < ROWS; row++) {
-          for (var column = 0; column < COLUMNS; column++) {
-            var dot = this.dots[column * COLUMNS + row];
-            var position = dot.position;
-            var x = position.getX();
-            position.setX(x - DOT_SIDE, {
-              duration: DURATION,
-              curve: CURVE
-            });
-          }
-        }
-        for (var column = 0; column < COLUMNS; column++) {
-          var dot = this.dots[column * COLUMNS + line];
-          var position = dot.position;
-          var x = position.getX();
-          position.setX(x + (ROWS - 1 - line) * DOT_SIDE, {
-            duration: DURATION,
-            curve: CURVE
-          });
-          dot.deselect();
-          this.filledColumns[line] = false;
-        }
-      }
-    } else {
-      throw new Error('Can\'t animate - please, check type of line in function\'s parameters.');
-    }
-  };
+	/**
+  * Move line (row or column)
+  * @param {number} line - Which line we should move.
+  * @param {boolean} offsetX - Moving line along the X-axis
+  * @param {boolean} offsetY - Moving line along the Y-axis
+  */
+	this.offsetLine = function offsetLine(line, type) {
+		if (type === 'row') {
+			if (line < COLUMNS / 2) {
+				for (var row = line; row >= 0; row--) {
+					for (var column = 0; column < COLUMNS; column++) {
+						var dot = this.dots[row * ROWS + column];
+						var position = dot.position;
+						var y = position.getY();
+						position.setY(y + DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				for (var column = 0; column < COLUMNS; column++) {
+					var dot = this.dots[line * COLUMNS + column];
+					var position = dot.position;
+					var y = position.getY();
+					position.setY(y - line * DOT_SIDE, {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+					this.filledRows[line] = false;
+				}
+			} else {
+				for (var row = line + 1; row < ROWS; row++) {
+					for (var column = 0; column < COLUMNS; column++) {
+						var dot = this.dots[row * ROWS + column];
+						var position = dot.position;
+						var y = position.getY();
+						position.setY(y - DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				for (var column = 0; column < COLUMNS; column++) {
+					var dot = this.dots[line * ROWS + column];
+					var position = dot.position;
+					var y = position.getY();
+					position.setY(y + (ROWS - 1 - line) * DOT_SIDE, {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+					this.filledRows[line] = false;
+				}
+			}
+		} else if (type === 'column') {
+			if (line < ROWS / 2) {
+				for (var column = 0; column < COLUMNS; column++) {
+					for (var row = line; row >= 0; row--) {
+						var dot = this.dots[column * COLUMNS + row];
+						var position = dot.position;
+						var x = position.getX();
+						position.setX(x + DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				for (var column = 0; column < COLUMNS; column++) {
+					var dot = this.dots[column * COLUMNS + line];
+					var position = dot.position;
+					var x = position.getX();
+					position.setX(x - line * DOT_SIDE, {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+					this.filledColumns[line] = false;
+				}
+			} else {
+				for (var row = line + 1; row < ROWS; row++) {
+					for (var column = 0; column < COLUMNS; column++) {
+						var dot = this.dots[column * COLUMNS + row];
+						var position = dot.position;
+						var x = position.getX();
+						position.setX(x - DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				for (var column = 0; column < COLUMNS; column++) {
+					var dot = this.dots[column * COLUMNS + line];
+					var position = dot.position;
+					var x = position.getX();
+					position.setX(x + (ROWS - 1 - line) * DOT_SIDE, {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+					this.filledColumns[line] = false;
+				}
+			}
+		} else {
+			throw new Error('Can\'t animate - please, check type of line in function\'s parameters.');
+		}
+	};
 
-  var hoverId;
-  this.fillDot = function (id) {
-    if (id !== undefined) {
-      if (id !== hoverId) {
-        this.dots[id].toggleFill();
-        this.defineFilledLine(id);
-        hoverId = id;
-      }
-    }
-  };
+	var hoverId;
+	this.fillDot = function (id) {
+		if (id !== undefined) {
+			if (id !== hoverId) {
+				this.dots[id].toggleFill();
+				this.defineFilledLine(id);
+				hoverId = id;
+			}
+		}
+	};
 
-  // Centering
-  this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setOrigin(0.5, 0.5, 0).setPosition(0, 0, 0);
-  this.layout = new Layout(this);
+	// Centering
+	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setOrigin(0.5, 0.5, 0).setPosition(0, 0, 0);
+	this.layout = new Layout(this);
 
-  // addUIEvent is being used in order to instruct the node's DOMElement
-  // to add the appropriate event listener through the DOMRenderer.
-  // DOM events are being emitted as UI Events and routed accordingly.
-  this.addUIEvent('mousedown');
-  this.addUIEvent('touchstart');
-  // this.addUIEvent('mousemove');
-  // this.addUIEvent('touchmove');
-  this.addUIEvent('mouseup');
-  this.addUIEvent('touchend');
+	// addUIEvent is being used in order to instruct the node's DOMElement
+	// to add the appropriate event listener through the DOMRenderer.
+	// DOM events are being emitted as UI Events and routed accordingly.
+	this.addUIEvent('mousedown');
+	this.addUIEvent('touchstart');
+	// this.addUIEvent('mousemove');
+	// this.addUIEvent('touchmove');
+	this.addUIEvent('mouseup');
+	this.addUIEvent('touchend');
 }
 
 Background.prototype = Object.create(Node.prototype);
 Background.prototype.constructor = Node;
 
 Background.prototype.onReceive = function onReceive(type, ev) {
-  if (type === 'mousedown') {
-    // dispatch globally
-    this.emit('x', ev.x).emit('y', ev.y);
-    this.mousing = true;
-  }
-  if (type === 'touchstart') {
-    // dispatch globally
-    this.emit('x', ev.x).emit('y', ev.y);
-    this.mousing = true;
-  }
-  // if (type === 'mousemove') {
-  //   // dispatch globally
-  //   this.emit('x', ev.x).emit('y', ev.y);
-  // }
-  // if (type === 'touchmove') {
-  //   // dispatch globally
-  //   this.emit('x', ev.x).emit('y', ev.y);
-  // }
-  if (type === 'mouseup') {
-    // dispatch globally
-    this.emit('x', ev.x).emit('y', ev.y);
-    this.mousing = false;
-  }
-  if (type === 'touchend') {
-    // dispatch globally
-    this.emit('x', ev.x).emit('y', ev.y);
-    this.mousing = false;
-  }
-  this.receive(type, ev);
+	if (type === 'mousedown') {
+		// dispatch globally
+		this.emit('x', ev.x).emit('y', ev.y);
+		this.mousing = true;
+	}
+	if (type === 'touchstart') {
+		// dispatch globally
+		this.emit('x', ev.x).emit('y', ev.y);
+		this.mousing = true;
+	}
+	// if (type === 'mousemove') {
+	//   // dispatch globally
+	//   this.emit('x', ev.x).emit('y', ev.y);
+	// }
+	// if (type === 'touchmove') {
+	//   // dispatch globally
+	//   this.emit('x', ev.x).emit('y', ev.y);
+	// }
+	if (type === 'mouseup') {
+		// dispatch globally
+		this.emit('x', ev.x).emit('y', ev.y);
+		this.mousing = false;
+	}
+	if (type === 'touchend') {
+		// dispatch globally
+		this.emit('x', ev.x).emit('y', ev.y);
+		this.mousing = false;
+	}
 };
 
 // The Layout component is a state machine. Each layout can is a state.
@@ -26412,140 +28995,141 @@ Background.prototype.onReceive = function onReceive(type, ev) {
 // 4. duration: The duration of the animation used for transitioning to the
 //      state.
 function Layout(node) {
-  this.node = node;
-  this.id = this.node.addComponent(this);
-  this.current = 0;
-  // Dot layout -> Square layout -> Square layout with random Z
-  // -> Expanded square -> Square layout
-  this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
-  this.duration = [0.5 * DURATION, 3 * DURATION, 3 * DURATION, DURATION, 0.5 * DURATION];
+	this.node = node;
+	this.id = this.node.addComponent(this);
+	this.current = 0;
+	// Dot layout -> Square layout -> Square layout with random Z
+	// -> Expanded square -> Square layout
+	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
+	this.duration = [0.5 * DURATION, 3 * DURATION, 3 * DURATION, DURATION, 0.5 * DURATION];
 
-  // Transitions to initial state.
-  this.next();
+	// Transitions to initial state.
+	this.next();
 }
 
 // Transitions to the next state.
 // Called by node.
 Layout.prototype.next = function next() {
-  if (this.current++ === ROWS) {
-    this.current = 0;
-  }
-  var duration = this.duration[this.current];
-  var curve = this.curve[this.current];
-  var row = 0;
-  var col = 0;
-  var dimension = DOT_SIDE;
-  var bounds = [-(dimension * ROWS / 2 - dimension / 2), -(dimension * COLUMNS / 2 - dimension / 2)];
-  for (var i = 0; i < this.node.getChildren().length; i++) {
-    var x = bounds[0] + dimension * col++;
-    var y = bounds[1] + dimension * row;
-    var z = 0;
-    this.node.dots[i].position.set(x, y, z, {
-      duration: i * ROWS + duration,
-      curve: curve
-    });
-    if (col >= COLUMNS) {
-      col = 0;
-      row++;
-    }
-  }
+	if (this.current++ === ROWS) {
+		this.current = 0;
+	}
+	var duration = this.duration[this.current];
+	var curve = this.curve[this.current];
+	var row = 0;
+	var col = 0;
+	var dimension = DOT_SIDE;
+	var bounds = [-(dimension * ROWS / 2 - dimension / 2), -(dimension * COLUMNS / 2 - dimension / 2)];
+	for (var i = 0; i < this.node.getChildren().length; i++) {
+		var x = bounds[0] + dimension * col++;
+		var y = bounds[1] + dimension * row;
+		var z = 0;
+		this.node.dots[i].position.set(x, y, z, {
+			duration: i * ROWS + duration,
+			curve: curve
+		});
+		if (col >= COLUMNS) {
+			col = 0;
+			row++;
+		}
+	}
 };
 
 // Dots are nodes.
 // They have a DOMElement attached to them by default.
 function Dot(id) {
-  Node.call(this);
+	Node.call(this);
 
-  // Center dot.
-  this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(DOT_SIZE, DOT_SIZE, DOT_SIZE);
+	// Center dot.
+	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(DOT_SIZE, DOT_SIZE, DOT_SIZE);
 
-  // Add the DOMElement (DOMElements are components).
-  this._domElement = new DOMElement(this, {
-    properties: {
-      background: COLOR
-    }
-  });
-  this.id = id;
-  this.fill = false;
+	// Add the DOMElement (DOMElements are components).
+	this._domElement = new DOMElement(this, {
+		classes: ['no-user-select'],
+		properties: {
+			background: COLOR
+		},
+		content: id
+	});
+	this.id = id;
+	this.fill = false;
 
-  this.select = function select() {
-    if (!this.fill) {
-      this.fill = true;
-      this._domElement.setProperty('background-color', COLOR__ACTIVE);
-    }
-  };
+	this.select = function select() {
+		if (!this.fill) {
+			this.fill = true;
+			this._domElement.setProperty('background-color', COLOR__ACTIVE);
+		}
+	};
 
-  this.deselect = function deselect() {
-    if (this.fill) {
-      this.fill = false;
-      this._domElement.setProperty('background-color', COLOR);
-    }
-  };
+	this.deselect = function deselect() {
+		if (this.fill) {
+			this.fill = false;
+			this._domElement.setProperty('background-color', COLOR);
+		}
+	};
 
-  this.toggleFill = function toggleFill() {
-    this.fill = !this.fill;
-    this._domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
-  };
-  // Add the Position component.
-  // The position component allows us to transition between different states
-  // instead of instantly setting the final translation.
-  this.position = new Position(this);
-  // addUIEvent is being used in order to instruct the node's DOMElement
-  // to add the appropriate event listener through the DOMRenderer.
-  // DOM events are being emitted as UI Events and routed accordingly.
-  this.addUIEvent('mousedown');
-  this.addUIEvent('touchstart');
-  this.addUIEvent('mousemove');
-  this.addUIEvent('touchmove');
-  this.addUIEvent('click');
-  this.addUIEvent('mouseup');
-  this.addUIEvent('touchend');
+	this.toggleFill = function toggleFill() {
+		this.fill = !this.fill;
+		this._domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
+	};
+	// Add the Position component.
+	// The position component allows us to transition between different states
+	// instead of instantly setting the final translation.
+	this.position = new Position(this);
+	// addUIEvent is being used in order to instruct the node's DOMElement
+	// to add the appropriate event listener through the DOMRenderer.
+	// DOM events are being emitted as UI Events and routed accordingly.
+	this.addUIEvent('mousedown');
+	this.addUIEvent('touchstart');
+	this.addUIEvent('mousemove');
+	this.addUIEvent('touchmove');
+	this.addUIEvent('click');
+	this.addUIEvent('mouseup');
+	this.addUIEvent('touchend');
 }
 
 Dot.prototype = Object.create(Node.prototype);
 Dot.prototype.constructor = Dot;
 
 Dot.prototype.onReceive = function onReceive(type, ev) {
-  if (type === 'mousedown') {
-    console.log('mousedown');
-    this._parent.mousingDown(this.id);
-  }
-  if (type === 'touchstart') {
-    console.log('touchstart');
-    this._parent.mousingUp(this.id);
-  }
-  if (type === 'mousemove') {
-    console.log('mousemove', this.id);
-    if (this._parent.mousing === true) {
-      this._parent.fillDot(this.id);
-      this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
-    }
-  }
-  if (type === 'touchmove') {
-    console.log('touchmove', this.id);
-    if (this._parent.mousing === true) {
-      this._parent.fillDot(this.id);
-      this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
-    }
-  }
-  if (type === 'click') {
-    console.log('click', this.id);
-    this._parent.fillDot(this.id);
-    this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
-  }
-  if (type === 'mouseup') {
-    console.log('mouseup');
-    this._parent.mousingUp(this.id);
-  }
-  if (type === 'touchend') {
-    console.log('touchend');
-    this._parent.mousingDown(this.id);
-  }
-  this.receive(type, ev);
+	if (type === 'mousedown') {
+		console.log('mousedown');
+		this._parent.mousingDown(this.id);
+	}
+	if (type === 'touchstart') {
+		console.log('touchstart');
+		this._parent.mousingUp(this.id);
+	}
+	if (type === 'mousemove') {
+		console.log('mousemove', this.id);
+		if (this._parent.mousing === true) {
+			this._parent.fillDot(this.id);
+			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+		}
+	}
+	if (type === 'touchmove') {
+		console.log('touchmove', this.id);
+		if (this._parent.mousing === true) {
+			this._parent.fillDot(this.id);
+			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+		}
+	}
+	if (type === 'click') {
+		console.log('click', this.id);
+		this._parent.fillDot(this.id);
+		this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+	}
+	if (type === 'mouseup') {
+		console.log('mouseup');
+		this._parent.mousingUp(this.id);
+	}
+	if (type === 'touchend') {
+		console.log('touchend');
+		this._parent.mousingDown(this.id);
+	}
 };
 
 FamousEngine.init();
 var scene = FamousEngine.createScene();
 scene.addChild(new Background(ROWS, COLUMNS));
 
-},{"famous":40}]},{},[137]);
+},{"famous":46}]},{},[141]);
