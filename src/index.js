@@ -95,6 +95,170 @@ function Background(rows, cols) {
 	this.filledRows = [].initialize(false, ROWS);
 	this.filledColumns = [].initialize(false, COLUMNS);
 
+
+	this.checkLine = function checkLine() {
+		var dots = this.dots;
+		var filledRows = [];
+		var filledColumns = [];
+		for (let line = 0; line < 10; line++) {
+			let row = dots.filter((element) => element.id % 10 === line && element.fill === true);
+			let column = dots.filter((element) => Number.parseInt(element.id / 10) === line && element.fill === true);
+			if (row.length === 10) {
+				console.log('Filled row: ', line);
+				filledRows.push(line);
+			}
+			if (column.length === 10) {
+				filledColumns.push(line);
+				console.log('Filled column: ', line);
+			}
+		}
+		filledRows.sort(function (x, y) {
+			if (x < 5) {
+				return y - x;
+			} else {
+				return x - y;
+			}
+		});
+		filledColumns.sort(function (x, y) {
+			if (x < 5) {
+				return y - x;
+			} else {
+				return x - y;
+			}
+		});
+		for (let row = 0; row < filledRows.length; row++) {
+			this.moveLine(filledRows[row], 'y');
+		}
+		for (let column = 0; column < filledColumns.length; column++) {
+			this.moveLine(filledColumns[column], 'x');
+		}
+	}
+
+	this.moveLine = function moveLine(line, direction) {
+		console.log('moveLine', line, direction);
+		let dots = this.dots;
+		let orderRows = this.orderRows;
+		let orderColumns = this.orderColumns;
+
+		if (direction === 'x') {
+			let order = orderRows;
+			let lineX = order.indexOf(line);
+
+			if (line < 5) {
+
+				for (let row = 0; row < 10; row++) {
+					let dot = this.dots[order[lineX] * 10 + row];
+					let position = dot.position;
+					let y = position.getY();
+					position.setY(y - DOT_SIDE * lineX, {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+				}
+				for (let column = lineX - 1; column >= 0; column--) {
+					for (let row = 0; row < 10; row++) {
+						let dot = this.dots[order[column] * 10 + row];
+						let position = dot.position;
+						let y = position.getY();
+						position.setY(y + DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				orderRows.splice(lineX, 1);
+				orderRows.unshift(line);
+
+			} else {
+
+				for (let row = 0; row < 10; row++) {
+					let dot = this.dots[order[lineX] * 10 + row];
+					let position = dot.position;
+					let y = position.getY();
+					position.setY(y + DOT_SIDE * (9 - lineX), {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+				}
+				for (let column = 9; column > lineX; column--) {
+					for (let row = 0; row < 10; row++) {
+						let dot = this.dots[order[column] * 10 + row];
+						let position = dot.position;
+						let y = position.getY();
+						position.setY(y - DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				orderRows.splice(lineX, 1);
+				orderRows.push(line);
+			}
+
+		} else {
+
+
+			let order = orderColumns;
+			let lineX = order.indexOf(line);
+
+			if (line < 5) {
+
+				for (let column = 0; column < 10; column++) {
+					let dot = this.dots[column * 10 + order[lineX]];
+					let position = dot.position;
+					let x = position.getX();
+					position.setX(x - DOT_SIDE * lineX, {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+				}
+				for (let row = lineX - 1; row >= 0; row--) {
+					for (let column = 0; column < 10; column++) {
+						let dot = this.dots[column * 10 + order[row]];
+						let position = dot.position;
+						let x = position.getX();
+						position.setX(x + DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				orderColumns.splice(lineX, 1);
+				orderColumns.unshift(line);
+
+			} else {
+
+				for (let column = 0; column < 10; column++) {
+					let dot = this.dots[column * 10 + order[lineX]];
+					let position = dot.position;
+					let x = position.getX();
+					position.setX(x + DOT_SIDE * (9 - lineX), {
+						duration: DURATION,
+						curve: CURVE
+					});
+					dot.deselect();
+				}
+				for (let row = 9; row > lineX; row--) {
+					for (let column = 0; column < 10; column++) {
+						let dot = this.dots[column * 10 + order[row]];
+						let position = dot.position;
+						let x = position.getX();
+						position.setX(x - DOT_SIDE, {
+							duration: DURATION,
+							curve: CURVE
+						});
+					}
+				}
+				orderColumns.splice(lineX, 1);
+				orderColumns.push(line);
+			}
+
+		}
+	}
+
 	/**
 	 * Get filled rows and columns
 	 * @param {number} id - Id of selected dot
@@ -263,7 +427,8 @@ function Background(rows, cols) {
 		if (id !== undefined) {
 			if (id !== hoverId) {
 				this.dots[id].toggleFill();
-				this.defineFilledLine(id);
+				//this.defineFilledLine(id);
+				this.checkLine();
 				hoverId = id;
 			}
 		}
@@ -434,38 +599,31 @@ Dot.prototype.constructor = Dot;
 
 Dot.prototype.onReceive = function onReceive(type, ev) {
 	if (type === 'mousedown') {
-		console.log('mousedown');
 		this._parent.mousingDown(this.id);
 	}
 	if (type === 'touchstart') {
-		console.log('touchstart');
 		this._parent.mousingUp(this.id);
 	}
 	if (type === 'mousemove') {
-		console.log('mousemove', this.id);
 		if (this._parent.mousing === true) {
 			this._parent.fillDot(this.id);
 			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
 		}
 	}
 	if (type === 'touchmove') {
-		console.log('touchmove', this.id);
 		if (this._parent.mousing === true) {
 			this._parent.fillDot(this.id);
 			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
 		}
 	}
 	if (type === 'click') {
-		console.log('click', this.id);
 		this._parent.fillDot(this.id);
 		this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
 	}
 	if (type === 'mouseup') {
-		console.log('mouseup');
 		this._parent.mousingUp(this.id);
 	}
 	if (type === 'touchend') {
-		console.log('touchend');
 		this._parent.mousingDown(this.id);
 	}
 };
