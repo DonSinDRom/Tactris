@@ -92,9 +92,6 @@ function Background(rows, cols) {
 
 	this.orderRows = [0,1,2,3,4,5,6,7,8,9];
 	this.orderColumns = [0,1,2,3,4,5,6,7,8,9];
-	this.filledRows = [].initialize(false, ROWS);
-	this.filledColumns = [].initialize(false, COLUMNS);
-
 
 	this.checkLine = function checkLine() {
 		var dots = this.dots;
@@ -259,169 +256,6 @@ function Background(rows, cols) {
 		}
 	}
 
-	/**
-	 * Get filled rows and columns
-	 * @param {number} id - Id of selected dot
-	 */
-	this.defineFilledLine = function defineFilledLine(id) {
-		let dots = this.dots;
-		let offsetLine = this.offsetLine;
-		let filledRows = this.filledRows;
-		let filledColumns = this.filledColumns;
-
-		let column = id % COLUMNS;
-		let columns = this.filledColumns.length;
-		let row = (id - column) / COLUMNS;
-		let rows = this.filledRows.length;
-		while (rows--) {
-			if (!this.dots[row * ROWS + rows].fill) {
-				rows = false;
-			}
-			if (rows === 0) {
-				this.filledRows[row] = row;
-				console.log('Fill Row: ' + row);
-			}
-		}
-
-		while (columns--) {
-			if (!this.dots[columns * COLUMNS + column].fill) {
-				columns = false;
-			}
-			if (columns === 0) {
-				this.filledColumns[column] = column;
-				console.log('Fill Column: ' + column);
-			}
-		}
-		var _rowsAnimation = this.filledRows.filter(value => {
-			return value !== false;
-		});
-		var _columnsAnimation = this.filledColumns.filter(value => {
-			return value !== false;
-		});
-		this.offsetLines(_rowsAnimation, _columnsAnimation);
-	};
-
-	/**
-	 * Move lines (rows and columns)
-	 * @param {string} type - Type - 'row' or 'column'
-	 */
-	this.offsetLines = function offsetLines(rows, columns) {
-		for (let row = 0; row < rows.length; row++) {
-			this.offsetLine(rows[row], 'row');
-		}
-		for (let column = 0; column < columns.length; column++) {
-			this.offsetLine(columns[column], 'column');
-		}
-	};
-
-	/**
-	 * Move line (row or column)
-	 * @param {number} line - Which line we should move.
-	 * @param {boolean} offsetX - Moving line along the X-axis
-	 * @param {boolean} offsetY - Moving line along the Y-axis
-	 */
-	this.offsetLine = function offsetLine(line, type) {
-		if (type === 'row') {
-			if (line < COLUMNS / 2) {
-				for (let row = line; row >= 0; row--) {
-					for (let column = 0; column < COLUMNS; column++) {
-						let dot = this.dots[row * ROWS + column];
-						let position = dot.position;
-						let y = position.getY();
-						position.setY(y + DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				for (let column = 0; column < COLUMNS; column++) {
-					let dot = this.dots[line * COLUMNS + column];
-					let position = dot.position;
-					let y = position.getY();
-					position.setY(y - (line * DOT_SIDE), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-					this.filledRows[line] = false;
-				}
-			} else {
-				for (let row = line + 1; row < ROWS; row++) {
-					for (let column = 0; column < COLUMNS; column++) {
-						let dot = this.dots[row * ROWS + column];
-						let position = dot.position;
-						let y = position.getY();
-						position.setY(y - DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				for (let column = 0; column < COLUMNS; column++) {
-					let dot = this.dots[line * ROWS + column];
-					let position = dot.position;
-					let y = position.getY();
-					position.setY(y + ((ROWS - 1 - line) * DOT_SIDE), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-					this.filledRows[line] = false;
-				}
-			}
-		} else if (type === 'column') {
-			if (line < ROWS / 2) {
-				for (let column = 0; column < COLUMNS; column++) {
-					for (let row = line; row >= 0; row--) {
-						let dot = this.dots[column * COLUMNS + row];
-						let position = dot.position;
-						let x = position.getX();
-						position.setX(x + DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				for (let column = 0; column < COLUMNS; column++) {
-					let dot = this.dots[column * COLUMNS + line];
-					let position = dot.position;
-					let x = position.getX();
-					position.setX(x - (line * DOT_SIDE), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-					this.filledColumns[line] = false;
-				}
-			} else {
-				for (let row = line + 1; row < ROWS; row++) {
-					for (let column = 0; column < COLUMNS; column++) {
-						let dot = this.dots[column * COLUMNS + row];
-						let position = dot.position;
-						let x = position.getX();
-						position.setX(x - DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				for (let column = 0; column < COLUMNS; column++) {
-					let dot = this.dots[column * COLUMNS + line];
-					let position = dot.position;
-					let x = position.getX();
-					position.setX(x + ((ROWS - 1 - line) * DOT_SIDE), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-					this.filledColumns[line] = false;
-				}
-			}
-		} else {
-			throw new Error('Can\'t animate - please, check type of line in function\'s parameters.');
-		}
-	};
-
 	var hoverId;
 	this.fillDot = function (id) {
 		if (id !== undefined) {
@@ -554,8 +388,7 @@ function Dot(id) {
 		classes: ['no-user-select'],
 		properties: {
 			background: COLOR
-		},
-		content: id
+		}
 	});
 	this.id = id;
 	this.fill = false;
