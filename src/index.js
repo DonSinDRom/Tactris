@@ -13,7 +13,7 @@ const DOMElement = famous.domRenderables.DOMElement;
 
 const COLOR = 'rgb(122,199,79)';
 const COLOR__ACTIVE = 'rgb(232,116,97)';
-const DOT_SIZE = 48;
+const DOT_SIZE = 35;
 const DOT_MARGIN = 1;
 const DOT_SIDE = DOT_SIZE + DOT_MARGIN;
 const ROWS = 10;
@@ -276,13 +276,10 @@ function Background(rows, cols) {
 		.setPosition(0, 0, 0);
 	this.layout = new Layout(this);
 
-	// addUIEvent is being used in order to instruct the node's DOMElement
-	// to add the appropriate event listener through the DOMRenderer.
-	// DOM events are being emitted as UI Events and routed accordingly.
+
 	this.addUIEvent('mousedown');
 	this.addUIEvent('touchstart');
-	// this.addUIEvent('mousemove');
-	// this.addUIEvent('touchmove');
+
 	this.addUIEvent('mouseup');
 	this.addUIEvent('touchend');
 }
@@ -291,33 +288,28 @@ Background.prototype = Object.create(Node.prototype);
 Background.prototype.constructor = Node;
 
 Background.prototype.onReceive = function onReceive(type, ev) {
-	if (type === 'mousedown') {
-		// dispatch globally
-		this.emit('x', ev.x).emit('y', ev.y);
-		this.mousing = true;
-	}
-	if (type === 'touchstart') {
-		// dispatch globally
-		this.emit('x', ev.x).emit('y', ev.y);
-		this.mousing = true;
-	}
-	// if (type === 'mousemove') {
-	//   // dispatch globally
-	//   this.emit('x', ev.x).emit('y', ev.y);
-	// }
-	// if (type === 'touchmove') {
-	//   // dispatch globally
-	//   this.emit('x', ev.x).emit('y', ev.y);
-	// }
-	if (type === 'mouseup') {
-		// dispatch globally
-		this.emit('x', ev.x).emit('y', ev.y);
-		this.mousing = false;
-	}
-	if (type === 'touchend') {
-		// dispatch globally
-		this.emit('x', ev.x).emit('y', ev.y);
-		this.mousing = false;
+
+	switch (type) {
+	case 'mousedown':
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = true;
+			break;
+	case 'touchstart':
+			console.log('Background.touchstart');
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = true;
+			break;
+	case 'mouseup':
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = false;
+			break;
+	case 'touchend':
+			console.log('Background.touchend');
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = false;
+			break;
+	default:
+			return false;
 	}
 };
 
@@ -415,14 +407,15 @@ function Dot(id) {
 	// The position component allows us to transition between different states
 	// instead of instantly setting the final translation.
 	this.position = new Position(this);
-	// addUIEvent is being used in order to instruct the node's DOMElement
-	// to add the appropriate event listener through the DOMRenderer.
-	// DOM events are being emitted as UI Events and routed accordingly.
+
 	this.addUIEvent('mousedown');
 	this.addUIEvent('touchstart');
+
 	this.addUIEvent('mousemove');
 	this.addUIEvent('touchmove');
+
 	this.addUIEvent('click');
+
 	this.addUIEvent('mouseup');
 	this.addUIEvent('touchend');
 }
@@ -431,33 +424,41 @@ Dot.prototype = Object.create(Node.prototype);
 Dot.prototype.constructor = Dot;
 
 Dot.prototype.onReceive = function onReceive(type, ev) {
-	if (type === 'mousedown') {
-		this._parent.mousingDown(this.id);
-	}
-	if (type === 'touchstart') {
-		this._parent.mousingUp(this.id);
-	}
-	if (type === 'mousemove') {
-		if (this._parent.mousing === true) {
+	switch (type) {
+	case 'mousedown':
+			this._parent.mousingDown(this.id);
+			break;
+	case 'touchstart':
+			console.log('Dot.touchstart', this.id);
+			this._parent.mousingUp(this.id);
+			break;
+	case 'mousemove':
+			if (this._parent.mousing === true) {
+				this._parent.fillDot(this.id);
+				this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+			}
+			break;
+	case 'touchmove':
+			console.log('Dot.touchmove', ev);
+			console.log('Dot.touchmove', this.id);
+			if (this._parent.mousing === true) {
+				this._parent.fillDot(this.id);
+				this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+			}
+			break;
+	case 'click':
 			this._parent.fillDot(this.id);
 			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
-		}
-	}
-	if (type === 'touchmove') {
-		if (this._parent.mousing === true) {
-			this._parent.fillDot(this.id);
-			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
-		}
-	}
-	if (type === 'click') {
-		this._parent.fillDot(this.id);
-		this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
-	}
-	if (type === 'mouseup') {
-		this._parent.mousingUp(this.id);
-	}
-	if (type === 'touchend') {
-		this._parent.mousingDown(this.id);
+			break;
+	case 'mouseup':
+			this._parent.mousingUp(this.id);
+			break;
+	case 'touchend':
+			console.log('Dot.touchend', this.id);
+			this._parent.mousingDown(this.id);
+			break;
+	default:
+			return false;
 	}
 };
 
