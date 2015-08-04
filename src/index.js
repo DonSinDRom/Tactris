@@ -94,7 +94,10 @@ function Background(rows, cols) {
 	this.orderRows = [].initialize(ROWS);
 	this.orderColumns = [].initialize(COLUMNS);
 
-	this.checkLine = function checkLine() {
+	/**
+	 * Check lines if dots are filled
+	 */
+	this.checkLines = function checkLines() {
 		var dots = this.dots;
 		var filledRows = [];
 		var filledColumns = [];
@@ -132,6 +135,10 @@ function Background(rows, cols) {
 		}
 	}
 
+	/**
+	 * Move filled line
+	 * @param {number} id - Id of filled line
+	 */
 	this.moveLine = function moveLine(line, direction) {
 		console.log('moveLine', line, direction);
 		let dots = this.dots;
@@ -260,14 +267,17 @@ function Background(rows, cols) {
 		}
 	};
 
-
 	var hoverId;
+
+	/**
+	 * Fill dot
+	 * @param {number} id - Id of dot
+	 */
 	this.fillDot = function (id) {
 		if (id !== undefined) {
 			if (id !== hoverId) {
 				this.dots[id].toggleFill();
-				//this.defineFilledLine(id);
-				this.checkLine();
+				this.checkLines();
 				hoverId = id;
 			}
 		}
@@ -293,7 +303,6 @@ Background.prototype = Object.create(Node.prototype);
 Background.prototype.constructor = Node;
 
 Background.prototype.onReceive = function onReceive(type, ev) {
-
 	switch (type) {
 	case 'mousedown':
 			this.emit('x', ev.x).emit('y', ev.y);
@@ -318,28 +327,16 @@ Background.prototype.onReceive = function onReceive(type, ev) {
 	}
 };
 
-// The Layout component is a state machine. Each layout can is a state.
-// The state is defined by
-// 1. spacing: The dot spacing.
-// 2. randomizePositionZ: Whether the x position should be randomized.
-// 3. curve: The easing curve used to enter the state.
-// 4. duration: The duration of the animation used for transitioning to the
-//      state.
 function Layout(node) {
 	this.node = node;
 	this.id = this.node.addComponent(this);
 	this.current = 0;
-	// Dot layout -> Square layout -> Square layout with random Z
-	// -> Expanded square -> Square layout
 	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
 	this.duration = [0.5 * DURATION, 3 * DURATION, 3 * DURATION, DURATION, 0.5 * DURATION];
 
-	// Transitions to initial state.
 	this.next();
 }
 
-// Transitions to the next state.
-// Called by node.
 Layout.prototype.next = function next() {
 	if (this.current++ === ROWS) {
 		this.current = 0;
@@ -366,10 +363,6 @@ Layout.prototype.next = function next() {
 };
 
 
-
-
-// Dots are nodes.
-// They have a DOMElement attached to them by default.
 function Dot(id) {
 	Node.call(this);
 
@@ -380,14 +373,12 @@ function Dot(id) {
 		.setSizeMode('absolute', 'absolute', 'absolute')
 		.setAbsoluteSize(DOT_SIZE, DOT_SIZE, DOT_SIZE);
 
-	// Add the DOMElement (DOMElements are components).
 	this.domElement = new DOMElement(this, {
 		classes: ['no-user-select'],
 		properties: {
 			background: COLOR
 		}
 	});
-
 
 	this.id = id;
 	this.fill = false;
@@ -418,9 +409,7 @@ function Dot(id) {
 		this.domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
 		this.domElement.setAttribute('aria-checked', this.fill);
 	};
-	// Add the Position component.
-	// The position component allows us to transition between different states
-	// instead of instantly setting the final translation.
+
 	this.position = new Position(this);
 
 	this.addUIEvent('mousedown');
