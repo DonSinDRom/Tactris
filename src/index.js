@@ -1,26 +1,23 @@
 'use strict';
 
-const famous = require('famous');
+var famous = require('famous');
 
-const Node = famous.core.Node;
-const FamousEngine = famous.core.FamousEngine;
-const Align = famous.components.Align;
-const Position = famous.components.Position;
-const Size = famous.components.Size;
-const Rotation = famous.components.Rotation;
-const Curves = famous.transitions.Curves;
-const DOMElement = famous.domRenderables.DOMElement;
+var Node = famous.core.Node;
+var FamousEngine = famous.core.FamousEngine;
+var Position = famous.components.Position;
+var Curves = famous.transitions.Curves;
+var DOMElement = famous.domRenderables.DOMElement;
 
-const COLOR = 'rgb(122,199,79)';
-const COLOR__ACTIVE = 'rgb(232,116,97)';
-const DOT_SIZE = 35;
-const DOT_MARGIN = 1;
-const DOT_SIDE = DOT_SIZE + DOT_MARGIN;
-const DIMENSION = 12;
-const ROWS = DIMENSION;
-const COLUMNS = DIMENSION;
-const DURATION = 600;
-const CURVE = 'outBounce'; //outQuint outElastic inElastic inOutEase inBounce outBounce
+var COLOR = 'rgb(122,199,79)';
+var COLOR__ACTIVE = 'rgb(232,116,97)';
+var DOT_SIZE = 35;
+var DOT_MARGIN = 1;
+var DOT_SIDE = DOT_SIZE + DOT_MARGIN;
+var DIMENSION = 12;
+var ROWS = DIMENSION;
+var COLUMNS = DIMENSION;
+var DURATION = 600;
+var CURVE = 'outBounce'; //outQuint outElastic inElastic inOutEase inBounce outBounce
 
 /**
  * Initialize fixed-sized array with incremented values
@@ -56,8 +53,8 @@ function Background(rows, cols) {
 		}
 	}
 
-
 	this.mousing = 0;
+
 	/**
 	 * Allow selecting dots by mousemoving
 	 * @param {number} id - Id of dot
@@ -133,7 +130,7 @@ function Background(rows, cols) {
 		for (let column = 0; column < filledColumns.length; column++) {
 			this.moveLine(filledColumns[column], 'x');
 		}
-	}
+	};
 
 	/**
 	 * Move filled line
@@ -141,7 +138,6 @@ function Background(rows, cols) {
 	 */
 	this.moveLine = function moveLine(line, direction) {
 		console.log('moveLine', line, direction);
-		let dots = this.dots;
 		let orderRows = this.orderRows;
 		let orderColumns = this.orderColumns;
 		let order = [];
