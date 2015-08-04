@@ -2,7 +2,8 @@
 
 var famous = require('famous');
 
-var Node = famous.core.Node;
+/*jshint -W079 */
+var Node = famous.core.Node;/*jshint +W079 */
 var FamousEngine = famous.core.FamousEngine;
 var Position = famous.components.Position;
 var Curves = famous.transitions.Curves;
@@ -23,6 +24,7 @@ var CURVE = 'outBounce'; //outQuint outElastic inElastic inOutEase inBounce outB
  * Initialize fixed-sized array with incremented values
  * @param {number} length - Length of array
  */
+/*jshint -W121 */
 if (!Array.prototype.initialize) {
 	Array.prototype.initialize = function (length) {
 		var arr = [];
@@ -31,7 +33,7 @@ if (!Array.prototype.initialize) {
 		}
 		return arr;
 	};
-}
+}/*jshint -W121 */
 
 
 function Background(rows, cols) {
@@ -94,6 +96,7 @@ function Background(rows, cols) {
 	/**
 	 * Check lines if dots are filled
 	 */
+	/*jshint -W074 */
 	this.checkLines = function checkLines() {
 		var dots = this.dots;
 		var filledRows = [];
@@ -130,12 +133,13 @@ function Background(rows, cols) {
 		for (let column = 0; column < filledColumns.length; column++) {
 			this.moveLine(filledColumns[column], 'x');
 		}
-	};
+	};/*jshint +W074 */
 
 	/**
 	 * Move filled line
 	 * @param {number} id - Id of filled line
 	 */
+	/*jshint -W071, -W074 */
 	this.moveLine = function moveLine(line, direction) {
 		console.log('moveLine', line, direction);
 		let orderRows = this.orderRows;
@@ -261,7 +265,7 @@ function Background(rows, cols) {
 		default:
 				return false;
 		}
-	};
+	};/*jshint +W071, +W074 */
 
 	var hoverId;
 
@@ -422,6 +426,7 @@ function Dot(id) {
 Dot.prototype = Object.create(Node.prototype);
 Dot.prototype.constructor = Dot;
 
+/*jshint -W074 */
 Dot.prototype.onReceive = function onReceive(type, ev) {
 	switch (type) {
 	case 'mousedown':
@@ -459,7 +464,7 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 	default:
 			return false;
 	}
-};
+};/*jshint +W074 */
 
 FamousEngine.init();
 var scene = FamousEngine.createScene();
