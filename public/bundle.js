@@ -28763,21 +28763,21 @@ var COLOR__ACTIVE = 'rgb(232,116,97)';
 var DOT_SIZE = 35;
 var DOT_MARGIN = 1;
 var DOT_SIDE = DOT_SIZE + DOT_MARGIN;
-var ROWS = 10;
-var COLUMNS = 10;
+var DIMENSION = 12;
+var ROWS = DIMENSION;
+var COLUMNS = DIMENSION;
 var DURATION = 600;
 var CURVE = 'outBounce'; //outQuint outElastic inElastic inOutEase inBounce outBounce
 
 /**
- * Initialize fixed-sized array with determinated value
- * @param {*} value - Determinated value
+ * Initialize fixed-sized array with incremented values
  * @param {number} length - Length of array
  */
 if (!Array.prototype.initialize) {
-	Array.prototype.initialize = function (value, length) {
+	Array.prototype.initialize = function (length) {
 		var arr = [];
-		while (length--) {
-			arr.push(value);
+		for (var i = 0; i < length; i++) {
+			arr.push(i);
 		}
 		return arr;
 	};
@@ -28785,11 +28785,7 @@ if (!Array.prototype.initialize) {
 
 function Background(rows, cols) {
 	Node.call(this);
-	this.domElement = new DOMElement(this, {
-		//		properties: {
-		//			backgroundColor: '#333'
-		//		}
-	});
+	this.domElement = new DOMElement(this, {});
 
 	this.domElement.setAttribute('role', 'grid');
 	this.domElement.setAttribute('aria-multiselectable', true);
@@ -28840,8 +28836,8 @@ function Background(rows, cols) {
 		}
 	};
 
-	this.orderRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-	this.orderColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+	this.orderRows = [].initialize(ROWS);
+	this.orderColumns = [].initialize(COLUMNS);
 
 	this.checkLine = function checkLine() {
 		var dots = this.dots;
@@ -28850,33 +28846,33 @@ function Background(rows, cols) {
 
 		var _loop = function (line) {
 			var row = dots.filter(function (element) {
-				return Number.parseInt(element.id / 10) === line && element.fill === true;
+				return Number.parseInt(element.id / ROWS) === line && element.fill === true;
 			});
 			var column = dots.filter(function (element) {
-				return element.id % 10 === line && element.fill === true;
+				return element.id % COLUMNS === line && element.fill === true;
 			});
-			if (row.length === 10) {
+			if (row.length === ROWS) {
 				console.log('Filled row: ', line);
 				filledRows.push(line);
 			}
-			if (column.length === 10) {
+			if (column.length === COLUMNS) {
 				filledColumns.push(line);
 				console.log('Filled column: ', line);
 			}
 		};
 
-		for (var line = 0; line < 10; line++) {
+		for (var line = 0; line < DIMENSION; line++) {
 			_loop(line);
 		}
 		filledRows.sort(function (x, y) {
-			if (x < 5) {
+			if (x < ROWS / 2) {
 				return y - x;
 			} else {
 				return x - y;
 			}
 		});
 		filledColumns.sort(function (x, y) {
-			if (x < 5) {
+			if (x < COLUMNS / 2) {
 				return y - x;
 			} else {
 				return x - y;
@@ -28902,9 +28898,9 @@ function Background(rows, cols) {
 			case 'x':
 				order = orderColumns;
 				lineHash = order.indexOf(line);
-				if (line < 5) {
-					for (var row = 0; row < 10; row++) {
-						var dot = this.dots[row * 10 + order[lineHash]];
+				if (line < COLUMNS / 2) {
+					for (var row = 0; row < ROWS; row++) {
+						var dot = this.dots[row * ROWS + order[lineHash]];
 						var position = dot.position;
 						var x = position.getX();
 						position.setX(x - DOT_SIDE * lineHash, {
@@ -28915,8 +28911,8 @@ function Background(rows, cols) {
 						dot.deselect();
 					}
 					for (var column = lineHash - 1; column >= 0; column--) {
-						for (var row = 0; row < 10; row++) {
-							var dot = this.dots[row * 10 + order[column]];
+						for (var row = 0; row < ROWS; row++) {
+							var dot = this.dots[row * ROWS + order[column]];
 							var position = dot.position;
 							var x = position.getX();
 							position.setX(x + DOT_SIDE, {
@@ -28929,20 +28925,20 @@ function Background(rows, cols) {
 					orderColumns.splice(lineHash, 1);
 					orderColumns.unshift(line);
 				} else {
-					for (var row = 0; row < 10; row++) {
-						var dot = this.dots[row * 10 + order[lineHash]];
+					for (var row = 0; row < ROWS; row++) {
+						var dot = this.dots[row * ROWS + order[lineHash]];
 						var position = dot.position;
 						var x = position.getX();
-						position.setX(x + DOT_SIDE * (9 - lineHash), {
+						position.setX(x + DOT_SIDE * (ROWS - 1 - lineHash), {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.domElement.setAttribute('aria-colindex', 9);
+						dot.domElement.setAttribute('aria-colindex', ROWS - 1);
 						dot.deselect();
 					}
-					for (var column = 9; column > lineHash; column--) {
-						for (var row = 0; row < 10; row++) {
-							var dot = this.dots[row * 10 + order[column]];
+					for (var column = COLUMNS - 1; column > lineHash; column--) {
+						for (var row = 0; row < ROWS; row++) {
+							var dot = this.dots[row * ROWS + order[column]];
 							var position = dot.position;
 							var x = position.getX();
 							position.setX(x - DOT_SIDE, {
@@ -28959,9 +28955,9 @@ function Background(rows, cols) {
 			case 'y':
 				order = orderRows;
 				lineHash = order.indexOf(line);
-				if (line < 5) {
-					for (var column = 0; column < 10; column++) {
-						var dot = this.dots[order[lineHash] * 10 + column];
+				if (line < ROWS / 2) {
+					for (var column = 0; column < COLUMNS; column++) {
+						var dot = this.dots[order[lineHash] * COLUMNS + column];
 						var position = dot.position;
 						var y = position.getY();
 						position.setY(y - DOT_SIDE * lineHash, {
@@ -28972,8 +28968,8 @@ function Background(rows, cols) {
 						dot.deselect();
 					}
 					for (var row = lineHash - 1; row >= 0; row--) {
-						for (var column = 0; column < 10; column++) {
-							var dot = this.dots[order[row] * 10 + column];
+						for (var column = 0; column < COLUMNS; column++) {
+							var dot = this.dots[order[row] * COLUMNS + column];
 							var position = dot.position;
 							var y = position.getY();
 							position.setY(y + DOT_SIDE, {
@@ -28986,20 +28982,20 @@ function Background(rows, cols) {
 					orderRows.splice(lineHash, 1);
 					orderRows.unshift(line);
 				} else {
-					for (var column = 0; column < 10; column++) {
-						var dot = this.dots[order[lineHash] * 10 + column];
+					for (var column = 0; column < COLUMNS; column++) {
+						var dot = this.dots[order[lineHash] * COLUMNS + column];
 						var position = dot.position;
 						var y = position.getY();
-						position.setY(y + DOT_SIDE * (9 - lineHash), {
+						position.setY(y + DOT_SIDE * (COLUMNS - 1 - lineHash), {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.domElement.setAttribute('aria-rowindex', 9);
+						dot.domElement.setAttribute('aria-rowindex', COLUMNS - 1);
 						dot.deselect();
 					}
-					for (var row = 9; row > lineHash; row--) {
-						for (var column = 0; column < 10; column++) {
-							var dot = this.dots[order[row] * 10 + column];
+					for (var row = ROWS - 1; row > lineHash; row--) {
+						for (var column = 0; column < COLUMNS; column++) {
+							var dot = this.dots[order[row] * COLUMNS + column];
 							var position = dot.position;
 							var y = position.getY();
 							position.setY(y - DOT_SIDE, {
