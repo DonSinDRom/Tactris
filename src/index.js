@@ -39,11 +39,16 @@ if (!Array.prototype.initialize) {
 
 function Background(rows, cols) {
 	Node.call(this);
-	this._domElement = new DOMElement(this, {
-		properties: {
-			backgroundColor: '#333'
-		}
+	this.domElement = new DOMElement(this, {
+//		properties: {
+//			backgroundColor: '#333'
+//		}
 	});
+
+	this.domElement.setAttribute('role', 'grid');
+	this.domElement.setAttribute('aria-multiselectable', true);
+	this.domElement.setAttribute('aria-colcount', COLUMNS);
+	this.domElement.setAttribute('aria-rowcount', ROWS);
 
 	var count = 0;
 	this.dots = [];
@@ -98,8 +103,8 @@ function Background(rows, cols) {
 		var filledRows = [];
 		var filledColumns = [];
 		for (let line = 0; line < 10; line++) {
-			let row = dots.filter((element) => element.id % 10 === line && element.fill === true);
-			let column = dots.filter((element) => Number.parseInt(element.id / 10) === line && element.fill === true);
+			let row = dots.filter((element) => Number.parseInt(element.id / 10) === line && element.fill === true);
+			let column = dots.filter((element) => element.id % 10 === line && element.fill === true);
 			if (row.length === 10) {
 				console.log('Filled row: ', line);
 				filledRows.push(line);
@@ -136,125 +141,129 @@ function Background(rows, cols) {
 		let dots = this.dots;
 		let orderRows = this.orderRows;
 		let orderColumns = this.orderColumns;
+		let order = [];
+		let lineHash = 0;
 
-		if (direction === 'x') {
-			let order = orderRows;
-			let lineX = order.indexOf(line);
-
-			if (line < 5) {
-
-				for (let row = 0; row < 10; row++) {
-					let dot = this.dots[order[lineX] * 10 + row];
-					let position = dot.position;
-					let y = position.getY();
-					position.setY(y - DOT_SIDE * lineX, {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (let column = lineX - 1; column >= 0; column--) {
+		switch (direction) {
+		case 'x':
+				order = orderColumns;
+				lineHash = order.indexOf(line);
+				if (line < 5) {
 					for (let row = 0; row < 10; row++) {
-						let dot = this.dots[order[column] * 10 + row];
-						let position = dot.position;
-						let y = position.getY();
-						position.setY(y + DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				orderRows.splice(lineX, 1);
-				orderRows.unshift(line);
-
-			} else {
-
-				for (let row = 0; row < 10; row++) {
-					let dot = this.dots[order[lineX] * 10 + row];
-					let position = dot.position;
-					let y = position.getY();
-					position.setY(y + DOT_SIDE * (9 - lineX), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (let column = 9; column > lineX; column--) {
-					for (let row = 0; row < 10; row++) {
-						let dot = this.dots[order[column] * 10 + row];
-						let position = dot.position;
-						let y = position.getY();
-						position.setY(y - DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				orderRows.splice(lineX, 1);
-				orderRows.push(line);
-			}
-
-		} else {
-
-
-			let order = orderColumns;
-			let lineX = order.indexOf(line);
-
-			if (line < 5) {
-
-				for (let column = 0; column < 10; column++) {
-					let dot = this.dots[column * 10 + order[lineX]];
-					let position = dot.position;
-					let x = position.getX();
-					position.setX(x - DOT_SIDE * lineX, {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (let row = lineX - 1; row >= 0; row--) {
-					for (let column = 0; column < 10; column++) {
-						let dot = this.dots[column * 10 + order[row]];
+						let dot = this.dots[row * 10 + order[lineHash]];
 						let position = dot.position;
 						let x = position.getX();
-						position.setX(x + DOT_SIDE, {
+						position.setX(x - DOT_SIDE * lineHash, {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-colindex', 0);
+						dot.deselect();
 					}
-				}
-				orderColumns.splice(lineX, 1);
-				orderColumns.unshift(line);
-
-			} else {
-
-				for (let column = 0; column < 10; column++) {
-					let dot = this.dots[column * 10 + order[lineX]];
-					let position = dot.position;
-					let x = position.getX();
-					position.setX(x + DOT_SIDE * (9 - lineX), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (let row = 9; row > lineX; row--) {
-					for (let column = 0; column < 10; column++) {
-						let dot = this.dots[column * 10 + order[row]];
+					for (let column = lineHash - 1; column >= 0; column--) {
+						for (let row = 0; row < 10; row++) {
+							let dot = this.dots[row * 10 + order[column]];
+							let position = dot.position;
+							let x = position.getX();
+							position.setX(x + DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-colindex', column + 1);
+						}
+					}
+					orderColumns.splice(lineHash, 1);
+					orderColumns.unshift(line);
+				} else {
+					for (let row = 0; row < 10; row++) {
+						let dot = this.dots[row * 10 + order[lineHash]];
 						let position = dot.position;
 						let x = position.getX();
-						position.setX(x - DOT_SIDE, {
+						position.setX(x + DOT_SIDE * (9 - lineHash), {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-colindex', 9);
+						dot.deselect();
 					}
+					for (let column = 9; column > lineHash; column--) {
+						for (let row = 0; row < 10; row++) {
+							let dot = this.dots[row * 10 + order[column]];
+							let position = dot.position;
+							let x = position.getX();
+							position.setX(x - DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-colindex', column - 1);
+						}
+					}
+					orderColumns.splice(lineHash, 1);
+					orderColumns.push(line);
 				}
-				orderColumns.splice(lineX, 1);
-				orderColumns.push(line);
-			}
-
+				break;
+		case 'y':
+				order = orderRows;
+				lineHash = order.indexOf(line);
+				if (line < 5) {
+					for (let column = 0; column < 10; column++) {
+						let dot = this.dots[order[lineHash] * 10 + column];
+						let position = dot.position;
+						let y = position.getY();
+						position.setY(y - DOT_SIDE * lineHash, {
+							duration: DURATION,
+							curve: CURVE
+						});
+						dot.domElement.setAttribute('aria-rowindex', 0);
+						dot.deselect();
+					}
+					for (let row = lineHash - 1; row >= 0; row--) {
+						for (let column = 0; column < 10; column++) {
+							let dot = this.dots[order[row] * 10 + column];
+							let position = dot.position;
+							let y = position.getY();
+							position.setY(y + DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-rowindex', row + 1);
+						}
+					}
+					orderRows.splice(lineHash, 1);
+					orderRows.unshift(line);
+				} else {
+					for (let column = 0; column < 10; column++) {
+						let dot = this.dots[order[lineHash] * 10 + column];
+						let position = dot.position;
+						let y = position.getY();
+						position.setY(y + DOT_SIDE * (9 - lineHash), {
+							duration: DURATION,
+							curve: CURVE
+						});
+						dot.domElement.setAttribute('aria-rowindex', 9);
+						dot.deselect();
+					}
+					for (let row = 9; row > lineHash; row--) {
+						for (let column = 0; column < 10; column++) {
+							let dot = this.dots[order[row] * 10 + column];
+							let position = dot.position;
+							let y = position.getY();
+							position.setY(y - DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-rowindex', row - 1);
+						}
+					}
+					orderRows.splice(lineHash, 1);
+					orderRows.push(line);
+				}
+				break;
+		default:
+				return false;
 		}
-	}
+	};
+
 
 	var hoverId;
 	this.fillDot = function (id) {
@@ -376,32 +385,42 @@ function Dot(id) {
 		.setAbsoluteSize(DOT_SIZE, DOT_SIZE, DOT_SIZE);
 
 	// Add the DOMElement (DOMElements are components).
-	this._domElement = new DOMElement(this, {
+	this.domElement = new DOMElement(this, {
 		classes: ['no-user-select'],
 		properties: {
 			background: COLOR
 		}
 	});
+
+
 	this.id = id;
 	this.fill = false;
+	this.domElement.setAttribute('role', 'gridcell');
+	this.domElement.setAttribute('aria-selected', false);
+	this.domElement.setAttribute('aria-live', 'polite');
+	this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / ROWS));
+	this.domElement.setAttribute('aria-colindex', id % COLUMNS);
 
 	this.select = function select() {
 		if (!this.fill) {
 			this.fill = true;
-			this._domElement.setProperty('background-color', COLOR__ACTIVE);
+			this.domElement.setProperty('background-color', COLOR__ACTIVE);
+			this.domElement.setAttribute('aria-selected', true);
 		}
 	};
 
 	this.deselect = function deselect() {
 		if (this.fill) {
 			this.fill = false;
-			this._domElement.setProperty('background-color', COLOR);
+			this.domElement.setProperty('background-color', COLOR);
+			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 
 	this.toggleFill = function toggleFill() {
 		this.fill = !this.fill;
-		this._domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
+		this.domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
+		this.domElement.setAttribute('aria-checked', this.fill);
 	};
 	// Add the Position component.
 	// The position component allows us to transition between different states
@@ -435,7 +454,7 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 	case 'mousemove':
 			if (this._parent.mousing === true) {
 				this._parent.fillDot(this.id);
-				this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
 			}
 			break;
 	case 'touchmove':
@@ -443,12 +462,12 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 			console.log('Dot.touchmove', this.id);
 			if (this._parent.mousing === true) {
 				this._parent.fillDot(this.id);
-				this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
 			}
 			break;
 	case 'click':
 			this._parent.fillDot(this.id);
-			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+			this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
 			break;
 	case 'mouseup':
 			this._parent.mousingUp(this.id);

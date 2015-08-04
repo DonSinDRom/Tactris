@@ -3271,6 +3271,12 @@ Dispatch.prototype.show = function show (path) {
 
     if (node.onShow) node.onShow();
 
+    var components = node.getComponents();
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onShow)
+            components[i].onShow();
+
+
     this.addChildrenToQueue(node);
     var child;
 
@@ -3298,6 +3304,12 @@ Dispatch.prototype.hide = function hide (path) {
         );
 
     if (node.onHide) node.onHide();
+
+    var components = node.getComponents();
+    for (var i = 0, len = components.length ; i < len ; i++)
+        if (components[i] && components[i].onHide)
+            components[i].onHide();
+
 
     this.addChildrenToQueue(node);
     var child;
@@ -3581,6 +3593,12 @@ function FamousEngine() {
  * @return {FamousEngine} this
  */
 FamousEngine.prototype.init = function init(options) {
+    if (typeof window === 'undefined') {
+        throw new Error(
+            'FamousEngine#init needs to have access to the global window object. ' +
+            'Instantiate Compositor and UIManager manually in the UI thread.'
+        );
+    }
     this.compositor = options && options.compositor || new Compositor();
     this.renderLoop = options && options.renderLoop || new RequestAnimationFrameLoop();
     this.uiManager = new UIManager(this.getChannel(), this.compositor, this.renderLoop);
@@ -3868,7 +3886,7 @@ FamousEngine.prototype.addScene = function addScene (scene) {
 
     var current = this._scenes[selector];
     if (current && current !== scene) current.dismount();
-    if (!scene.isMounted()) scene.mount();
+    if (!scene.isMounted()) scene.mount(scene.getSelector());
     this._scenes[selector] = scene;
     return this;
 };
@@ -3990,7 +4008,7 @@ var Transform = require('./Transform');
  *
  * A Node is either mounted or unmounted. Unmounted nodes are detached from the
  * scene graph. Unmounted nodes have no parent node, while each mounted node has
- * exactly one parent. Nodes have an arbitary number of children, which can be
+ * exactly one parent. Nodes have an arbitrary number of children, which can be
  * dynamically added using {@link Node#addChild}.
  *
  * Each Node has an arbitrary number of `components`. Those components can
@@ -7630,6 +7648,7 @@ function DOMElement(node, options) {
     this._renderSize = [0, 0, 0];
 
     this._node = node;
+
     if (node) node.addComponent(this);
 
     this._callbacks = new CallbackStore();
@@ -8655,6 +8674,7 @@ DOMRenderer.prototype.findParent = function findParent () {
         path = path.substring(0, path.lastIndexOf('/'));
         parent = this._elements[path];
     }
+
     this._parent = parent;
     return parent;
 };
@@ -8729,36 +8749,29 @@ DOMRenderer.prototype.resolveChildren = function resolveChildren (element, paren
  * @return {undefined} undefined
  */
 DOMRenderer.prototype.insertEl = function insertEl (tagName) {
-    if (!this._target ||
-        this._target.element.tagName.toLowerCase() !== tagName.toLowerCase()) {
 
-        this.findParent();
+    this.findParent();
 
-        this._assertParentLoaded();
+    this._assertParentLoaded();
 
-        if (this._parent.void)
-            throw new Error(
-                this._parent.path + ' is a void element. ' +
-                'Void elements are not allowed to have children.'
-            );
+    if (this._parent.void)
+        throw new Error(
+            this._parent.path + ' is a void element. ' +
+            'Void elements are not allowed to have children.'
+        );
 
-        if (this._target) {
-            this._parent.element.removeChild(this._target.element);
-            this._removeElCallbackStore.trigger(this._path, this._target);
-        }
+    if (!this._target) this._target = new ElementCache(document.createElement(tagName), this._path);
 
-        this._target = new ElementCache(document.createElement(tagName), this._path);
+    var el = this._target.element;
+    var parent = this._parent.element;
 
-        var el = this._target.element;
-        var parent = this._parent.element;
+    this.resolveChildren(el, parent);
 
-        this.resolveChildren(el, parent);
+    parent.appendChild(el);
+    this._elements[this._path] = this._target;
 
-        this._parent.element.appendChild(this._target.element);
-        this._elements[this._path] = this._target;
+    this._insertElCallbackStore.trigger(this._path, this._target);
 
-        this._insertElCallbackStore.trigger(this._path, this._target);
-    }
 };
 
 
@@ -9062,7 +9075,7 @@ DOMRenderer.prototype.offRemoveEl = function offRemoveEl(path, callback) {
 
 module.exports = DOMRenderer;
 
-},{"../core/Path":20,"../utilities/CallbackStore":94,"../utilities/vendorPrefix":104,"./ElementCache":31,"./Math":32,"./events/EventMap":36}],31:[function(require,module,exports){
+},{"../core/Path":20,"../utilities/CallbackStore":94,"../utilities/vendorPrefix":105,"./ElementCache":31,"./Math":32,"./events/EventMap":36}],31:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10627,7 +10640,7 @@ module.exports = {
     polyfills: require('./polyfills')
 };
 
-},{"./components":12,"./core":27,"./dom-renderables":29,"./dom-renderers":45,"./math":51,"./physics":79,"./polyfills":81,"./render-loops":84,"./renderers":89,"./transitions":93,"./utilities":100,"./webgl-geometries":109,"./webgl-materials":123,"./webgl-renderables":125,"./webgl-renderers":138,"./webgl-shaders":140}],47:[function(require,module,exports){
+},{"./components":12,"./core":27,"./dom-renderables":29,"./dom-renderers":45,"./math":51,"./physics":79,"./polyfills":81,"./render-loops":84,"./renderers":89,"./transitions":93,"./utilities":101,"./webgl-geometries":110,"./webgl-materials":124,"./webgl-renderables":126,"./webgl-renderers":139,"./webgl-shaders":141}],47:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19807,8 +19820,13 @@ Compositor.prototype.receiveCommands = function receiveCommands(commands) {
  */
 Compositor.prototype.giveSizeFor = function giveSizeFor(iterator, commands) {
     var selector = commands[iterator];
-    var size = this.getOrSetContext(selector).getRootSize();
-    this.sendResize(selector, size);
+    var context = this.getContext(selector);
+    if (context) {
+        var size = context.getRootSize();
+        this.sendResize(selector, size);
+    } else {
+        this.getOrSetContext(selector);
+    }
 };
 
 /**
@@ -20304,7 +20322,6 @@ function glUniforms (context, path, commands, iterator) {
 function glBufferData (context, path, commands, iterator) {
     if (!context._webGLRenderer) context._initWebGLRenderer();
     context._webGLRenderer.bufferData(
-        path,
         commands[++iterator],
         commands[++iterator],
         commands[++iterator],
@@ -20373,7 +20390,7 @@ function changeViewTransform (context, path, commands, iterator) {
 
 module.exports = Context;
 
-},{"../components/Camera":2,"../core/Commands":15,"../dom-renderers/DOMRenderer":30,"../webgl-renderers/WebGLRenderer":135}],88:[function(require,module,exports){
+},{"../components/Camera":2,"../core/Commands":15,"../dom-renderers/DOMRenderer":30,"../webgl-renderers/WebGLRenderer":136}],88:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22152,6 +22169,65 @@ ObjectManager.disposeOf = function(type) {
 module.exports = ObjectManager;
 
 },{}],98:[function(require,module,exports){
+'use strict';
+
+function Registry () {
+    this._keyToValue = {};
+    this._values = [];
+    this._keys = [];
+    this._keyToIndex = {};
+    this._freedIndices = [];
+}
+
+Registry.prototype.register = function register (key, value) {
+    var index = this._keyToIndex[key];
+    if (index == null) {
+        index = this._freedIndices.pop();
+        if (index === undefined) index = this._values.length;
+
+        this._values[index] = value;
+        this._keys[index] = key;
+
+        this._keyToIndex[key] = index;
+        this._keyToValue[key] = value;
+    }
+    else {
+        this._keyToValue[key] = value;
+        this._values[index] = value;
+    }
+};
+
+Registry.prototype.unregister = function unregister (key) {
+    var index = this._keyToIndex[key];
+
+    if (index != null) {
+        this._freedIndices.push(index);
+        this._keyToValue[key] = null;
+        this._keyToIndex[key] = null;
+        this._values[index] = null;
+        this._keys[index] = null;
+    }
+};
+
+Registry.prototype.get = function get (key) {
+    return this._keyToValue[key];
+};
+
+Registry.prototype.getValues = function getValues () {
+    return this._values;
+};
+
+Registry.prototype.getKeys = function getKeys () {
+    return this._keys;
+};
+
+Registry.prototype.getKeyToValue = function getKeyToValue () {
+    return this._keyToValue;
+};
+
+module.exports = Registry;
+
+},{}],99:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -22195,7 +22271,7 @@ function clamp(value, lower, upper) {
 module.exports = clamp;
 
 
-},{}],99:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22259,22 +22335,22 @@ var clone = function clone(b) {
 
 module.exports = clone;
 
-},{}],100:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 /**
  * The MIT License (MIT)
- * 
+ *
  * Copyright (c) 2015 Famous Industries Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22295,12 +22371,12 @@ module.exports = {
     keyValueToArrays: require('./keyValueToArrays'),
     loadURL: require('./loadURL'),
     ObjectManager: require('./ObjectManager'),
+    Registry: require('./Registry'),
     strip: require('./strip'),
     vendorPrefix: require('./vendorPrefix')
 };
 
-
-},{"./CallbackStore":94,"./Color":95,"./KeyCodes":96,"./ObjectManager":97,"./clamp":98,"./clone":99,"./keyValueToArrays":101,"./loadURL":102,"./strip":103,"./vendorPrefix":104}],101:[function(require,module,exports){
+},{"./CallbackStore":94,"./Color":95,"./KeyCodes":96,"./ObjectManager":97,"./Registry":98,"./clamp":99,"./clone":100,"./keyValueToArrays":102,"./loadURL":103,"./strip":104,"./vendorPrefix":105}],102:[function(require,module,exports){
 'use strict';
 
 /**
@@ -22357,7 +22433,7 @@ module.exports = function keyValuesToArrays(obj) {
     };
 };
 
-},{}],102:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22408,7 +22484,7 @@ var loadURL = function loadURL(url, callback) {
 
 module.exports = loadURL;
 
-},{}],103:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22474,7 +22550,7 @@ function strip(obj) {
 
 module.exports = strip;
 
-},{}],104:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22534,7 +22610,7 @@ function vendorPrefix(property) {
 
 module.exports = vendorPrefix;
 
-},{}],105:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22741,7 +22817,7 @@ DynamicGeometry.prototype.getTextureCoords = function () {
 
 module.exports = DynamicGeometry;
 
-},{"./Geometry":106}],106:[function(require,module,exports){
+},{"./Geometry":107}],107:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22807,7 +22883,7 @@ function Geometry(options) {
 
 module.exports = Geometry;
 
-},{}],107:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23375,7 +23451,7 @@ GeometryHelper.addBackfaceTriangles = function addBackfaceTriangles(vertices, in
 
 module.exports = GeometryHelper;
 
-},{"../math/Vec2":49,"../math/Vec3":50}],108:[function(require,module,exports){
+},{"../math/Vec2":49,"../math/Vec3":50}],109:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23869,7 +23945,7 @@ function flatten(arr) {
 
 module.exports = OBJLoader;
 
-},{"../utilities/loadURL":102,"./GeometryHelper":107}],109:[function(require,module,exports){
+},{"../utilities/loadURL":103,"./GeometryHelper":108}],110:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23914,7 +23990,7 @@ module.exports = {
     OBJLoader: require('./OBJLoader')
 };
 
-},{"./DynamicGeometry":105,"./Geometry":106,"./GeometryHelper":107,"./OBJLoader":108,"./primitives/Box":110,"./primitives/Circle":111,"./primitives/Cylinder":112,"./primitives/GeodesicSphere":113,"./primitives/Icosahedron":114,"./primitives/ParametricCone":115,"./primitives/Plane":116,"./primitives/Sphere":117,"./primitives/Tetrahedron":118,"./primitives/Torus":119,"./primitives/Triangle":120}],110:[function(require,module,exports){
+},{"./DynamicGeometry":106,"./Geometry":107,"./GeometryHelper":108,"./OBJLoader":109,"./primitives/Box":111,"./primitives/Circle":112,"./primitives/Cylinder":113,"./primitives/GeodesicSphere":114,"./primitives/Icosahedron":115,"./primitives/ParametricCone":116,"./primitives/Plane":117,"./primitives/Sphere":118,"./primitives/Tetrahedron":119,"./primitives/Torus":120,"./primitives/Triangle":121}],111:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23997,19 +24073,19 @@ function BoxGeometry(options) {
 
     }
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: vertices },
-            { name: 'a_texCoord', data: textureCoords, size: 2 },
-            { name: 'a_normals', data: normals },
-            { name: 'indices', data: indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: vertices },
+        { name: 'a_texCoord', data: textureCoords, size: 2 },
+        { name: 'a_normals', data: normals },
+        { name: 'indices', data: indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 module.exports = BoxGeometry;
 
-},{"../Geometry":106}],111:[function(require,module,exports){
+},{"../Geometry":107}],112:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24063,14 +24139,14 @@ function Circle (options) {
     var textureCoords = getCircleTexCoords(buffers.vertices);
     var normals = GeometryHelper.computeNormals(buffers.vertices, buffers.indices);
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: buffers.vertices },
-            { name: 'a_texCoord', data: textureCoords, size: 2 },
-            { name: 'a_normals', data: normals },
-            { name: 'indices', data: buffers.indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: buffers.vertices },
+        { name: 'a_texCoord', data: textureCoords, size: 2 },
+        { name: 'a_normals', data: normals },
+        { name: 'indices', data: buffers.indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 function getCircleTexCoords (vertices) {
@@ -24125,7 +24201,7 @@ function getCircleBuffers(detail) {
 
 module.exports = Circle;
 
-},{"../Geometry":106,"../GeometryHelper":107}],112:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],113:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24184,14 +24260,14 @@ function Cylinder (options) {
         GeometryHelper.addBackfaceTriangles(buffers.vertices, buffers.indices);
     }
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: buffers.vertices },
-            { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV(buffers.vertices), size: 2 },
-            { name: 'a_normals', data: GeometryHelper.computeNormals(buffers.vertices, buffers.indices) },
-            { name: 'indices', data: buffers.indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: buffers.vertices },
+        { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV(buffers.vertices), size: 2 },
+        { name: 'a_normals', data: GeometryHelper.computeNormals(buffers.vertices, buffers.indices) },
+        { name: 'indices', data: buffers.indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 /**
@@ -24214,7 +24290,7 @@ Cylinder.generator = function generator(r, u, v, pos) {
 
 module.exports = Cylinder;
 
-},{"../Geometry":106,"../GeometryHelper":107}],113:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],114:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -24282,19 +24358,19 @@ function GeodesicSphere (options) {
     var normals       = GeometryHelper.computeNormals(vertices, indices);
     var textureCoords = GeometryHelper.getSpheroidUV(vertices);
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: vertices },
-            { name: 'a_texCoord', data: textureCoords, size: 2 },
-            { name: 'a_normals', data: normals },
-            { name: 'indices', data: indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: vertices },
+        { name: 'a_texCoord', data: textureCoords, size: 2 },
+        { name: 'a_normals', data: normals },
+        { name: 'indices', data: indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 module.exports = GeodesicSphere;
 
-},{"../Geometry":106,"../GeometryHelper":107}],114:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],115:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -24336,7 +24412,9 @@ var GeometryHelper = require('../GeometryHelper');
  * 
  * @return {Object} constructed geometry
  */
-function Icosahedron() {
+function Icosahedron( options )
+{
+   options = options || {};
     var t = ( 1 + Math.sqrt( 5 ) ) / 2;
 
     var vertices = [
@@ -24358,19 +24436,19 @@ function Icosahedron() {
 
     vertices      = GeometryHelper.normalizeAll(vertices);
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: vertices },
-            { name: 'a_texCoord', data: textureCoords, size: 2 },
-            { name: 'a_normals', data: normals },
-            { name: 'indices', data: indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: vertices },
+        { name: 'a_texCoord', data: textureCoords, size: 2 },
+        { name: 'a_normals', data: normals },
+        { name: 'indices', data: indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 module.exports = Icosahedron;
 
-},{"../Geometry":106,"../GeometryHelper":107}],115:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],116:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24427,14 +24505,14 @@ function ParametricCone (options) {
         GeometryHelper.addBackfaceTriangles(buffers.vertices, buffers.indices);
     }
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: buffers.vertices },
-            { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV(buffers.vertices), size: 2 },
-            { name: 'a_normals', data: GeometryHelper.computeNormals(buffers.vertices, buffers.indices) },
-            { name: 'indices', data: buffers.indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: buffers.vertices },
+        { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV( buffers.vertices ), size: 2 },
+        { name: 'a_normals', data: GeometryHelper.computeNormals( buffers.vertices, buffers.indices ) },
+        { name: 'indices', data: buffers.indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 /**
@@ -24456,7 +24534,7 @@ ParametricCone.generator = function generator(r, u, v, pos) {
 
 module.exports = ParametricCone;
 
-},{"../Geometry":106,"../GeometryHelper":107}],116:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],117:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24535,19 +24613,19 @@ function Plane(options) {
 
     normals = GeometryHelper.computeNormals(vertices, indices);
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: vertices },
-            { name: 'a_texCoord', data: textureCoords, size: 2 },
-            { name: 'a_normals', data: normals },
-            { name: 'indices', data: indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: vertices },
+        { name: 'a_texCoord', data: textureCoords, size: 2 },
+        { name: 'a_normals', data: normals },
+        { name: 'indices', data: indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 module.exports = Plane;
 
-},{"../Geometry":106,"../GeometryHelper":107}],117:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],118:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24602,14 +24680,14 @@ function ParametricSphere (options) {
         true
     );
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: buffers.vertices },
-            { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV(buffers.vertices), size: 2 },
-            { name: 'a_normals', data: GeometryHelper.getSpheroidNormals(buffers.vertices) },
-            { name: 'indices', data: buffers.indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: buffers.vertices },
+        { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV(buffers.vertices), size: 2 },
+        { name: 'a_normals', data: GeometryHelper.getSpheroidNormals(buffers.vertices) },
+        { name: 'indices', data: buffers.indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 /**
@@ -24635,7 +24713,7 @@ ParametricSphere.generator = function generator(u, v, pos) {
 
 module.exports = ParametricSphere;
 
-},{"../Geometry":106,"../GeometryHelper":107}],118:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],119:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24726,19 +24804,19 @@ function Tetrahedron(options) {
     while(--detail) GeometryHelper.subdivide(indices, vertices, textureCoords);
     normals       = GeometryHelper.computeNormals(vertices, indices);
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: vertices },
-            { name: 'a_texCoord', data: textureCoords, size: 2 },
-            { name: 'a_normals', data: normals },
-            { name: 'indices', data: indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: vertices },
+        { name: 'a_texCoord', data: textureCoords, size: 2 },
+        { name: 'a_normals', data: normals },
+        { name: 'indices', data: indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 module.exports = Tetrahedron;
 
-},{"../Geometry":106,"../GeometryHelper":107}],119:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],120:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24793,14 +24871,14 @@ function Torus(options) {
         Torus.generator.bind(null, holeRadius, tubeRadius)
     );
 
-    return new Geometry({
-        buffers: [
-            { name: 'a_pos', data: buffers.vertices },
-            { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV(buffers.vertices), size: 2 },
-            { name: 'a_normals', data: GeometryHelper.computeNormals(buffers.vertices, buffers.indices) },
-            { name: 'indices', data: buffers.indices, size: 1 }
-        ]
-    });
+    options.buffers = [
+        { name: 'a_pos', data: buffers.vertices },
+        { name: 'a_texCoord', data: GeometryHelper.getSpheroidUV(buffers.vertices), size: 2 },
+        { name: 'a_normals', data: GeometryHelper.computeNormals(buffers.vertices, buffers.indices) },
+        { name: 'indices', data: buffers.indices, size: 1 }
+    ];
+
+    return new Geometry(options);
 }
 
 /**
@@ -24824,7 +24902,7 @@ Torus.generator = function generator(c, a, u, v, pos) {
 
 module.exports = Torus;
 
-},{"../Geometry":106,"../GeometryHelper":107}],120:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],121:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24892,19 +24970,19 @@ function Triangle (options) {
 
     normals = GeometryHelper.computeNormals(vertices, indices);
 
-    return new Geometry({
-        buffers: [
+    options.buffers = [
             { name: 'a_pos', data: vertices },
             { name: 'a_texCoord', data: textureCoords, size: 2 },
             { name: 'a_normals', data: normals },
             { name: 'indices', data: indices, size: 1 }
-        ]
-    });
+    ];
+
+    return new Geometry(options);
 }
 
 module.exports = Triangle;
 
-},{"../Geometry":106,"../GeometryHelper":107}],121:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],122:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -25131,7 +25209,7 @@ Material.prototype.traverse = function traverse(callback) {
 };
 
 
-},{"./TextureRegistry":122}],122:[function(require,module,exports){
+},{"./TextureRegistry":123}],123:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25216,7 +25294,7 @@ TextureRegistry.get = function get(accessor) {
 
 module.exports = TextureRegistry;
 
-},{}],123:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25248,7 +25326,7 @@ module.exports = {
     TextureRegistry: require('./TextureRegistry')
 };
 
-},{"./Material":121,"./TextureRegistry":122}],124:[function(require,module,exports){
+},{"./Material":122,"./TextureRegistry":123}],125:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25297,7 +25375,8 @@ var defaultGeometry = new Geometry.Plane();
 var INPUTS = ['baseColor', 'normals', 'glossiness', 'positionOffset'];
 
 function Mesh (node, options) {
-    this._node = node;
+    this._node = null;
+    this._id = null;
     this._changeQueue = [];
     this._initialized = false;
     this._requestingUpdate = false;
@@ -25312,9 +25391,8 @@ function Mesh (node, options) {
         positionOffset: null,
         normals: null
     };
-
+    if (node) node.addComponent(this);
     if (options) this.setDrawOptions(options);
-    this._id = node.addComponent(this);
 }
 /**
  * Pass custom options to Mesh, such as a 3 element map
@@ -25376,6 +25454,7 @@ Mesh.prototype.setGeometry = function setGeometry (geometry, options) {
     if (this._initialized) {
         if (this._node) {
             var i = this.value.geometry.spec.invalidations.length;
+            if (i) this._requestUpdate();
             while (i--) {
                 this.value.geometry.spec.invalidations.pop();
                 this._changeQueue.push(Commands.GL_BUFFER_DATA);
@@ -25385,7 +25464,6 @@ Mesh.prototype.setGeometry = function setGeometry (geometry, options) {
                 this._changeQueue.push(this.value.geometry.spec.bufferSpacings[i]);
                 this._changeQueue.push(this.value.geometry.spec.dynamic);
             }
-            if (i) this._requestUpdate();
         }
     }
     return this;
@@ -25695,7 +25773,7 @@ Mesh.prototype.onUpdate = function onUpdate() {
     var node = this._node;
     var queue = this._changeQueue;
 
-    if (node) {
+    if (node && node.isMounted()) {
         node.sendDrawCommand(Commands.WITH);
         node.sendDrawCommand(node.getLocation());
 
@@ -25760,9 +25838,14 @@ Mesh.prototype.onMount = function onMount (node, id) {
  */
 Mesh.prototype.onDismount = function onDismount () {
     this._initialized = false;
-    this._changeQueue.push(Commands.GL_REMOVE_MESH);
+    this._inDraw = false;
 
-    this._requestUpdate();
+    this._node.sendDrawCommand(Commands.WITH);
+    this._node.sendDrawCommand(this._node.getLocation());
+    this._node.sendDrawCommand(Commands.GL_REMOVE_MESH);
+
+    this._node = null;
+    this._id = null;
 };
 
 /**
@@ -25874,7 +25957,7 @@ Mesh.prototype.onAddUIEvent = function onAddUIEvent (UIEvent) {
  * @return {undefined} undefined
  */
 Mesh.prototype._requestUpdate = function _requestUpdate () {
-    if (!this._requestingUpdate) {
+    if (!this._requestingUpdate && this._node) {
         this._node.requestUpdate(this._id);
         this._requestingUpdate = true;
     }
@@ -25948,8 +26031,7 @@ function addMeshToMaterial(mesh, material, name) {
 
 module.exports = Mesh;
 
-
-},{"../core/Commands":15,"../core/TransformSystem":26,"../webgl-geometries":109}],125:[function(require,module,exports){
+},{"../core/Commands":15,"../core/TransformSystem":26,"../webgl-geometries":110}],126:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25982,7 +26064,7 @@ module.exports = {
     AmbientLight: require('./lights/AmbientLight')
 };
 
-},{"./Mesh":124,"./lights/AmbientLight":126,"./lights/PointLight":128}],126:[function(require,module,exports){
+},{"./Mesh":125,"./lights/AmbientLight":127,"./lights/PointLight":129}],127:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26042,7 +26124,7 @@ AmbientLight.prototype.constructor = AmbientLight;
 
 module.exports = AmbientLight;
 
-},{"../../core/Commands":15,"./Light":127}],127:[function(require,module,exports){
+},{"../../core/Commands":15,"./Light":128}],128:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26164,7 +26246,7 @@ Light.prototype.onUpdate = function onUpdate() {
 
 module.exports = Light;
 
-},{"../../core/Commands":15}],128:[function(require,module,exports){
+},{"../../core/Commands":15}],129:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26257,7 +26339,7 @@ PointLight.prototype.onTransformChange = function onTransformChange (transform) 
 
 module.exports = PointLight;
 
-},{"../../core/TransformSystem":26,"./Light":127}],129:[function(require,module,exports){
+},{"../../core/TransformSystem":26,"./Light":128}],130:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26329,7 +26411,7 @@ Buffer.prototype.subData = function subData() {
 
 module.exports = Buffer;
 
-},{}],130:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26476,7 +26558,7 @@ BufferRegistry.prototype.allocate = function allocate(geometryId, name, value, s
 
 module.exports = BufferRegistry;
 
-},{"./Buffer":129}],131:[function(require,module,exports){
+},{"./Buffer":130}],132:[function(require,module,exports){
 'use strict';
 
 /**
@@ -26573,7 +26655,7 @@ function _processErrors(errors, source) {
 
 module.exports = Debug;
 
-},{}],132:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26697,7 +26779,7 @@ function Program(gl, options) {
     this.options = options || {};
 
     this.registeredMaterials = {};
-    this.cachedUniforms  = {};
+    this.cachedUniforms = {};
     this.uniformTypes = [];
 
     this.definitionVec4 = [];
@@ -26976,12 +27058,10 @@ Program.prototype.setUniforms = function (uniformNames, uniformValue) {
 
         // Check if the value is already set for the
         // given uniform.
-
         if (this.uniformIsCached(name, value)) continue;
 
         // Determine the correct function and pass the uniform
         // value to WebGL.
-
         if (!this.uniformTypes[name]) {
             this.uniformTypes[name] = this.getUniformTypeFromValue(value);
         }
@@ -26989,11 +27069,11 @@ Program.prototype.setUniforms = function (uniformNames, uniformValue) {
         // Call uniform setter function on WebGL context with correct value
 
         switch (this.uniformTypes[name]) {
-            case 'uniform4fv':  gl.uniform4fv(location, value); break;
-            case 'uniform3fv':  gl.uniform3fv(location, value); break;
-            case 'uniform2fv':  gl.uniform2fv(location, value); break;
-            case 'uniform1fv':  gl.uniform1fv(location, value); break;
-            case 'uniform1f' :  gl.uniform1f(location, value); break;
+            case 'uniform4fv': gl.uniform4fv(location, value); break;
+            case 'uniform3fv': gl.uniform3fv(location, value); break;
+            case 'uniform2fv': gl.uniform2fv(location, value); break;
+            case 'uniform1fv': gl.uniform1fv(location, value); break;
+            case 'uniform1f' : gl.uniform1f(location, value); break;
             case 'uniformMatrix3fv': gl.uniformMatrix3fv(location, false, value); break;
             case 'uniformMatrix4fv': gl.uniformMatrix4fv(location, false, value); break;
         }
@@ -27058,7 +27138,7 @@ Program.prototype.compileShader = function compileShader(shader, source) {
 
 module.exports = Program;
 
-},{"../utilities/clone":99,"../utilities/keyValueToArrays":101,"../webgl-shaders":140,"./Debug":131}],133:[function(require,module,exports){
+},{"../utilities/clone":100,"../utilities/keyValueToArrays":102,"../webgl-shaders":141,"./Debug":132}],134:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27199,7 +27279,7 @@ Texture.prototype.readBack = function readBack(x, y, width, height) {
 
 module.exports = Texture;
 
-},{}],134:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27411,7 +27491,7 @@ TextureManager.prototype.bindTexture = function bindTexture(id) {
 
 module.exports = TextureManager;
 
-},{"./Texture":133,"./createCheckerboard":137}],135:[function(require,module,exports){
+},{"./Texture":134,"./createCheckerboard":138}],136:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27444,6 +27524,7 @@ var sorter = require('./radixSort');
 var keyValueToArrays = require('../utilities/keyValueToArrays');
 var TextureManager = require('./TextureManager');
 var compileMaterial = require('./compileMaterial');
+var Registry = require('../utilities/Registry');
 
 var identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 
@@ -27489,20 +27570,12 @@ function WebGLRenderer(canvas, compositor) {
     gl.enable(gl.CULL_FACE);
     gl.cullFace(gl.BACK);
 
-    this.meshRegistry = {};
-    this.meshRegistryKeys = [];
+    this.meshRegistry = new Registry();
+    this.cutoutRegistry = new Registry();
+    this.lightRegistry = new Registry();
 
-    this.cutoutRegistry = {};
-
-    this.cutoutRegistryKeys = [];
-
-    /**
-     * Lights
-     */
     this.numLights = 0;
     this.ambientLightColor = [0, 0, 0];
-    this.lightRegistry = {};
-    this.lightRegistryKeys = [];
     this.lightPositions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     this.lightColors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -27599,12 +27672,12 @@ WebGLRenderer.prototype.getWebGLContext = function getWebGLContext(canvas) {
  */
 WebGLRenderer.prototype.createLight = function createLight(path) {
     this.numLights++;
-    this.lightRegistryKeys.push(path);
-    this.lightRegistry[path] = {
+    var light = {
         color: [0, 0, 0],
         position: [0, 0, 0]
     };
-    return this.lightRegistry[path];
+    this.lightRegistry.register(path, light);
+    return light;
 };
 
 /**
@@ -27617,8 +27690,6 @@ WebGLRenderer.prototype.createLight = function createLight(path) {
  * @return {Object} Newly created mesh spec.
  */
 WebGLRenderer.prototype.createMesh = function createMesh(path) {
-    this.meshRegistryKeys.push(path);
-
     var uniforms = keyValueToArrays({
         u_opacity: 1,
         u_transform: identity,
@@ -27629,7 +27700,7 @@ WebGLRenderer.prototype.createMesh = function createMesh(path) {
         u_flatShading: 0,
         u_glossiness: [0, 0, 0, 0]
     });
-    this.meshRegistry[path] = {
+    var mesh = {
         depth: null,
         uniformKeys: uniforms.keys,
         uniformValues: uniforms.values,
@@ -27639,7 +27710,9 @@ WebGLRenderer.prototype.createMesh = function createMesh(path) {
         textures: [],
         visible: true
     };
-    return this.meshRegistry[path];
+
+    this.meshRegistry.register(path, mesh);
+    return mesh;
 };
 
 /**
@@ -27669,10 +27742,9 @@ WebGLRenderer.prototype.setCutoutState = function setCutoutState(path, usesCutou
  * @return {Object} Newly created cutout spec.
  */
 WebGLRenderer.prototype.getOrSetCutout = function getOrSetCutout(path) {
-    if (this.cutoutRegistry[path]) {
-        return this.cutoutRegistry[path];
-    }
-    else {
+    var cutout = this.cutoutRegistry.get(path);
+
+    if (!cutout) {
         var uniforms = keyValueToArrays({
             u_opacity: 0,
             u_transform: identity.slice(),
@@ -27681,9 +27753,7 @@ WebGLRenderer.prototype.getOrSetCutout = function getOrSetCutout(path) {
             u_baseColor: [0, 0, 0, 1]
         });
 
-        this.cutoutRegistryKeys.push(path);
-
-        this.cutoutRegistry[path] = {
+        cutout = {
             uniformKeys: uniforms.keys,
             uniformValues: uniforms.values,
             geometry: this.cutoutGeometry.spec.id,
@@ -27691,8 +27761,10 @@ WebGLRenderer.prototype.getOrSetCutout = function getOrSetCutout(path) {
             visible: true
         };
 
-        return this.cutoutRegistry[path];
+        this.cutoutRegistry.register(path, cutout);
     }
+
+    return cutout;
 };
 
 /**
@@ -27706,7 +27778,7 @@ WebGLRenderer.prototype.getOrSetCutout = function getOrSetCutout(path) {
  * @return {undefined} undefined
  */
 WebGLRenderer.prototype.setMeshVisibility = function setMeshVisibility(path, visibility) {
-    var mesh = this.meshRegistry[path] || this.createMesh(path);
+    var mesh = this.meshRegistry.get(path) || this.createMesh(path);
 
     mesh.visible = visibility;
 };
@@ -27720,9 +27792,7 @@ WebGLRenderer.prototype.setMeshVisibility = function setMeshVisibility(path, vis
  * @return {undefined} undefined
  */
 WebGLRenderer.prototype.removeMesh = function removeMesh(path) {
-    var keyLocation = this.meshRegistryKeys.indexOf(path);
-    this.meshRegistryKeys.splice(keyLocation, 1);
-    this.meshRegistry[path] = null;
+    this.meshRegistry.unregister(path);
 };
 
 /**
@@ -27757,10 +27827,10 @@ WebGLRenderer.prototype.setCutoutUniform = function setCutoutUniform(path, unifo
  * @param {String} path Path used as id of target mesh
  * @param {Object} options Map of draw options for mesh
  *
- * @return {undefined} undefined
-**/
+ * @return {WebGLRenderer} this
+ */
 WebGLRenderer.prototype.setMeshOptions = function(path, options) {
-    var mesh = this.meshRegistry[path] || this.createMesh(path);
+    var mesh = this.meshRegistry.get(path) || this.createMesh(path);
 
     mesh.options = options;
     return this;
@@ -27776,8 +27846,8 @@ WebGLRenderer.prototype.setMeshOptions = function(path, options) {
  * @param {Number} g green channel
  * @param {Number} b blue channel
  *
- * @return {undefined} undefined
-**/
+ * @return {WebGLRenderer} this
+ */
 WebGLRenderer.prototype.setAmbientLightColor = function setAmbientLightColor(path, r, g, b) {
     this.ambientLightColor[0] = r;
     this.ambientLightColor[1] = g;
@@ -27795,11 +27865,10 @@ WebGLRenderer.prototype.setAmbientLightColor = function setAmbientLightColor(pat
  * @param {Number} y y position
  * @param {Number} z z position
  *
- * @return {undefined} undefined
-**/
+ * @return {WebGLRenderer} this
+ */
 WebGLRenderer.prototype.setLightPosition = function setLightPosition(path, x, y, z) {
-    var light = this.lightRegistry[path] || this.createLight(path);
-
+    var light = this.lightRegistry.get(path) || this.createLight(path);
     light.position[0] = x;
     light.position[1] = y;
     light.position[2] = z;
@@ -27816,10 +27885,10 @@ WebGLRenderer.prototype.setLightPosition = function setLightPosition(path, x, y,
  * @param {Number} g green channel
  * @param {Number} b blue channel
  *
- * @return {undefined} undefined
-**/
+ * @return {WebGLRenderer} this
+ */
 WebGLRenderer.prototype.setLightColor = function setLightColor(path, r, g, b) {
-    var light = this.lightRegistry[path] || this.createLight(path);
+    var light = this.lightRegistry.get(path) || this.createLight(path);
 
     light.color[0] = r;
     light.color[1] = g;
@@ -27836,10 +27905,10 @@ WebGLRenderer.prototype.setLightColor = function setLightColor(path, r, g, b) {
  * @param {String} name Name that the rendering input the material is bound to
  * @param {Object} material Material spec
  *
- * @return {undefined} undefined
-**/
+ * @return {WebGLRenderer} this
+ */
 WebGLRenderer.prototype.handleMaterialInput = function handleMaterialInput(path, name, material) {
-    var mesh = this.meshRegistry[path] || this.createMesh(path);
+    var mesh = this.meshRegistry.get(path) || this.createMesh(path);
     material = compileMaterial(material, mesh.textures.length);
 
     // Set uniforms to enable texture!
@@ -27873,9 +27942,9 @@ WebGLRenderer.prototype.handleMaterialInput = function handleMaterialInput(path,
  * @param {Boolean} dynamic Whether geometry is dynamic
  *
  * @return {undefined} undefined
-**/
+ */
 WebGLRenderer.prototype.setGeometry = function setGeometry(path, geometry, drawType, dynamic) {
-    var mesh = this.meshRegistry[path] || this.createMesh(path);
+    var mesh = this.meshRegistry.get(path) || this.createMesh(path);
 
     mesh.geometry = geometry;
     mesh.drawType = drawType;
@@ -27894,9 +27963,9 @@ WebGLRenderer.prototype.setGeometry = function setGeometry(path, geometry, drawT
  * @param {Array} uniformValue Value of uniform data
  *
  * @return {undefined} undefined
-**/
+ */
 WebGLRenderer.prototype.setMeshUniform = function setMeshUniform(path, uniformName, uniformValue) {
-    var mesh = this.meshRegistry[path] || this.createMesh(path);
+    var mesh = this.meshRegistry.get(path) || this.createMesh(path);
 
     var index = mesh.uniformKeys.indexOf(uniformName);
 
@@ -27910,12 +27979,10 @@ WebGLRenderer.prototype.setMeshUniform = function setMeshUniform(path, uniformNa
 };
 
 /**
- * Triggers the 'draw' phase of the WebGLRenderer. Iterates through registries
- * to set uniforms, set attributes and issue draw commands for renderables.
+ * Allocates a new buffer using the internal BufferRegistry.
  *
  * @method
  *
- * @param {String} path Path used as id of mesh in mesh registry
  * @param {Number} geometryId Id of geometry in geometry registry
  * @param {String} bufferName Attribute location name
  * @param {Array} bufferValue Vertex data
@@ -27924,10 +27991,8 @@ WebGLRenderer.prototype.setMeshUniform = function setMeshUniform(path, uniformNa
  *
  * @return {undefined} undefined
  */
-WebGLRenderer.prototype.bufferData = function bufferData(path, geometryId, bufferName, bufferValue, bufferSpacing, isDynamic) {
+WebGLRenderer.prototype.bufferData = function bufferData(geometryId, bufferName, bufferValue, bufferSpacing, isDynamic) {
     this.bufferRegistry.allocate(geometryId, bufferName, bufferValue, bufferSpacing, isDynamic);
-
-    return this;
 };
 
 /**
@@ -27946,7 +28011,7 @@ WebGLRenderer.prototype.draw = function draw(renderState) {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this.textureManager.update(time);
 
-    this.meshRegistryKeys = sorter(this.meshRegistryKeys, this.meshRegistry);
+    this.meshRegistryKeys = sorter(this.meshRegistry.getKeys(), this.meshRegistry.getKeyToValue());
 
     this.setGlobalUniforms(renderState);
     this.drawCutouts();
@@ -27967,8 +28032,13 @@ WebGLRenderer.prototype.drawMeshes = function drawMeshes() {
     var buffers;
     var mesh;
 
-    for(var i = 0; i < this.meshRegistryKeys.length; i++) {
-        mesh = this.meshRegistry[this.meshRegistryKeys[i]];
+    var meshes = this.meshRegistry.getValues();
+
+    for(var i = 0; i < meshes.length; i++) {
+        mesh = meshes[i];
+
+        if (!mesh) continue;
+
         buffers = this.bufferRegistry.registry[mesh.geometry];
 
         if (!mesh.visible) continue;
@@ -28007,16 +28077,18 @@ WebGLRenderer.prototype.drawMeshes = function drawMeshes() {
 WebGLRenderer.prototype.drawCutouts = function drawCutouts() {
     var cutout;
     var buffers;
-    var len = this.cutoutRegistryKeys.length;
-
-    if (!len) return;
+    var cutouts = this.cutoutRegistry.getValues();
+    var len = cutouts.length;
 
     this.gl.disable(this.gl.CULL_FACE);
     this.gl.enable(this.gl.BLEND);
     this.gl.depthMask(true);
 
     for (var i = 0; i < len; i++) {
-        cutout = this.cutoutRegistry[this.cutoutRegistryKeys[i]];
+        cutout = cutouts[i];
+
+        if (!cutout) continue;
+
         buffers = this.bufferRegistry.registry[cutout.geometry];
 
         if (!cutout.visible) continue;
@@ -28040,9 +28112,14 @@ WebGLRenderer.prototype.drawCutouts = function drawCutouts() {
 WebGLRenderer.prototype.setGlobalUniforms = function setGlobalUniforms(renderState) {
     var light;
     var stride;
+    var lights = this.lightRegistry.getValues();
+    var len = lights.length;
 
-    for (var i = 0, len = this.lightRegistryKeys.length; i < len; i++) {
-        light = this.lightRegistry[this.lightRegistryKeys[i]];
+    for (var i = 0; i < len; i++) {
+        light = lights[i];
+
+        if (!light) continue;
+
         stride = i * 4;
 
         // Build the light positions' 4x4 matrix
@@ -28270,7 +28347,7 @@ WebGLRenderer.prototype.resetOptions = function resetOptions(options) {
 
 module.exports = WebGLRenderer;
 
-},{"../utilities/keyValueToArrays":101,"./BufferRegistry":130,"./Program":132,"./TextureManager":134,"./compileMaterial":136,"./radixSort":139}],136:[function(require,module,exports){
+},{"../utilities/Registry":98,"../utilities/keyValueToArrays":102,"./BufferRegistry":131,"./Program":133,"./TextureManager":135,"./compileMaterial":137,"./radixSort":140}],137:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28338,7 +28415,6 @@ function compileMaterial(material, textureSlot) {
         if (node.texture) textures.push(node.texture);
     });
 
-    console.log(uniforms);
     return {
         _id: material._id,
         glsl: glsl + 'return ' + _makeLabel(material) + ';',
@@ -28404,7 +28480,7 @@ function _arrayToVec(array) {
 
 module.exports = compileMaterial;
 
-},{}],137:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28455,7 +28531,7 @@ function createCheckerBoard() {
 
 module.exports = createCheckerBoard;
 
-},{}],138:[function(require,module,exports){
+},{}],139:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -28495,7 +28571,7 @@ module.exports = {
     WebGLRenderer: require('./WebGLRenderer')
 };
 
-},{"./Buffer":129,"./BufferRegistry":130,"./Debug":131,"./Program":132,"./Texture":133,"./TextureManager":134,"./WebGLRenderer":135,"./compileMaterial":136,"./createCheckerboard":137,"./radixSort":139}],139:[function(require,module,exports){
+},{"./Buffer":130,"./BufferRegistry":131,"./Debug":132,"./Program":133,"./Texture":134,"./TextureManager":135,"./WebGLRenderer":136,"./compileMaterial":137,"./createCheckerboard":138,"./radixSort":140}],140:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28632,7 +28708,7 @@ function radixSort(list, registry) {
 
 module.exports = radixSort;
 
-},{}],140:[function(require,module,exports){
+},{}],141:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28663,12 +28739,12 @@ module.exports = radixSort;
 
 var shaders = {
     vertex: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates transpose inverse matrix from transform\n * \n * @method random\n * @private\n *\n *\n */\n\n\nmat3 getNormalMatrix_1_0(in mat4 t) {\n   mat3 matNorm;\n   mat4 a = t;\n\n   float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3],\n   a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3],\n   a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3],\n   a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3],\n   b00 = a00 * a11 - a01 * a10,\n   b01 = a00 * a12 - a02 * a10,\n   b02 = a00 * a13 - a03 * a10,\n   b03 = a01 * a12 - a02 * a11,\n   b04 = a01 * a13 - a03 * a11,\n   b05 = a02 * a13 - a03 * a12,\n   b06 = a20 * a31 - a21 * a30,\n   b07 = a20 * a32 - a22 * a30,\n   b08 = a20 * a33 - a23 * a30,\n   b09 = a21 * a32 - a22 * a31,\n   b10 = a21 * a33 - a23 * a31,\n   b11 = a22 * a33 - a23 * a32,\n\n   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n   det = 1.0 / det;\n\n   matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n   matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n   matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n\n   matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n   matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n   matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n\n   matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n   matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n   matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n\n   return matNorm;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates a matrix that creates the identity when multiplied by m\n * \n * @method inverse\n * @private\n *\n *\n */\n\n\nfloat inverse_2_1(float m) {\n    return 1.0 / m;\n}\n\nmat2 inverse_2_1(mat2 m) {\n    return mat2(m[1][1],-m[0][1],\n               -m[1][0], m[0][0]) / (m[0][0]*m[1][1] - m[0][1]*m[1][0]);\n}\n\nmat3 inverse_2_1(mat3 m) {\n    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n\n    float b01 =  a22 * a11 - a12 * a21;\n    float b11 = -a22 * a10 + a12 * a20;\n    float b21 =  a21 * a10 - a11 * a20;\n\n    float det = a00 * b01 + a01 * b11 + a02 * b21;\n\n    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),\n                b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),\n                b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\n\nmat4 inverse_2_1(mat4 m) {\n    float\n        a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n        a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n        a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n        a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n\n        b00 = a00 * a11 - a01 * a10,\n        b01 = a00 * a12 - a02 * a10,\n        b02 = a00 * a13 - a03 * a10,\n        b03 = a01 * a12 - a02 * a11,\n        b04 = a01 * a13 - a03 * a11,\n        b05 = a02 * a13 - a03 * a12,\n        b06 = a20 * a31 - a21 * a30,\n        b07 = a20 * a32 - a22 * a30,\n        b08 = a20 * a33 - a23 * a30,\n        b09 = a21 * a32 - a22 * a31,\n        b10 = a21 * a33 - a23 * a31,\n        b11 = a22 * a33 - a23 * a32,\n\n        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Reflects a matrix over its main diagonal.\n * \n * @method transpose\n * @private\n *\n *\n */\n\n\nfloat transpose_3_2(float m) {\n    return m;\n}\n\nmat2 transpose_3_2(mat2 m) {\n    return mat2(m[0][0], m[1][0],\n                m[0][1], m[1][1]);\n}\n\nmat3 transpose_3_2(mat3 m) {\n    return mat3(m[0][0], m[1][0], m[2][0],\n                m[0][1], m[1][1], m[2][1],\n                m[0][2], m[1][2], m[2][2]);\n}\n\nmat4 transpose_3_2(mat4 m) {\n    return mat4(m[0][0], m[1][0], m[2][0], m[3][0],\n                m[0][1], m[1][1], m[2][1], m[3][1],\n                m[0][2], m[1][2], m[2][2], m[3][2],\n                m[0][3], m[1][3], m[2][3], m[3][3]);\n}\n\n\n\n\n/**\n * Converts vertex from modelspace to screenspace using transform\n * information from context.\n *\n * @method applyTransform\n * @private\n *\n *\n */\n\nvec4 applyTransform(vec4 pos) {\n    //TODO: move this multiplication to application code. \n\n    /**\n     * Currently multiplied in the vertex shader to avoid consuming the complexity of holding an additional\n     * transform as state on the mesh object in WebGLRenderer. Multiplies the object's transformation from object space\n     * to world space with its transformation from world space to eye space.\n     */\n    mat4 MVMatrix = u_view * u_transform;\n\n    //TODO: move the origin, sizeScale and y axis inversion to application code in order to amortize redundant per-vertex calculations.\n\n    /**\n     * The transform uniform should be changed to the result of the transformation chain:\n     *\n     * view * modelTransform * invertYAxis * sizeScale * origin\n     *\n     * which could be simplified to:\n     *\n     * view * modelTransform * convertToDOMSpace\n     *\n     * where convertToDOMSpace represents the transform matrix:\n     *\n     *                           size.x 0       0       size.x \n     *                           0      -size.y 0       size.y\n     *                           0      0       1       0\n     *                           0      0       0       1\n     *\n     */\n\n    /**\n     * Assuming a unit volume, moves the object space origin [0, 0, 0] to the \"top left\" [1, -1, 0], the DOM space origin.\n     * Later in the transformation chain, the projection transform negates the rigidbody translation.\n     * Equivalent to (but much faster than) multiplying a translation matrix \"origin\"\n     *\n     *                           1 0 0 1 \n     *                           0 1 0 -1\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.x += 1.0;\n    pos.y -= 1.0;\n\n    /**\n     * Assuming a unit volume, scales an object to the amount of pixels in the size uniform vector's specified dimensions.\n     * Later in the transformation chain, the projection transform transforms the point into clip space by scaling\n     * by the inverse of the canvas' resolution.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"sizeScale\"\n     *\n     *                           size.x 0      0      0 \n     *                           0      size.y 0      0\n     *                           0      0      size.z 0\n     *                           0      0      0      1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.xyz *= u_size * 0.5;\n\n    /**\n     * Inverts the object space's y axis in order to match DOM space conventions. \n     * Later in the transformation chain, the projection transform reinverts the y axis to convert to clip space.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"invertYAxis\"\n     *\n     *                           1 0 0 0 \n     *                           0 -1 0 0\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.y *= -1.0;\n\n    /**\n     * Exporting the vertex's position as a varying, in DOM space, to be used for lighting calculations. This has to be in DOM space\n     * since light position and direction is derived from the scene graph, calculated in DOM space.\n     */\n\n    v_position = (MVMatrix * pos).xyz;\n\n    /**\n    * Exporting the eye vector (a vector from the center of the screen) as a varying, to be used for lighting calculations.\n    * In clip space deriving the eye vector is a matter of simply taking the inverse of the position, as the position is a vector\n    * from the center of the screen. However, since our points are represented in DOM space,\n    * the position is a vector from the top left corner of the screen, so some additional math is needed (specifically, subtracting\n    * the position from the center of the screen, i.e. half the resolution of the canvas).\n    */\n\n    v_eyeVector = (u_resolution * 0.5) - v_position;\n\n    /**\n     * Transforming the position (currently represented in dom space) into view space (with our dom space view transform)\n     * and then projecting the point into raster both by applying a perspective transformation and converting to clip space\n     * (the perspective matrix is a combination of both transformations, therefore it's probably more apt to refer to it as a\n     * projection transform).\n     */\n\n    pos = u_perspective * MVMatrix * pos;\n\n    return pos;\n}\n\n/**\n * Placeholder for positionOffset chunks to be templated in.\n * Used for mesh deformation.\n *\n * @method calculateOffset\n * @private\n *\n *\n */\n#vert_definitions\nvec3 calculateOffset(vec3 ID) {\n    #vert_applications\n    return vec3(0.0);\n}\n\n/**\n * Writes the position of the vertex onto the screen.\n * Passes texture coordinate and normal attributes as varyings\n * and passes the position attribute through position pipeline.\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    v_textureCoordinate = a_texCoord;\n    vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n    invertedNormals.y *= -1.0;\n    v_normal = transpose_3_2(mat3(inverse_2_1(u_transform))) * invertedNormals;\n    vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n    gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}\n",
-    fragment: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Placeholder for fragmentShader  chunks to be templated in.\n * Used for normal mapping, gloss mapping and colors.\n * \n * @method applyMaterial\n * @private\n *\n *\n */\n\n#float_definitions\nfloat applyMaterial_2_0(float ID) {\n    #float_applications\n    return 1.;\n}\n\n#vec3_definitions\nvec3 applyMaterial_2_0(vec3 ID) {\n    #vec3_applications\n    return vec3(0);\n}\n\n#vec4_definitions\nvec4 applyMaterial_2_0(vec4 ID) {\n    #vec4_applications\n\n    return vec4(0);\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates the intensity of light on a surface.\n *\n * @method applyLight\n * @private\n *\n */\nvec4 applyLight_1_1(in vec4 baseColor, in vec3 normal, in vec4 glossiness, int numLights, vec3 ambientColor, vec3 eyeVector, mat4 lightPosition, mat4 lightColor, vec3 v_position) {\n    vec3 diffuse = vec3(0.0);\n    bool hasGlossiness = glossiness.a > 0.0;\n    bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n\n    for(int i = 0; i < 4; i++) {\n        if (i >= numLights) break;\n        vec3 lightDirection = normalize(lightPosition[i].xyz - v_position);\n        float lambertian = max(dot(lightDirection, normal), 0.0);\n\n        if (lambertian > 0.0) {\n            diffuse += lightColor[i].rgb * baseColor.rgb * lambertian;\n            if (hasGlossiness) {\n                vec3 halfVector = normalize(lightDirection + eyeVector);\n                float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n                vec3 specularColor = hasSpecularColor ? glossiness.rgb : lightColor[i].rgb;\n                diffuse += specularColor * specularWeight * lambertian;\n            }\n        }\n\n    }\n\n    return vec4(ambientColor + diffuse, baseColor.a);\n}\n\n\n\n\n\n/**\n * Writes the color of the pixel onto the screen\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : applyMaterial_2_0(u_baseColor);\n\n    /**\n     * Apply lights only if flat shading is false\n     * and at least one light is added to the scene\n     */\n    bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n\n    vec3 normal = normalize(v_normal);\n    vec4 glossiness = u_glossiness.x < 0.0 ? applyMaterial_2_0(u_glossiness) : u_glossiness;\n\n    vec4 color = lightsEnabled ?\n    applyLight_1_1(material, normalize(v_normal), glossiness,\n               int(u_numLights),\n               u_ambientLight * u_baseColor.rgb,\n               normalize(v_eyeVector),\n               u_lightPosition,\n               u_lightColor,   \n               v_position)\n    : material;\n\n    gl_FragColor = color;\n    gl_FragColor.a *= u_opacity;   \n}\n"
+    fragment: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Placeholder for fragmentShader  chunks to be templated in.\n * Used for normal mapping, gloss mapping and colors.\n * \n * @method applyMaterial\n * @private\n *\n *\n */\n\n#float_definitions\nfloat applyMaterial_1_0(float ID) {\n    #float_applications\n    return 1.;\n}\n\n#vec3_definitions\nvec3 applyMaterial_1_0(vec3 ID) {\n    #vec3_applications\n    return vec3(0);\n}\n\n#vec4_definitions\nvec4 applyMaterial_1_0(vec4 ID) {\n    #vec4_applications\n\n    return vec4(0);\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates the intensity of light on a surface.\n *\n * @method applyLight\n * @private\n *\n */\nvec4 applyLight_2_1(in vec4 baseColor, in vec3 normal, in vec4 glossiness, int numLights, vec3 ambientColor, vec3 eyeVector, mat4 lightPosition, mat4 lightColor, vec3 v_position) {\n    vec3 diffuse = vec3(0.0);\n    bool hasGlossiness = glossiness.a > 0.0;\n    bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n\n    for(int i = 0; i < 4; i++) {\n        if (i >= numLights) break;\n        vec3 lightDirection = normalize(lightPosition[i].xyz - v_position);\n        float lambertian = max(dot(lightDirection, normal), 0.0);\n\n        if (lambertian > 0.0) {\n            diffuse += lightColor[i].rgb * baseColor.rgb * lambertian;\n            if (hasGlossiness) {\n                vec3 halfVector = normalize(lightDirection + eyeVector);\n                float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n                vec3 specularColor = hasSpecularColor ? glossiness.rgb : lightColor[i].rgb;\n                diffuse += specularColor * specularWeight * lambertian;\n            }\n        }\n\n    }\n\n    return vec4(ambientColor + diffuse, baseColor.a);\n}\n\n\n\n\n\n/**\n * Writes the color of the pixel onto the screen\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : applyMaterial_1_0(u_baseColor);\n\n    /**\n     * Apply lights only if flat shading is false\n     * and at least one light is added to the scene\n     */\n    bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n\n    vec3 normal = normalize(v_normal);\n    vec4 glossiness = u_glossiness.x < 0.0 ? applyMaterial_1_0(u_glossiness) : u_glossiness;\n\n    vec4 color = lightsEnabled ?\n    applyLight_2_1(material, normalize(v_normal), glossiness,\n               int(u_numLights),\n               u_ambientLight * u_baseColor.rgb,\n               normalize(v_eyeVector),\n               u_lightPosition,\n               u_lightColor,   \n               v_position)\n    : material;\n\n    gl_FragColor = color;\n    gl_FragColor.a *= u_opacity;   \n}\n"
 };
 
 module.exports = shaders;
 
-},{}],141:[function(require,module,exports){
+},{}],142:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -28709,11 +28785,16 @@ if (!Array.prototype.initialize) {
 
 function Background(rows, cols) {
 	Node.call(this);
-	this._domElement = new DOMElement(this, {
-		properties: {
-			backgroundColor: '#333'
-		}
+	this.domElement = new DOMElement(this, {
+		//		properties: {
+		//			backgroundColor: '#333'
+		//		}
 	});
+
+	this.domElement.setAttribute('role', 'grid');
+	this.domElement.setAttribute('aria-multiselectable', true);
+	this.domElement.setAttribute('aria-colcount', COLUMNS);
+	this.domElement.setAttribute('aria-rowcount', ROWS);
 
 	var count = 0;
 	this.dots = [];
@@ -28769,10 +28850,10 @@ function Background(rows, cols) {
 
 		var _loop = function (line) {
 			var row = dots.filter(function (element) {
-				return element.id % 10 === line && element.fill === true;
+				return Number.parseInt(element.id / 10) === line && element.fill === true;
 			});
 			var column = dots.filter(function (element) {
-				return Number.parseInt(element.id / 10) === line && element.fill === true;
+				return element.id % 10 === line && element.fill === true;
 			});
 			if (row.length === 10) {
 				console.log('Filled row: ', line);
@@ -28814,118 +28895,126 @@ function Background(rows, cols) {
 		var dots = this.dots;
 		var orderRows = this.orderRows;
 		var orderColumns = this.orderColumns;
+		var order = [];
+		var lineHash = 0;
 
-		if (direction === 'x') {
-			var order = orderRows;
-			var lineX = order.indexOf(line);
-
-			if (line < 5) {
-
-				for (var row = 0; row < 10; row++) {
-					var dot = this.dots[order[lineX] * 10 + row];
-					var position = dot.position;
-					var y = position.getY();
-					position.setY(y - DOT_SIDE * lineX, {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (var column = lineX - 1; column >= 0; column--) {
+		switch (direction) {
+			case 'x':
+				order = orderColumns;
+				lineHash = order.indexOf(line);
+				if (line < 5) {
 					for (var row = 0; row < 10; row++) {
-						var dot = this.dots[order[column] * 10 + row];
-						var position = dot.position;
-						var y = position.getY();
-						position.setY(y + DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				orderRows.splice(lineX, 1);
-				orderRows.unshift(line);
-			} else {
-
-				for (var row = 0; row < 10; row++) {
-					var dot = this.dots[order[lineX] * 10 + row];
-					var position = dot.position;
-					var y = position.getY();
-					position.setY(y + DOT_SIDE * (9 - lineX), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (var column = 9; column > lineX; column--) {
-					for (var row = 0; row < 10; row++) {
-						var dot = this.dots[order[column] * 10 + row];
-						var position = dot.position;
-						var y = position.getY();
-						position.setY(y - DOT_SIDE, {
-							duration: DURATION,
-							curve: CURVE
-						});
-					}
-				}
-				orderRows.splice(lineX, 1);
-				orderRows.push(line);
-			}
-		} else {
-
-			var order = orderColumns;
-			var lineX = order.indexOf(line);
-
-			if (line < 5) {
-
-				for (var column = 0; column < 10; column++) {
-					var dot = this.dots[column * 10 + order[lineX]];
-					var position = dot.position;
-					var x = position.getX();
-					position.setX(x - DOT_SIDE * lineX, {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (var row = lineX - 1; row >= 0; row--) {
-					for (var column = 0; column < 10; column++) {
-						var dot = this.dots[column * 10 + order[row]];
+						var dot = this.dots[row * 10 + order[lineHash]];
 						var position = dot.position;
 						var x = position.getX();
-						position.setX(x + DOT_SIDE, {
+						position.setX(x - DOT_SIDE * lineHash, {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-colindex', 0);
+						dot.deselect();
 					}
-				}
-				orderColumns.splice(lineX, 1);
-				orderColumns.unshift(line);
-			} else {
-
-				for (var column = 0; column < 10; column++) {
-					var dot = this.dots[column * 10 + order[lineX]];
-					var position = dot.position;
-					var x = position.getX();
-					position.setX(x + DOT_SIDE * (9 - lineX), {
-						duration: DURATION,
-						curve: CURVE
-					});
-					dot.deselect();
-				}
-				for (var row = 9; row > lineX; row--) {
-					for (var column = 0; column < 10; column++) {
-						var dot = this.dots[column * 10 + order[row]];
+					for (var column = lineHash - 1; column >= 0; column--) {
+						for (var row = 0; row < 10; row++) {
+							var dot = this.dots[row * 10 + order[column]];
+							var position = dot.position;
+							var x = position.getX();
+							position.setX(x + DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-colindex', column + 1);
+						}
+					}
+					orderColumns.splice(lineHash, 1);
+					orderColumns.unshift(line);
+				} else {
+					for (var row = 0; row < 10; row++) {
+						var dot = this.dots[row * 10 + order[lineHash]];
 						var position = dot.position;
 						var x = position.getX();
-						position.setX(x - DOT_SIDE, {
+						position.setX(x + DOT_SIDE * (9 - lineHash), {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-colindex', 9);
+						dot.deselect();
 					}
+					for (var column = 9; column > lineHash; column--) {
+						for (var row = 0; row < 10; row++) {
+							var dot = this.dots[row * 10 + order[column]];
+							var position = dot.position;
+							var x = position.getX();
+							position.setX(x - DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-colindex', column - 1);
+						}
+					}
+					orderColumns.splice(lineHash, 1);
+					orderColumns.push(line);
 				}
-				orderColumns.splice(lineX, 1);
-				orderColumns.push(line);
-			}
+				break;
+			case 'y':
+				order = orderRows;
+				lineHash = order.indexOf(line);
+				if (line < 5) {
+					for (var column = 0; column < 10; column++) {
+						var dot = this.dots[order[lineHash] * 10 + column];
+						var position = dot.position;
+						var y = position.getY();
+						position.setY(y - DOT_SIDE * lineHash, {
+							duration: DURATION,
+							curve: CURVE
+						});
+						dot.domElement.setAttribute('aria-rowindex', 0);
+						dot.deselect();
+					}
+					for (var row = lineHash - 1; row >= 0; row--) {
+						for (var column = 0; column < 10; column++) {
+							var dot = this.dots[order[row] * 10 + column];
+							var position = dot.position;
+							var y = position.getY();
+							position.setY(y + DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-rowindex', row + 1);
+						}
+					}
+					orderRows.splice(lineHash, 1);
+					orderRows.unshift(line);
+				} else {
+					for (var column = 0; column < 10; column++) {
+						var dot = this.dots[order[lineHash] * 10 + column];
+						var position = dot.position;
+						var y = position.getY();
+						position.setY(y + DOT_SIDE * (9 - lineHash), {
+							duration: DURATION,
+							curve: CURVE
+						});
+						dot.domElement.setAttribute('aria-rowindex', 9);
+						dot.deselect();
+					}
+					for (var row = 9; row > lineHash; row--) {
+						for (var column = 0; column < 10; column++) {
+							var dot = this.dots[order[row] * 10 + column];
+							var position = dot.position;
+							var y = position.getY();
+							position.setY(y - DOT_SIDE, {
+								duration: DURATION,
+								curve: CURVE
+							});
+							dot.domElement.setAttribute('aria-rowindex', row - 1);
+						}
+					}
+					orderRows.splice(lineHash, 1);
+					orderRows.push(line);
+				}
+				break;
+			default:
+				return false;
 		}
 	};
 
@@ -29037,32 +29126,41 @@ function Dot(id) {
 	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(DOT_SIZE, DOT_SIZE, DOT_SIZE);
 
 	// Add the DOMElement (DOMElements are components).
-	this._domElement = new DOMElement(this, {
+	this.domElement = new DOMElement(this, {
 		classes: ['no-user-select'],
 		properties: {
 			background: COLOR
 		}
 	});
+
 	this.id = id;
 	this.fill = false;
+	this.domElement.setAttribute('role', 'gridcell');
+	this.domElement.setAttribute('aria-selected', false);
+	this.domElement.setAttribute('aria-live', 'polite');
+	this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / ROWS));
+	this.domElement.setAttribute('aria-colindex', id % COLUMNS);
 
 	this.select = function select() {
 		if (!this.fill) {
 			this.fill = true;
-			this._domElement.setProperty('background-color', COLOR__ACTIVE);
+			this.domElement.setProperty('background-color', COLOR__ACTIVE);
+			this.domElement.setAttribute('aria-selected', true);
 		}
 	};
 
 	this.deselect = function deselect() {
 		if (this.fill) {
 			this.fill = false;
-			this._domElement.setProperty('background-color', COLOR);
+			this.domElement.setProperty('background-color', COLOR);
+			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 
 	this.toggleFill = function toggleFill() {
 		this.fill = !this.fill;
-		this._domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
+		this.domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
+		this.domElement.setAttribute('aria-checked', this.fill);
 	};
 	// Add the Position component.
 	// The position component allows us to transition between different states
@@ -29096,7 +29194,7 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 		case 'mousemove':
 			if (this._parent.mousing === true) {
 				this._parent.fillDot(this.id);
-				this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
 			}
 			break;
 		case 'touchmove':
@@ -29104,12 +29202,12 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 			console.log('Dot.touchmove', this.id);
 			if (this._parent.mousing === true) {
 				this._parent.fillDot(this.id);
-				this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
 			}
 			break;
 		case 'click':
 			this._parent.fillDot(this.id);
-			this.emit('id', this._domElement.id).emit('fill', this._domElement.fill);
+			this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
 			break;
 		case 'mouseup':
 			this._parent.mousingUp(this.id);
@@ -29127,4 +29225,4 @@ FamousEngine.init();
 var scene = FamousEngine.createScene();
 scene.addChild(new Background(ROWS, COLUMNS));
 
-},{"famous":46}]},{},[141]);
+},{"famous":46}]},{},[142]);
