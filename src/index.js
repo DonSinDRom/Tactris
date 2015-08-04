@@ -374,7 +374,6 @@ function Dot(id) {
 		.setAbsoluteSize(DOT_SIZE, DOT_SIZE, DOT_SIZE);
 
 	this.domElement = new DOMElement(this, {
-		classes: ['no-user-select'],
 		properties: {
 			background: COLOR
 		}
