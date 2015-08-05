@@ -405,11 +405,6 @@ function Game(rows, cols) {
 	Node.call(this);
 	this.domElement = new DOMElement(this, {});
 
-	this.domElement.setAttribute('role', 'grid');
-	this.domElement.setAttribute('aria-multiselectable', true);
-	this.domElement.setAttribute('aria-colcount', COLUMNS);
-	this.domElement.setAttribute('aria-rowcount', ROWS);
-
 	var count = 0;
 	this.dots = [];
 	for (let row = 0; row < rows; row++) {
@@ -525,7 +520,6 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.domElement.setAttribute('aria-colindex', 0);
 						dot.deselect();
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
@@ -537,7 +531,6 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
-							dot.domElement.setAttribute('aria-colindex', column + 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -551,7 +544,6 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.domElement.setAttribute('aria-colindex', ROWS - 1);
 						dot.deselect();
 					}
 					for (let column = COLUMNS - 1; column > lineHash; column--) {
@@ -563,7 +555,6 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
-							dot.domElement.setAttribute('aria-colindex', column - 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -582,7 +573,6 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.domElement.setAttribute('aria-rowindex', 0);
 						dot.deselect();
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
@@ -594,7 +584,6 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
-							dot.domElement.setAttribute('aria-rowindex', row + 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -608,7 +597,6 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.domElement.setAttribute('aria-rowindex', COLUMNS - 1);
 						dot.deselect();
 					}
 					for (let row = ROWS - 1; row > lineHash; row--) {
@@ -620,7 +608,6 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
-							dot.domElement.setAttribute('aria-rowindex', row - 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -655,7 +642,6 @@ function Game(rows, cols) {
 		.setOrigin(0.5, 0.5, 0)
 		.setPosition(0, 0, 0);
 	this.layout = new Layout(this);
-
 
 	this.addUIEvent('mousedown');
 	this.addUIEvent('mouseup');
@@ -733,17 +719,11 @@ function Dot(id) {
 
 	this.id = id;
 	this.fill = false;
-	this.domElement.setAttribute('role', 'gridcell');
-	this.domElement.setAttribute('aria-selected', false);
-	this.domElement.setAttribute('aria-live', 'polite');
-	this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / ROWS));
-	this.domElement.setAttribute('aria-colindex', id % COLUMNS);
 
 	this.select = function select() {
 		if (!this.fill) {
 			this.fill = true;
 			this.domElement.setProperty('background-color', COLOR__ACTIVE);
-			this.domElement.setAttribute('aria-selected', true);
 		}
 	};
 
@@ -751,14 +731,12 @@ function Dot(id) {
 		if (this.fill) {
 			this.fill = false;
 			this.domElement.setProperty('background-color', COLOR);
-			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 
 	this.toggleFill = function toggleFill() {
 		this.fill = !this.fill;
 		this.domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
-		this.domElement.setAttribute('aria-checked', this.fill);
 	};
 
 	this.position = new Position(this);
@@ -798,4 +776,5 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 
 FamousEngine.init();
 var scene = FamousEngine.createScene();
-scene.addChild(new Game(ROWS, COLUMNS));
+var game = new Game(ROWS, COLUMNS);
+scene.addChild(game);
