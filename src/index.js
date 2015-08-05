@@ -658,10 +658,7 @@ function Game(rows, cols) {
 
 
 	this.addUIEvent('mousedown');
-	this.addUIEvent('touchstart');
-
 	this.addUIEvent('mouseup');
-	this.addUIEvent('touchend');
 }
 
 Game.prototype = Object.create(Node.prototype);
@@ -673,17 +670,7 @@ Game.prototype.onReceive = function onReceive(type, ev) {
 			this.emit('x', ev.x).emit('y', ev.y);
 			this.mousing = true;
 			break;
-	case 'touchstart':
-			console.log('Game.touchstart');
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = true;
-			break;
 	case 'mouseup':
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = false;
-			break;
-	case 'touchend':
-			console.log('Game.touchend');
 			this.emit('x', ev.x).emit('y', ev.y);
 			this.mousing = false;
 			break;
@@ -777,15 +764,9 @@ function Dot(id) {
 	this.position = new Position(this);
 
 	this.addUIEvent('mousedown');
-	this.addUIEvent('touchstart');
-
 	this.addUIEvent('mousemove');
-	this.addUIEvent('touchmove');
-
 	this.addUIEvent('click');
-
 	this.addUIEvent('mouseup');
-	this.addUIEvent('touchend');
 }
 
 Dot.prototype = Object.create(Node.prototype);
@@ -797,19 +778,7 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 	case 'mousedown':
 			this._parent.mousingDown(this.id);
 			break;
-	case 'touchstart':
-			console.log('Dot.touchstart', this.id);
-			this._parent.mousingUp(this.id);
-			break;
 	case 'mousemove':
-			if (this._parent.mousing === true) {
-				this._parent.fillDot(this.id);
-				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
-			}
-			break;
-	case 'touchmove':
-			console.log('Dot.touchmove', ev);
-			console.log('Dot.touchmove', this.id);
 			if (this._parent.mousing === true) {
 				this._parent.fillDot(this.id);
 				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
@@ -821,10 +790,6 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 			break;
 	case 'mouseup':
 			this._parent.mousingUp(this.id);
-			break;
-	case 'touchend':
-			console.log('Dot.touchend', this.id);
-			this._parent.mousingDown(this.id);
 			break;
 	default:
 			return false;
