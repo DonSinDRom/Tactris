@@ -1,6 +1,7 @@
 'use strict';
 
 var famous = require('famous');
+var _ = require('underscore');
 
 /*jshint -W079 */
 var Node = famous.core.Node;/*jshint +W079 */
@@ -385,6 +386,12 @@ const FIGURES = [
 	]
 ];
 
+const FIGURESCOUNT = 2;
+
+function getRandomInt(min, max) {
+	return Math.floor(Math.random() * (max - min)) + min;
+}
+
 /**
  * Initialize fixed-sized array with incremented values
  * @param {number} length - Length of array
@@ -413,6 +420,55 @@ function Game(rows, cols) {
 			this.addChild(dot);
 			this.dots.push(dot);
 		}
+	}
+
+	this.figures = [];
+
+	this.generateFigure = function generateFigure(figureId) {
+		let figures = this.figures || [];
+		let rand = getRandomInt(0, FIGURES.length);;
+
+		if (figures.length < 1) {
+			figures.push(FIGURES[rand]);
+		} else {
+			let figuresCount = FIGURESCOUNT;
+			let figuresIndexes = [];
+			let isFiguresEqual = function(f1, f2) {
+				return f1.every(function(element, index) {
+					return _.isEqual(element, f2[index]);
+				});
+			}
+			let findIndex = function(figure) {
+				return FIGURES.findIndex(function (element) {
+					return isFiguresEqual(element, figure);
+				});
+			}
+			let isHashUnique = function(array, hash) {
+				if (hash !== figureId) {
+					return array.every(function(element) { return element !== hash });
+				} else {
+					return false;
+				}
+			}
+			for (let i = 0; i < Math.min(figuresCount, figures.length); i++) {
+				if (figureId !== i) {
+					figuresIndexes.push(figures[i]);
+				}
+			}
+			let figuresHash = [];
+			for (let i = 0; i < figuresIndexes.length; i++) {
+				figuresHash[i] = findIndex(figuresIndexes[i]);
+			}
+
+			while(!isHashUnique(figuresHash, rand)) {
+				rand = getRandomInt(0, FIGURES.length);
+			}
+			figures[figureId] = FIGURES[rand];
+		}
+	}
+
+	for (let figure = 0; figure < 2; figure++) {
+		this.generateFigure(figure);
 	}
 
 	this.mousing = 0;
