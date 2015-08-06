@@ -1,7 +1,6 @@
 'use strict';
 
 var famous = require('famous');
-var _ = require('underscore');
 
 /*jshint -W079 */
 var Node = famous.core.Node;/*jshint +W079 */
@@ -20,17 +19,16 @@ const ROWS = DIMENSION;
 const COLUMNS = DIMENSION;
 const DURATION = 600;
 const CURVE = 'outBounce'; //outQuint outElastic inElastic inOutEase inBounce outBounce
-
 const FIGURES = [
 	[
-		{//             ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 0 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 1 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
+		{//            +-----+ +-----+                       //
+			x: 0, //   |▓▓▓▓| |▓▓▓▓|                //
+			y: 0 //    |▓▓▓▓| |▓▓▓▓|                //
+		}, //          +-----+ +-----+              //
+		{ //           +-----+ +-----+                     //
+			x: 0, //   |▓▓▓▓| |▓▓▓▓|                        //
+			y: 1 //    |▓▓▓▓| |▓▓▓▓|                        //
+		}, //          +-----+ +-----+                    //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 0 //                                            //
@@ -42,29 +40,29 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 0 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 1 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 2 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 3 //     ║      ║                               //
-		} //            ╚══════╝                               //
+		{//             ________                               //
+			x: 0, //   |        |                               //
+			y: 0 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 1 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 2 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 3 //    |        |                               //
+		} //            |______|                               //
 	],
 
 	[
-		{//             ╔══════╗ ╔══════╗ ╔══════╗ ╔══════╗    //
-			x: 0, //    ║      ║ ║      ║ ║      ║ ║      ║    //
-			y: 0 //     ║      ║ ║      ║ ║      ║ ║      ║    //
-		}, //           ╚══════╝ ╚══════╝ ╚══════╝ ╚══════╝    //
+		{//             ________ ________ ________ ________    //
+			x: 0, //   |        ||        ||        ||        |    //
+			y: 0 //    |        ||        ||        ||        |    //
+		}, //           |______| |______| |______| |______|    //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 0 //                                            //
@@ -81,14 +79,14 @@ const FIGURES = [
 
 
 	[
-		{//                      ╔══════╗ ╔══════╗             //
-			x: 0, //             ║      ║ ║      ║             //
-			y: 1 //              ║      ║ ║      ║             //
-		}, //                    ╚══════╝ ╚══════╝             //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 1, //    ║      ║ ║      ║                      //
-			y: 0 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
+		{//                      ________ ________             //
+			x: 0, //            |        ||        |             //
+			y: 1 //             |        ||        |             //
+		}, //                    |______| |______|             //
+		{ //            ________ ________                      //
+			x: 1, //   |        ||        |                      //
+			y: 0 //    |        ||        |                      //
+		}, //           |______| |______|                      //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 1 //                                            //
@@ -100,18 +98,18 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 0 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 1 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //                     ╔══════╗                      //
-			x: 1, //             ║      ║                      //
-			y: 1 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
+		{//             ________                               //
+			x: 0, //   |        |                               //
+			y: 0 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________ ________                      //
+			x: 0, //   |        ||        |                      //
+			y: 1 //    |        ||        |                      //
+		}, //           |______| |______|                      //
+		{ //                     ________                      //
+			x: 1, //            |        |                      //
+			y: 1 //             |        |                      //
+		}, //                    |______|                      //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 2 //                                            //
@@ -119,14 +117,14 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 0 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //                     ╔══════╗ ╔══════╗             //
-			x: 1, //             ║      ║ ║      ║             //
-			y: 0 //              ║      ║ ║      ║             //
-		}, //                    ╚══════╝ ╚══════╝             //
+		{//             ________ ________                      //
+			x: 0, //   |        ||        |                      //
+			y: 0 //    |        ||        |                      //
+		}, //           |______| |______|                      //
+		{ //                     ________ ________             //
+			x: 1, //            |        ||        |             //
+			y: 0 //             |        ||        |             //
+		}, //                    |______| |______|             //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 1 //                                            //
@@ -138,18 +136,18 @@ const FIGURES = [
 	],
 
 	[
-		{//                      ╔══════╗                      //
-			x: 0, //             ║      ║                      //
-			y: 1 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 2 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //            ╔══════╗                               //
-			x: 1, //    ║      ║                               //
-			y: 0 //     ║      ║                               //
-		}, //           ╚══════╝                               //
+		{//                      ________                      //
+			x: 0, //            |        |                      //
+			y: 1 //             |        |                      //
+		}, //                    |______|                      //
+		{ //            ________ ________                      //
+			x: 0, //   |        ||        |                      //
+			y: 2 //    |        ||        |                      //
+		}, //           |______| |______|                      //
+		{ //            ________                               //
+			x: 1, //   |        |                               //
+			y: 0 //    |        |                               //
+		}, //           |______|                               //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 1 //                                            //
@@ -158,14 +156,14 @@ const FIGURES = [
 
 
 	[
-		{//                      ╔══════╗                      //
-			x: 0, //             ║      ║                      //
-			y: 1 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
-		{ //            ╔══════╗ ╔══════╗ ╔══════╗             //
-			x: 1, //    ║      ║ ║      ║ ║      ║             //
-			y: 0 //     ║      ║ ║      ║ ║      ║             //
-		}, //           ╚══════╝ ╚══════╝ ╚══════╝             //
+		{//                      ________                      //
+			x: 0, //            |        |                      //
+			y: 1 //             |        |                      //
+		}, //                    |______|                      //
+		{ //            ________ ________ ________             //
+			x: 1, //   |        ||        ||        |             //
+			y: 0 //    |        ||        ||        |             //
+		}, //           |______| |______| |______|             //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 1 //                                            //
@@ -177,18 +175,18 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 0 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 1 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 2 //     ║      ║                               //
-		}, //           ╚══════╝                               //
+		{//             ________                               //
+			x: 0, //   |        |                               //
+			y: 0 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________ ________                      //
+			x: 0, //   |        ||        |                      //
+			y: 1 //    |        ||        |                      //
+		}, //           |______| |______|                      //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 2 //    |        |                               //
+		}, //           |______|                               //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 1 //                                            //
@@ -196,14 +194,14 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗ ╔══════╗ ╔══════╗             //
-			x: 0, //    ║      ║ ║      ║ ║      ║             //
-			y: 0 //     ║      ║ ║      ║ ║      ║             //
-		}, //           ╚══════╝ ╚══════╝ ╚══════╝             //
-		{ //                     ╔══════╗                      //
-			x: 1, //             ║      ║                      //
-			y: 0 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
+		{//             ________ ________ ________             //
+			x: 0, //   |        ||        ||        |             //
+			y: 0 //    |        ||        ||        |             //
+		}, //           |______| |______| |______|             //
+		{ //                     ________                      //
+			x: 1, //            |        |                      //
+			y: 0 //             |        |                      //
+		}, //                    |______|                      //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 1 //                                            //
@@ -215,18 +213,18 @@ const FIGURES = [
 	],
 
 	[
-		{//                      ╔══════╗                      //
-			x: 0, //             ║      ║                      //
-			y: 1 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 1, //    ║      ║ ║      ║                      //
-			y: 0 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //                     ╔══════╗                      //
-			x: 1, //             ║      ║                      //
-			y: 1 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
+		{//                      ________                      //
+			x: 0, //            |        |                      //
+			y: 1 //             |        |                      //
+		}, //                    |______|                      //
+		{ //            ________ ________                      //
+			x: 1, //   |        ||        |                      //
+			y: 0 //    |        ||        |                      //
+		}, //           |______| |______|                      //
+		{ //                     ________                      //
+			x: 1, //            |        |                      //
+			y: 1 //             |        |                      //
+		}, //                    |______|                      //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 2 //                                            //
@@ -234,14 +232,14 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 0 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗ ╔══════╗ ╔══════╗             //
-			x: 0, //    ║      ║ ║      ║ ║      ║             //
-			y: 1 //     ║      ║ ║      ║ ║      ║             //
-		}, //           ╚══════╝ ╚══════╝ ╚══════╝             //
+		{//             ________                               //
+			x: 0, //   |        |                               //
+			y: 0 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________ ________ ________             //
+			x: 0, //   |        ||        ||        |             //
+			y: 1 //    |        ||        ||        |             //
+		}, //           |______| |______| |______|             //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 1 //                                            //
@@ -253,18 +251,18 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 0 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 1 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 2 //     ║      ║                               //
-		}, //           ╚══════╝                               //
+		{//             ________ ________                      //
+			x: 0, //   |        ||        |                      //
+			y: 0 //    |        ||        |                      //
+		}, //           |______| |______|                      //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 1 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 2 //    |        |                               //
+		}, //           |______|                               //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 0 //                                            //
@@ -272,14 +270,14 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗ ╔══════╗ ╔══════╗             //
-			x: 0, //    ║      ║ ║      ║ ║      ║             //
-			y: 0 //     ║      ║ ║      ║ ║      ║             //
-		}, //           ╚══════╝ ╚══════╝ ╚══════╝             //
-		{ //                              ╔══════╗             //
-			x: 1, //                      ║      ║             //
-			y: 0 //                       ║      ║             //
-		}, //                             ╚══════╝             //
+		{//             ________ ________ ________             //
+			x: 0, //   |        ||        ||        |             //
+			y: 0 //    |        ||        ||        |             //
+		}, //           |______| |______| |______|             //
+		{ //                              ________             //
+			x: 1, //                     |        |             //
+			y: 0 //                      |        |             //
+		}, //                             |______|             //
 		{ //                                                   //
 			x: 2, //                                           //
 			y: 0 //                                            //
@@ -291,18 +289,18 @@ const FIGURES = [
 	],
 
 	[
-		{//                      ╔══════╗                      //
-			x: 0, //             ║      ║                      //
-			y: 2 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
-		{ //                     ╔══════╗                      //
-			x: 1, //             ║      ║                      //
-			y: 0 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 1, //    ║      ║ ║      ║                      //
-			y: 1 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
+		{//                      ________                      //
+			x: 0, //            |        |                      //
+			y: 2 //             |        |                      //
+		}, //                    |______|                      //
+		{ //                     ________                      //
+			x: 1, //            |        |                      //
+			y: 0 //             |        |                      //
+		}, //                    |______|                      //
+		{ //            ________ ________                      //
+			x: 1, //   |        ||        |                      //
+			y: 1 //    |        ||        |                      //
+		}, //           |______| |______|                      //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 2 //                                            //
@@ -310,14 +308,14 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗ ╔══════╗ ╔══════╗             //
-			x: 0, //    ║      ║ ║      ║ ║      ║             //
-			y: 0 //     ║      ║ ║      ║ ║      ║             //
-		}, //           ╚══════╝ ╚══════╝ ╚══════╝             //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 1 //     ║      ║                               //
-		}, //           ╚══════╝                               //
+		{//             ________ ________ ________             //
+			x: 0, //   |        ||        ||        |             //
+			y: 0 //    |        ||        ||        |             //
+		}, //           |______| |______| |______|             //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 1 //    |        |                               //
+		}, //           |______|                               //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 0 //                                            //
@@ -329,18 +327,18 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 0 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
-		{ //                     ╔══════╗                      //
-			x: 1, //             ║      ║                      //
-			y: 0 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
-		{ //                     ╔══════╗                      //
-			x: 1, //             ║      ║                      //
-			y: 1 //              ║      ║                      //
-		}, //                    ╚══════╝                      //
+		{//             ________ ________                      //
+			x: 0, //   |        ||        |                      //
+			y: 0 //    |        ||        |                      //
+		}, //           |______| |______|                      //
+		{ //                     ________                      //
+			x: 1, //            |        |                      //
+			y: 0 //             |        |                      //
+		}, //                    |______|                      //
+		{ //                     ________                      //
+			x: 1, //            |        |                      //
+			y: 1 //             |        |                      //
+		}, //                    |______|                      //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 2 //                                            //
@@ -348,14 +346,14 @@ const FIGURES = [
 	],
 
 	[
-		{//                               ╔══════╗             //
-			x: 0, //                      ║      ║             //
-			y: 1 //                       ║      ║             //
-		}, //                             ╚══════╝             //
-		{ //            ╔══════╗ ╔══════╗ ╔══════╗             //
-			x: 1, //    ║      ║ ║      ║ ║      ║             //
-			y: 1 //     ║      ║ ║      ║ ║      ║             //
-		}, //           ╚══════╝ ╚══════╝ ╚══════╝             //
+		{//                               ________             //
+			x: 0, //                     |        |             //
+			y: 1 //                      |        |             //
+		}, //                             |______|             //
+		{ //            ________ ________ ________             //
+			x: 1, //   |        ||        ||        |             //
+			y: 1 //    |        ||        ||        |             //
+		}, //           |______| |______| |______|             //
 		{ //                                                   //
 			x: 2, //                                           //
 			y: 0 //                                            //
@@ -367,29 +365,24 @@ const FIGURES = [
 	],
 
 	[
-		{//             ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 0 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗                               //
-			x: 0, //    ║      ║                               //
-			y: 1 //     ║      ║                               //
-		}, //           ╚══════╝                               //
-		{ //            ╔══════╗ ╔══════╗                      //
-			x: 0, //    ║      ║ ║      ║                      //
-			y: 2 //     ║      ║ ║      ║                      //
-		}, //           ╚══════╝ ╚══════╝                      //
+		{//             ________                               //
+			x: 0, //   |        |                               //
+			y: 0 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________                               //
+			x: 0, //   |        |                               //
+			y: 1 //    |        |                               //
+		}, //           |______|                               //
+		{ //            ________ ________                      //
+			x: 0, //   |        ||        |                      //
+			y: 2 //    |        ||        |                      //
+		}, //           |______| |______|                      //
 		{ //                                                   //
 			x: 1, //                                           //
 			y: 2 //                                            //
 		} //                                                   //
 	]
 ];
-const FIGURESCOUNT = 2;
-
-function getRandomInt(min, max) {
-	return Math.floor(Math.random() * (max - min)) + min;
-}
 
 /**
  * Initialize fixed-sized array with incremented values
@@ -404,12 +397,17 @@ if (!Array.prototype.initialize) {
 		}
 		return arr;
 	};
-}/*jshint +W121 */
+}/*jshint -W121 */
 
 
-function Game(rows, cols) {
+function Background(rows, cols) {
 	Node.call(this);
 	this.domElement = new DOMElement(this, {});
+
+	this.domElement.setAttribute('role', 'grid');
+	this.domElement.setAttribute('aria-multiselectable', true);
+	this.domElement.setAttribute('aria-colcount', COLUMNS);
+	this.domElement.setAttribute('aria-rowcount', ROWS);
 
 	var count = 0;
 	this.dots = [];
@@ -419,55 +417,6 @@ function Game(rows, cols) {
 			this.addChild(dot);
 			this.dots.push(dot);
 		}
-	}
-
-	this.figures = [];
-
-	this.generateFigure = function generateFigure(figureId) {
-		let figures = this.figures || [];
-		let rand = getRandomInt(0, FIGURES.length);;
-
-		if (figures.length < 1) {
-			figures.push(FIGURES[rand]);
-		} else {
-			let figuresCount = FIGURESCOUNT;
-			let figuresIndexes = [];
-			let isFiguresEqual = function(f1, f2) {
-				return f1.every(function(element, index) {
-					return _.isEqual(element, f2[index]);
-				});
-			}
-			let findIndex = function(figure) {
-				return FIGURES.findIndex(function (element) {
-					return isFiguresEqual(element, figure);
-				});
-			}
-			let isHashUnique = function(array, hash) {
-				if (hash !== figureId) {
-					return array.every(function(element) { return element !== hash });
-				} else {
-					return false;
-				}
-			}
-			for (let i = 0; i < Math.min(figuresCount, figures.length); i++) {
-				if (figureId !== i) {
-					figuresIndexes.push(figures[i]);
-				}
-			}
-			let figuresHash = [];
-			for (let i = 0; i < figuresIndexes.length; i++) {
-				figuresHash[i] = findIndex(figuresIndexes[i]);
-			}
-
-			while(!isHashUnique(figuresHash, rand)) {
-				rand = getRandomInt(0, FIGURES.length);
-			}
-			figures[figureId] = FIGURES[rand];
-		}
-	}
-
-	for (let figure = 0; figure < 2; figure++) {
-		this.generateFigure(figure);
 	}
 
 	this.mousing = 0;
@@ -575,6 +524,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-colindex', 0);
 						dot.deselect();
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
@@ -586,6 +536,7 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
+							dot.domElement.setAttribute('aria-colindex', column + 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -599,6 +550,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-colindex', ROWS - 1);
 						dot.deselect();
 					}
 					for (let column = COLUMNS - 1; column > lineHash; column--) {
@@ -610,6 +562,7 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
+							dot.domElement.setAttribute('aria-colindex', column - 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -628,6 +581,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-rowindex', 0);
 						dot.deselect();
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
@@ -639,6 +593,7 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
+							dot.domElement.setAttribute('aria-rowindex', row + 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -652,6 +607,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
+						dot.domElement.setAttribute('aria-rowindex', COLUMNS - 1);
 						dot.deselect();
 					}
 					for (let row = ROWS - 1; row > lineHash; row--) {
@@ -663,6 +619,7 @@ function Game(rows, cols) {
 								duration: DURATION,
 								curve: CURVE
 							});
+							dot.domElement.setAttribute('aria-rowindex', row - 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -698,20 +655,34 @@ function Game(rows, cols) {
 		.setPosition(0, 0, 0);
 	this.layout = new Layout(this);
 
+
 	this.addUIEvent('mousedown');
+	this.addUIEvent('touchstart');
+
 	this.addUIEvent('mouseup');
+	this.addUIEvent('touchend');
 }
 
-Game.prototype = Object.create(Node.prototype);
-Game.prototype.constructor = Node;
+Background.prototype = Object.create(Node.prototype);
+Background.prototype.constructor = Node;
 
-Game.prototype.onReceive = function onReceive(type, ev) {
+Background.prototype.onReceive = function onReceive(type, ev) {
 	switch (type) {
 	case 'mousedown':
 			this.emit('x', ev.x).emit('y', ev.y);
 			this.mousing = true;
 			break;
+	case 'touchstart':
+			console.log('Background.touchstart');
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = true;
+			break;
 	case 'mouseup':
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = false;
+			break;
+	case 'touchend':
+			console.log('Background.touchend');
 			this.emit('x', ev.x).emit('y', ev.y);
 			this.mousing = false;
 			break;
@@ -774,11 +745,17 @@ function Dot(id) {
 
 	this.id = id;
 	this.fill = false;
+	this.domElement.setAttribute('role', 'gridcell');
+	this.domElement.setAttribute('aria-selected', false);
+	this.domElement.setAttribute('aria-live', 'polite');
+	this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / ROWS));
+	this.domElement.setAttribute('aria-colindex', id % COLUMNS);
 
 	this.select = function select() {
 		if (!this.fill) {
 			this.fill = true;
 			this.domElement.setProperty('background-color', COLOR__ACTIVE);
+			this.domElement.setAttribute('aria-selected', true);
 		}
 	};
 
@@ -786,20 +763,28 @@ function Dot(id) {
 		if (this.fill) {
 			this.fill = false;
 			this.domElement.setProperty('background-color', COLOR);
+			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 
 	this.toggleFill = function toggleFill() {
 		this.fill = !this.fill;
 		this.domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
+		this.domElement.setAttribute('aria-checked', this.fill);
 	};
 
 	this.position = new Position(this);
 
 	this.addUIEvent('mousedown');
+	this.addUIEvent('touchstart');
+
 	this.addUIEvent('mousemove');
+	this.addUIEvent('touchmove');
+
 	this.addUIEvent('click');
+
 	this.addUIEvent('mouseup');
+	this.addUIEvent('touchend');
 }
 
 Dot.prototype = Object.create(Node.prototype);
@@ -811,7 +796,19 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 	case 'mousedown':
 			this._parent.mousingDown(this.id);
 			break;
+	case 'touchstart':
+			console.log('Dot.touchstart', this.id);
+			this._parent.mousingUp(this.id);
+			break;
 	case 'mousemove':
+			if (this._parent.mousing === true) {
+				this._parent.fillDot(this.id);
+				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
+			}
+			break;
+	case 'touchmove':
+			console.log('Dot.touchmove', ev);
+			console.log('Dot.touchmove', this.id);
 			if (this._parent.mousing === true) {
 				this._parent.fillDot(this.id);
 				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
@@ -824,6 +821,10 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 	case 'mouseup':
 			this._parent.mousingUp(this.id);
 			break;
+	case 'touchend':
+			console.log('Dot.touchend', this.id);
+			this._parent.mousingDown(this.id);
+			break;
 	default:
 			return false;
 	}
@@ -831,5 +832,4 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 
 FamousEngine.init();
 var scene = FamousEngine.createScene();
-var game = new Game(ROWS, COLUMNS);
-scene.addChild(game);
+scene.addChild(new Background(ROWS, COLUMNS));
