@@ -10,8 +10,6 @@ var Position = famous.components.Position;
 var Curves = famous.transitions.Curves;
 var DOMElement = famous.domRenderables.DOMElement;
 
-const COLOR = 'rgb(122,199,79)';
-const COLOR__ACTIVE = 'rgb(232,116,97)';
 const DOT_SIZE = 35;
 const DOT_MARGIN = 1;
 const DOT_SIDE = DOT_SIZE + DOT_MARGIN;
@@ -388,6 +386,13 @@ const FIGURES = [
 
 const FIGURESCOUNT = 2;
 
+const DOT_STATE__HOVERED = 1;
+const DOT_STATE__UNTOUCHED = 0;
+const DOT_STATE__PLACED = -1;
+const DOT_COLOR__HOVERED = 'rgb(122,199,79)';
+const DOT_COLOR__UNTOUCHED = 'rgb(232,116,97)';
+const DOT_COLOR__PLACED = 'rgb(10,10,97)';
+
 function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
 }
@@ -405,8 +410,13 @@ if (!Array.prototype.initialize) {
 		}
 		return arr;
 	};
-}/*jshint -W121 */
-
+}
+Array.prototype.max = function() {
+	return Math.max.apply(null, this);
+};
+Array.prototype.min = function() {
+	return Math.min.apply(null, this);
+};/*jshint -W121 */
 
 function Game(rows, cols) {
 	Node.call(this);
@@ -469,16 +479,77 @@ function Game(rows, cols) {
 
 	for (let figure = 0; figure < 2; figure++) {
 		this.generateFigure(figure);
+		console.log('generateFigure', this.figures);
+	}
+
+	this.checkFigure = function checkFigure() {
+		console.log('checkFigure', this.hoverDots);
+		let hovers = this.hoverDots;
+
+		if (hovers.length === 4) {
+
+			let figures = this.figures;
+			let dots = this.dots;
+			let rows = this.orderRows;
+			let columns = this.orderColumns;
+
+			let _rows = hovers.map(function (element) {
+				return element % DIMENSION
+			});
+			let _columns = hovers.map(function (element) {
+				return Number.parseInt(element / DIMENSION)
+			});
+
+			let virtualRow = [];
+			let virtualColumn = [];
+			for (let i = 0; i < 4; i++) {
+				virtualRow.push(columns.findIndex(function (element) {
+					return element === _columns[i]
+				}));
+				virtualColumn.push(rows.findIndex(function (element) {
+					return element === _rows[i]
+				}));
+			}
+			console.log('virtualRow', virtualRow);
+			console.log('virtualColumn', virtualColumn);
+			let zeroPoint = virtualRow.min() * 10 + virtualColumn.min();
+
+			let data = [];
+			for (let i = 0; i < 4; i++) {
+				data[i] = {
+					x: Math.abs(virtualRow[i] - Number.parseInt(zeroPoint / 10)),
+					y: Math.abs((virtualColumn[i] % 10) - (zeroPoint % 10))
+				}
+			}
+			data.sort(function (a, b) {
+				var n = a.x - b.x;
+				if (n !== 0) {
+					return n;
+				}
+				return a.y - b.y;
+			});
+			console.log('data', data);
+
+			for (var figure = 0; figure < FIGURESCOUNT; figure++) {
+				var f = figures[figure];
+				if (f[0].x === data[0].x && f[0].y === data[0].y && f[1].x === data[1].x && f[1].y === data[1].y && f[2].x === data[2].x && f[2].y === data[2].y && f[3].x === data[3].x && f[3].y === data[3].y) {
+					for (var j = 0; j < 4; j++) {
+						//
+					}
+					figure = FIGURESCOUNT;
+				}
+			}
+		}
 	}
 
 	this.mousing = 0;
 
 	/**
-	 * Allow selecting dots by mousemoving
+	 * Allow hovering dots by mousemoving
 	 * @param {number} id - Id of dot
 	 */
 	this.mousingDown = function (id) {
-		this.mousing = this.dots[id].fill ? -1 : +1;
+		this.mousing = this.dots[id].state ? -1 : +1;
 	};
 	this.mousingUp = function (id) {
 		this.mousing = 0;
@@ -487,20 +558,23 @@ function Game(rows, cols) {
 	this.hoverDots = [];
 
 	/**
-	 * Check dot for selectability
+	 * Check dot for hoverability
 	 * @param {number} id - Id of dot
 	 */
 	this.hoverDot = function (id) {
+		console.log('this.hoverDots', this.hoverDots);
 		if (id !== undefined) {
-			if (!this.hoverDots.includes(id)) {
-				if (this.hoverDots.length < 12) {
+			if (this.hoverDots.indexOf(id) < 0) {
+				if (this.hoverDots.length < 4) {
 					this.hoverDots.push(id);
-					return true;
 				} else {
-					this.dots[this.hoverDots[0]].toggleFill();
+					this.dots[this.hoverDots[0]].unhover();
 					this.hoverDots.shift();
 					this.hoverDots.push(id);
-					return true;
+				}
+				this.dots[id].hover();
+				if (this.hoverDots.length === 4) {
+					this.checkFigure();
 				}
 			}
 		}
@@ -510,50 +584,50 @@ function Game(rows, cols) {
 	this.orderColumns = [].initialize(COLUMNS);
 
 	/**
-	 * Check lines if dots are filled
+	 * Check lines if dots are stateed
 	 */
 	/*jshint -W074 */
 	this.checkLines = function checkLines() {
 		var dots = this.dots;
-		var filledRows = [];
-		var filledColumns = [];
+		var stateedRows = [];
+		var stateedColumns = [];
 		for (let line = 0; line < DIMENSION; line++) {
-			let row = dots.filter((element) => Number.parseInt(element.id / ROWS) === line && element.fill === true);
-			let column = dots.filter((element) => element.id % COLUMNS === line && element.fill === true);
+			let row = dots.filter((element) => Number.parseInt(element.id / ROWS) === line && element.state === true);
+			let column = dots.filter((element) => element.id % COLUMNS === line && element.state === true);
 			if (row.length === ROWS) {
 				console.log('Filled row: ', line);
-				filledRows.push(line);
+				stateedRows.push(line);
 			}
 			if (column.length === COLUMNS) {
-				filledColumns.push(line);
+				stateedColumns.push(line);
 				console.log('Filled column: ', line);
 			}
 		}
-		filledRows.sort(function (x, y) {
+		stateedRows.sort(function (x, y) {
 			if (x < (ROWS / 2)) {
 				return y - x;
 			} else {
 				return x - y;
 			}
 		});
-		filledColumns.sort(function (x, y) {
+		stateedColumns.sort(function (x, y) {
 			if (x < (COLUMNS / 2)) {
 				return y - x;
 			} else {
 				return x - y;
 			}
 		});
-		for (let row = 0; row < filledRows.length; row++) {
-			this.moveLine(filledRows[row], 'y');
+		for (let row = 0; row < stateedRows.length; row++) {
+			this.moveLine(stateedRows[row], 'y');
 		}
-		for (let column = 0; column < filledColumns.length; column++) {
-			this.moveLine(filledColumns[column], 'x');
+		for (let column = 0; column < stateedColumns.length; column++) {
+			this.moveLine(stateedColumns[column], 'x');
 		}
 	};/*jshint +W074 */
 
 	/**
-	 * Move filled line
-	 * @param {number} id - Id of filled line
+	 * Move stateed line
+	 * @param {number} id - Id of stateed line
 	 */
 	/*jshint -W071, -W074 */
 	this.moveLine = function moveLine(line, direction) {
@@ -576,7 +650,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.deselect();
+						dot.unhover();
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
 						for (let row = 0; row < ROWS; row++) {
@@ -600,7 +674,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.deselect();
+						dot.unhover();
 					}
 					for (let column = COLUMNS - 1; column > lineHash; column--) {
 						for (let row = 0; row < ROWS; row++) {
@@ -629,7 +703,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.deselect();
+						dot.unhover();
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
 						for (let column = 0; column < COLUMNS; column++) {
@@ -653,7 +727,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.deselect();
+						dot.unhover();
 					}
 					for (let row = ROWS - 1; row > lineHash; row--) {
 						for (let column = 0; column < COLUMNS; column++) {
@@ -681,13 +755,11 @@ function Game(rows, cols) {
 	 * Fill dot
 	 * @param {number} id - Id of dot
 	 */
-	this.fillDot = function (id) {
-		if (id !== undefined) {
-			if (id !== hoverId) {
-				this.dots[id].toggleFill();
-				this.checkLines();
-				hoverId = id;
-			}
+	this.stateDot = function (id) {
+		if (id !== undefined && id !== hoverId) {
+			this.hoverDot(id);
+			this.checkLines();
+			hoverId = id;
 		}
 	};
 
@@ -769,30 +841,40 @@ function Dot(id) {
 
 	this.domElement = new DOMElement(this, {
 		properties: {
-			background: COLOR
+			background: DOT_COLOR__UNTOUCHED
 		}
 	});
 
 	this.id = id;
-	this.fill = false;
 
-	this.select = function select() {
-		if (!this.fill) {
-			this.fill = true;
-			this.domElement.setProperty('background-color', COLOR__ACTIVE);
+	this.state = DOT_STATE__UNTOUCHED;
+
+	this.hover = function hover() {
+		if (this.state === DOT_STATE__UNTOUCHED) {
+			this.state = DOT_STATE__HOVERED;
+			this.domElement.setProperty('background-color', DOT_COLOR__HOVERED);
 		}
 	};
 
-	this.deselect = function deselect() {
-		if (this.fill) {
-			this.fill = false;
-			this.domElement.setProperty('background-color', COLOR);
+	this.unhover = function unhover() {
+		if (this.state === DOT_STATE__HOVERED) {
+			this.state = DOT_STATE__UNTOUCHED;
+			this.domElement.setProperty('background-color', DOT_COLOR__UNTOUCHED);
 		}
 	};
 
-	this.toggleFill = function toggleFill() {
-		this.fill = !this.fill;
-		this.domElement.setProperty('background-color', this.fill ? COLOR__ACTIVE : COLOR);
+	this.place = function place() {
+		if (this.state === DOT_STATE__HOVERED) {
+			this.state = DOT_STATE__PLACED;
+			this.domElement.setProperty('background-color', DOT_COLOR__PLACED);
+		}
+	};
+
+	this.unplace = function unplace() {
+		if (this.state === DOT_STATE__PLACED) {
+			this.state = DOT_STATE__UNTOUCHED;
+			this.domElement.setProperty('background-color', DOT_COLOR__UNTOUCHED);
+		}
 	};
 
 	this.position = new Position(this);
@@ -814,13 +896,13 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 			break;
 	case 'mousemove':
 			if (this._parent.mousing === true) {
-				this._parent.fillDot(this.id);
-				this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
+				this._parent.stateDot(this.id);
+				this.emit('id', this.domElement.id).emit('state', this.domElement.state);
 			}
 			break;
 	case 'click':
-			this._parent.fillDot(this.id);
-			this.emit('id', this.domElement.id).emit('fill', this.domElement.fill);
+			this._parent.stateDot(this.id);
+			this.emit('id', this.domElement.id).emit('state', this.domElement.state);
 			break;
 	case 'mouseup':
 			this._parent.mousingUp(this.id);
