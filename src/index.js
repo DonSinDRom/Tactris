@@ -10,10 +10,11 @@ var Position = famous.components.Position;
 var Curves = famous.transitions.Curves;
 var DOMElement = famous.domRenderables.DOMElement;
 
-const DOT_SIZE = 35;
+const DOT_SIZE = 36;
+const CELL_SIZE = DOT_SIZE / 2;
 const DOT_MARGIN = 1;
 const DOT_SIDE = DOT_SIZE + DOT_MARGIN;
-const DIMENSION = 12;
+const DIMENSION = 10;
 const ROWS = DIMENSION;
 const COLUMNS = DIMENSION;
 const DURATION = 600;
@@ -389,19 +390,21 @@ const FIGURESCOUNT = 2;
 const DOT_STATE__HOVERED = 1;
 const DOT_STATE__UNTOUCHED = 0;
 const DOT_STATE__PLACED = -1;
-const DOT_COLOR__HOVERED = 'rgb(122,199,79)';
-const DOT_COLOR__UNTOUCHED = 'rgb(232,116,97)';
-const DOT_COLOR__PLACED = 'rgb(10,10,97)';
+
+//'#7ac74f' '#a1cf6b' '#d5d887' '#e0c879' '#e87461'
+const DOT_COLOR__HOVERED = '#e87461';
+const DOT_COLOR__UNTOUCHED = '#7ac74f';
+const DOT_COLOR__PLACED = '#e0c879';
 
 function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
 }
 
+/*jshint -W121 */
 /**
  * Initialize fixed-sized array with incremented values
  * @param {number} length - Length of array
  */
-/*jshint -W121 */
 if (!Array.prototype.initialize) {
 	Array.prototype.initialize = function (length) {
 		var arr = [];
@@ -416,7 +419,8 @@ Array.prototype.max = function() {
 };
 Array.prototype.min = function() {
 	return Math.min.apply(null, this);
-};/*jshint -W121 */
+};
+/*jshint -W121 */
 
 function Game(rows, cols) {
 	Node.call(this);
@@ -436,10 +440,10 @@ function Game(rows, cols) {
 
 	this.generateFigure = function generateFigure(figureId) {
 		let figures = this.figures || [];
-		let rand = getRandomInt(0, FIGURES.length);;
+		let rand = getRandomInt(0, FIGURES.length);
 
 		if (figures.length < 1) {
-			figures.push(FIGURES[rand]);
+			return rand;
 		} else {
 			let figuresCount = FIGURESCOUNT;
 			let figuresIndexes = [];
@@ -447,19 +451,19 @@ function Game(rows, cols) {
 				return f1.every(function(element, index) {
 					return _.isEqual(element, f2[index]);
 				});
-			}
+			};
 			let findIndex = function(figure) {
 				return FIGURES.findIndex(function (element) {
 					return isFiguresEqual(element, figure);
 				});
-			}
+			};
 			let isHashUnique = function(array, hash) {
 				if (hash !== figureId) {
-					return array.every(function(element) { return element !== hash });
+					return array.every(function(element) { return element !== hash; });
 				} else {
 					return false;
 				}
-			}
+			};
 			for (let i = 0; i < Math.min(figuresCount, figures.length); i++) {
 				if (figureId !== i) {
 					figuresIndexes.push(figures[i]);
@@ -470,21 +474,28 @@ function Game(rows, cols) {
 				figuresHash[i] = findIndex(figuresIndexes[i]);
 			}
 
-			while(!isHashUnique(figuresHash, rand)) {
+			while(isHashUnique(figuresHash, rand)) {
 				rand = getRandomInt(0, FIGURES.length);
 			}
-			figures[figureId] = FIGURES[rand];
+			return rand;
 		}
-	}
+	};
 
-	for (let figure = 0; figure < 2; figure++) {
-		this.generateFigure(figure);
-		console.log('generateFigure', this.figures);
+	for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
+		let firstDot = this.dots[0];
+		let position = firstDot.position;
+		let x = position.getX();
+		let y = position.getY();
+		let randomId = this.generateFigure(figureCounter);
+		let figure = new Figure(figureCounter, randomId, x, y);
+		this.addChild(figure);
+		this.figures.push(figure);
+		console.log('this', this);
 	}
 
 	this.checkFigure = function checkFigure() {
-		console.log('checkFigure', this.hoverDots);
 		let hovers = this.hoverDots;
+		console.log('hovers', hovers);
 
 		if (hovers.length === 4) {
 
@@ -494,32 +505,30 @@ function Game(rows, cols) {
 			let columns = this.orderColumns;
 
 			let _rows = hovers.map(function (element) {
-				return element % DIMENSION
+				return element % DIMENSION;
 			});
 			let _columns = hovers.map(function (element) {
-				return Number.parseInt(element / DIMENSION)
+				return Number.parseInt(element / DIMENSION);
 			});
 
 			let virtualRow = [];
 			let virtualColumn = [];
 			for (let i = 0; i < 4; i++) {
 				virtualRow.push(columns.findIndex(function (element) {
-					return element === _columns[i]
+					return element === _columns[i];
 				}));
 				virtualColumn.push(rows.findIndex(function (element) {
-					return element === _rows[i]
+					return element === _rows[i];
 				}));
 			}
-			console.log('virtualRow', virtualRow);
-			console.log('virtualColumn', virtualColumn);
-			let zeroPoint = virtualRow.min() * 10 + virtualColumn.min();
+			let zeroPoint = virtualRow.min() * DIMENSION + virtualColumn.min();
 
 			let data = [];
 			for (let i = 0; i < 4; i++) {
 				data[i] = {
-					x: Math.abs(virtualRow[i] - Number.parseInt(zeroPoint / 10)),
-					y: Math.abs((virtualColumn[i] % 10) - (zeroPoint % 10))
-				}
+					x: Math.abs(virtualRow[i] - Number.parseInt(zeroPoint / DIMENSION)),
+					y: Math.abs((virtualColumn[i] % DIMENSION) - (zeroPoint % DIMENSION))
+				};
 			}
 			data.sort(function (a, b) {
 				var n = a.x - b.x;
@@ -528,19 +537,22 @@ function Game(rows, cols) {
 				}
 				return a.y - b.y;
 			});
-			console.log('data', data);
 
 			for (var figure = 0; figure < FIGURESCOUNT; figure++) {
-				var f = figures[figure];
+				let f = figures[figure].cells;
+				console.log('f', f);
 				if (f[0].x === data[0].x && f[0].y === data[0].y && f[1].x === data[1].x && f[1].y === data[1].y && f[2].x === data[2].x && f[2].y === data[2].y && f[3].x === data[3].x && f[3].y === data[3].y) {
-					for (var j = 0; j < 4; j++) {
-						//
+					for (let hover = 0; hover < 4; hover++) {
+						dots[hovers[hover]].place();
 					}
+					this.hoverDots = [];
+					this.generateFigure(figure);
+					this.checkLines();
 					figure = FIGURESCOUNT;
 				}
 			}
 		}
-	}
+	};
 
 	this.mousing = 0;
 
@@ -562,8 +574,7 @@ function Game(rows, cols) {
 	 * @param {number} id - Id of dot
 	 */
 	this.hoverDot = function (id) {
-		console.log('this.hoverDots', this.hoverDots);
-		if (id !== undefined) {
+		if (id !== undefined && this.dots[id].state === DOT_STATE__UNTOUCHED) {
 			if (this.hoverDots.indexOf(id) < 0) {
 				if (this.hoverDots.length < 4) {
 					this.hoverDots.push(id);
@@ -584,44 +595,44 @@ function Game(rows, cols) {
 	this.orderColumns = [].initialize(COLUMNS);
 
 	/**
-	 * Check lines if dots are stateed
+	 * Check lines if dots are filled
 	 */
 	/*jshint -W074 */
 	this.checkLines = function checkLines() {
 		var dots = this.dots;
-		var stateedRows = [];
-		var stateedColumns = [];
+		var filledRows = [];
+		var filledColumns = [];
 		for (let line = 0; line < DIMENSION; line++) {
-			let row = dots.filter((element) => Number.parseInt(element.id / ROWS) === line && element.state === true);
-			let column = dots.filter((element) => element.id % COLUMNS === line && element.state === true);
+			let row = dots.filter((element) => Number.parseInt(element.id / ROWS) === line && element.state === DOT_STATE__PLACED);
+			let column = dots.filter((element) => element.id % COLUMNS === line && element.state === DOT_STATE__PLACED);
 			if (row.length === ROWS) {
 				console.log('Filled row: ', line);
-				stateedRows.push(line);
+				filledRows.push(line);
 			}
 			if (column.length === COLUMNS) {
-				stateedColumns.push(line);
+				filledColumns.push(line);
 				console.log('Filled column: ', line);
 			}
 		}
-		stateedRows.sort(function (x, y) {
+		filledRows.sort(function (x, y) {
 			if (x < (ROWS / 2)) {
 				return y - x;
 			} else {
 				return x - y;
 			}
 		});
-		stateedColumns.sort(function (x, y) {
+		filledColumns.sort(function (x, y) {
 			if (x < (COLUMNS / 2)) {
 				return y - x;
 			} else {
 				return x - y;
 			}
 		});
-		for (let row = 0; row < stateedRows.length; row++) {
-			this.moveLine(stateedRows[row], 'y');
+		for (let row = 0; row < filledRows.length; row++) {
+			this.moveLine(filledRows[row], 'y');
 		}
-		for (let column = 0; column < stateedColumns.length; column++) {
-			this.moveLine(stateedColumns[column], 'x');
+		for (let column = 0; column < filledColumns.length; column++) {
+			this.moveLine(filledColumns[column], 'x');
 		}
 	};/*jshint +W074 */
 
@@ -650,7 +661,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.unhover();
+						dot.unplace();
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
 						for (let row = 0; row < ROWS; row++) {
@@ -674,7 +685,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.unhover();
+						dot.unplace();
 					}
 					for (let column = COLUMNS - 1; column > lineHash; column--) {
 						for (let row = 0; row < ROWS; row++) {
@@ -703,7 +714,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.unhover();
+						dot.unplace();
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
 						for (let column = 0; column < COLUMNS; column++) {
@@ -727,7 +738,7 @@ function Game(rows, cols) {
 							duration: DURATION,
 							curve: CURVE
 						});
-						dot.unhover();
+						dot.unplace();
 					}
 					for (let row = ROWS - 1; row > lineHash; row--) {
 						for (let column = 0; column < COLUMNS; column++) {
@@ -758,7 +769,6 @@ function Game(rows, cols) {
 	this.stateDot = function (id) {
 		if (id !== undefined && id !== hoverId) {
 			this.hoverDot(id);
-			this.checkLines();
 			hoverId = id;
 		}
 	};
@@ -813,7 +823,7 @@ Layout.prototype.next = function next() {
 	let col = 0;
 	let dimension = DOT_SIDE;
 	let bounds = [-(((dimension) * ROWS / 2) - (dimension / 2)), -(((dimension) * COLUMNS / 2) - (dimension / 2))];
-	for (let i = 0; i < this.node.getChildren().length; i++) {
+	for (let i = 0; i < this.node.dots.length; i++) {
 		let x = bounds[0] + ((dimension) * col++);
 		let y = bounds[1] + ((dimension) * row);
 		let z = 0;
@@ -827,6 +837,77 @@ Layout.prototype.next = function next() {
 		}
 	}
 };
+
+function Figure(id, randomId, x, y) {
+	Node.call(this);
+
+	// Center dot.
+	this
+		.setMountPoint(0, 0, 0)
+		.setAlign(0.5, 0.5, 0)
+		.setSizeMode('absolute', 'absolute', 'absolute')
+		.setAbsoluteSize(DOT_SIDE * DIMENSION / 2, DOT_SIDE * DIMENSION / 2, DOT_SIDE);
+
+	this.domElement = new DOMElement(this, {
+		content: 'Figure ' + id
+	});
+
+	this.id = id;
+	this.randomId = randomId;
+
+	this.cells = [];
+	for (let cellCounter = 0; cellCounter < 4; cellCounter++) {
+		let cell = new Cell(cellCounter, FIGURES[randomId][cellCounter].x, FIGURES[randomId][cellCounter].y);
+		this.addChild(cell);
+		this.cells.push(cell);
+	}
+
+	this.position = new Position(this);
+	if (id === 0) {
+		this.position.setX(x - DOT_SIDE * DIMENSION / 2, {});
+	}
+	this.position.setY(y - DOT_SIDE * DIMENSION, {});
+}
+
+Figure.prototype = Object.create(Node.prototype);
+Figure.prototype.constructor = Figure;
+
+
+function Cell(id, x, y) {
+	Node.call(this);
+
+	// Center dot.
+	this
+		.setMountPoint(0.5, 0.5, 0)
+		.setAlign(0.5, 0.5, 0)
+		.setSizeMode('absolute', 'absolute', 'absolute')
+		.setAbsoluteSize(CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+	this.domElement = new DOMElement(this, {
+		properties: {
+			background: DOT_COLOR__UNTOUCHED
+		}
+	});
+
+	this.id = id;
+	this.x = x;
+	this.y = y;
+
+	this.generate = function generate() {
+		if (this.state === DOT_STATE__UNTOUCHED) {
+			this.state = DOT_STATE__HOVERED;
+			this.domElement.setProperty('background-color', DOT_COLOR__HOVERED);
+		}
+	};
+
+	this.state = DOT_STATE__UNTOUCHED;
+	this.position = new Position(this);
+	this.position.setX(x * CELL_SIZE, {});
+	this.position.setY(y * CELL_SIZE, {});
+}
+
+Cell.prototype = Object.create(Node.prototype);
+Cell.prototype.constructor = Cell;
 
 
 function Dot(id) {
@@ -846,7 +927,6 @@ function Dot(id) {
 	});
 
 	this.id = id;
-
 	this.state = DOT_STATE__UNTOUCHED;
 
 	this.hover = function hover() {
