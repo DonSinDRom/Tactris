@@ -384,6 +384,9 @@ const Consts = {
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
 	DOT_COLOR__PLACED: '#e0c879',
 
+	SCORE__FIGURE: 2,
+	SCORE__LINE: 10,
+
 	init: function() {
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
 		this.CELL_SIZE = this.DOT_SIZE / 2;

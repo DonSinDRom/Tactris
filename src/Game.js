@@ -4,6 +4,7 @@ var famous = require('famous');
 var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
+var Player = require('./Player.js');
 var getRandomInt = require('./getRandomInt.js');
 
 /*jshint -W079 */
@@ -77,6 +78,23 @@ function Game(rows, cols) {
 		this.figures.push(figure);
 	}
 
+	let firstDot = this.dots[0];
+	let position = firstDot.position;
+	let x = position.getX();
+	let y = position.getY();
+	let player = new Player(x, y);
+	this.addChild(player);
+	this.player = player;
+
+	this.scoreInc = function scoreInc(value) {
+		let player = this.player;
+		player.scoreInc(value);
+	};
+	this.scoreReset = function scoreReset() {
+		let player = this.player;
+		player.scoreReset();
+	};
+
 	this.checkFigure = function checkFigure() {
 		let hovers = this.hoverDots;
 
@@ -127,6 +145,7 @@ function Game(rows, cols) {
 						dots[hovers[hover]].place();
 					}
 					this.hoverDots = [];
+					this.scoreInc(Consts.SCORE__FIGURE);
 					this.updateFigure(figure);
 					this.checkLines();
 					figure = Consts.FIGURESCOUNT;
@@ -224,6 +243,8 @@ function Game(rows, cols) {
 	/*jshint -W071, -W074 */
 	this.moveLine = function moveLine(line, direction) {
 		console.log('moveLine', line, direction);
+		this.scoreInc(Consts.SCORE__LINE);
+
 		let orderRows = this.orderRows;
 		let orderColumns = this.orderColumns;
 		let order = [];

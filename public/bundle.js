@@ -29118,6 +29118,9 @@ var Consts = ({
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
 	DOT_COLOR__PLACED: '#e0c879',
 
+	SCORE__FIGURE: 2,
+	SCORE__LINE: 10,
+
 	init: function init() {
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
 		this.CELL_SIZE = this.DOT_SIZE / 2;
@@ -29282,6 +29285,7 @@ var famous = require('famous');
 var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
+var Player = require('./Player.js');
 var getRandomInt = require('./getRandomInt.js');
 
 /*jshint -W079 */
@@ -29339,10 +29343,10 @@ function Game(rows, cols) {
 		var figure = Consts.FIGURES[uniqueFigureId];
 		for (var cellCounter = 0; cellCounter < 4; cellCounter++) {
 			var cell = figures[index].cells[cellCounter];
-			var position = cell.position;
-			var x = position.getX();
-			var y = position.getY();
-			position.set(x - (cell.x - figure[cellCounter].x) * Consts.CELL_SIDE, y - (cell.y - figure[cellCounter].y) * Consts.CELL_SIDE, 0, {
+			var _position = cell.position;
+			var _x = _position.getX();
+			var _y = _position.getY();
+			_position.set(_x - (cell.x - figure[cellCounter].x) * Consts.CELL_SIDE, _y - (cell.y - figure[cellCounter].y) * Consts.CELL_SIDE, 0, {
 				duration: Consts.DURATION,
 				curve: Consts.CURVE
 			});
@@ -29353,15 +29357,32 @@ function Game(rows, cols) {
 	};
 
 	for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
-		var firstDot = this.dots[0];
-		var position = firstDot.position;
-		var x = position.getX();
-		var y = position.getY();
+		var _firstDot = this.dots[0];
+		var _position2 = _firstDot.position;
+		var _x2 = _position2.getX();
+		var _y2 = _position2.getY();
 		var randomId = this.generateFigureIndex(figureCounter);
-		var figure = new Figure(figureCounter, randomId, x, y);
+		var figure = new Figure(figureCounter, randomId, _x2, _y2);
 		this.addChild(figure);
 		this.figures.push(figure);
 	}
+
+	var firstDot = this.dots[0];
+	var position = firstDot.position;
+	var x = position.getX();
+	var y = position.getY();
+	var player = new Player(x, y);
+	this.addChild(player);
+	this.player = player;
+
+	this.scoreInc = function scoreInc(value) {
+		var player = this.player;
+		player.scoreInc(value);
+	};
+	this.scoreReset = function scoreReset() {
+		var player = this.player;
+		player.scoreReset();
+	};
 
 	this.checkFigure = function checkFigure() {
 		var _this = this;
@@ -29425,6 +29446,7 @@ function Game(rows, cols) {
 							dots[hovers[hover]].place();
 						}
 						_this.hoverDots = [];
+						_this.scoreInc(Consts.SCORE__FIGURE);
 						_this.updateFigure(figure);
 						_this.checkLines();
 						figure = Consts.FIGURESCOUNT;
@@ -29532,6 +29554,8 @@ function Game(rows, cols) {
 	/*jshint -W071, -W074 */
 	this.moveLine = function moveLine(line, direction) {
 		console.log('moveLine', line, direction);
+		this.scoreInc(Consts.SCORE__LINE);
+
 		var orderRows = this.orderRows;
 		var orderColumns = this.orderColumns;
 		var order = [];
@@ -29544,9 +29568,9 @@ function Game(rows, cols) {
 				if (line < Consts.COLUMNS / 2) {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var position = dot.position;
-						var x = position.getX();
-						position.setX(x - Consts.DOT_SIDE * lineHash, {
+						var _position3 = dot.position;
+						var _x3 = _position3.getX();
+						_position3.setX(_x3 - Consts.DOT_SIDE * lineHash, {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -29555,9 +29579,9 @@ function Game(rows, cols) {
 					for (var column = lineHash - 1; column >= 0; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
 							var dot = this.dots[row * Consts.ROWS + order[column]];
-							var position = dot.position;
-							var x = position.getX();
-							position.setX(x + Consts.DOT_SIDE, {
+							var _position4 = dot.position;
+							var _x4 = _position4.getX();
+							_position4.setX(_x4 + Consts.DOT_SIDE, {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29568,9 +29592,9 @@ function Game(rows, cols) {
 				} else {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var position = dot.position;
-						var x = position.getX();
-						position.setX(x + Consts.DOT_SIDE * (Consts.ROWS - 1 - lineHash), {
+						var _position5 = dot.position;
+						var _x5 = _position5.getX();
+						_position5.setX(_x5 + Consts.DOT_SIDE * (Consts.ROWS - 1 - lineHash), {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -29579,9 +29603,9 @@ function Game(rows, cols) {
 					for (var column = Consts.COLUMNS - 1; column > lineHash; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
 							var dot = this.dots[row * Consts.ROWS + order[column]];
-							var position = dot.position;
-							var x = position.getX();
-							position.setX(x - Consts.DOT_SIDE, {
+							var _position6 = dot.position;
+							var _x6 = _position6.getX();
+							_position6.setX(_x6 - Consts.DOT_SIDE, {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29597,9 +29621,9 @@ function Game(rows, cols) {
 				if (line < Consts.ROWS / 2) {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var position = dot.position;
-						var y = position.getY();
-						position.setY(y - Consts.DOT_SIDE * lineHash, {
+						var _position7 = dot.position;
+						var _y3 = _position7.getY();
+						_position7.setY(_y3 - Consts.DOT_SIDE * lineHash, {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -29608,9 +29632,9 @@ function Game(rows, cols) {
 					for (var row = lineHash - 1; row >= 0; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
 							var dot = this.dots[order[row] * Consts.COLUMNS + column];
-							var position = dot.position;
-							var y = position.getY();
-							position.setY(y + Consts.DOT_SIDE, {
+							var _position8 = dot.position;
+							var _y4 = _position8.getY();
+							_position8.setY(_y4 + Consts.DOT_SIDE, {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29621,9 +29645,9 @@ function Game(rows, cols) {
 				} else {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var position = dot.position;
-						var y = position.getY();
-						position.setY(y + Consts.DOT_SIDE * (Consts.COLUMNS - 1 - lineHash), {
+						var _position9 = dot.position;
+						var _y5 = _position9.getY();
+						_position9.setY(_y5 + Consts.DOT_SIDE * (Consts.COLUMNS - 1 - lineHash), {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -29632,9 +29656,9 @@ function Game(rows, cols) {
 					for (var row = Consts.ROWS - 1; row > lineHash; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
 							var dot = this.dots[order[row] * Consts.COLUMNS + column];
-							var position = dot.position;
-							var y = position.getY();
-							position.setY(y - Consts.DOT_SIDE, {
+							var _position10 = dot.position;
+							var _y6 = _position10.getY();
+							_position10.setY(_y6 - Consts.DOT_SIDE, {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29725,7 +29749,53 @@ Layout.prototype.next = function next() {
 
 module.exports = Game;
 
-},{"./Consts.js":143,"./Dot.js":144,"./Figure.js":145,"./getRandomInt.js":147,"famous":46}],147:[function(require,module,exports){
+},{"./Consts.js":143,"./Dot.js":144,"./Figure.js":145,"./Player.js":147,"./getRandomInt.js":148,"famous":46}],147:[function(require,module,exports){
+'use strict';
+
+var famous = require('famous');
+var Consts = require('./Consts.js');
+
+var Node = famous.core.Node;
+var Position = famous.components.Position;
+var DOMElement = famous.domRenderables.DOMElement;
+
+function Player(x, y) {
+	Node.call(this);
+
+	// Center dot.
+	this.setMountPoint(0, 0, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
+
+	this.score = 0;
+
+	this.domElement = new DOMElement(this, {
+		properties: {
+			color: '#fff',
+			fontSize: '32px'
+		},
+		content: 'Score ' + Number(this.score)
+	});
+
+	this.scoreInc = function scoreInc(inc) {
+		this.score += inc;
+		this.domElement.setContent('Score ' + this.score);
+	};
+
+	this.scoreReset = function scoreReset() {
+		this.domElement.setContent('Score ' + 0);
+		this.score = 0;
+	};
+
+	this.position = new Position(this);
+	this.position.setX(x - Consts.DOT_SIDE * Consts.DIMENSION / 2, {});
+	this.position.setY(y - Consts.DOT_SIDE * (Consts.DIMENSION - 15), {});
+}
+
+Player.prototype = Object.create(Node.prototype);
+Player.prototype.constructor = Player;
+
+module.exports = Player;
+
+},{"./Consts.js":143,"famous":46}],148:[function(require,module,exports){
 'use strict';
 
 var getRandomInt = function getRandomInt(min, max) {
@@ -29734,7 +29804,7 @@ var getRandomInt = function getRandomInt(min, max) {
 
 module.exports = getRandomInt;
 
-},{}],148:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -29770,4 +29840,4 @@ var scene = FamousEngine.createScene();
 var game = new Game(Consts.ROWS, Consts.COLUMNS);
 scene.addChild(game);
 
-},{"./Consts.js":143,"./Game.js":146,"famous":46}]},{},[148]);
+},{"./Consts.js":143,"./Game.js":146,"famous":46}]},{},[149]);
