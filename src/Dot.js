@@ -19,7 +19,8 @@ function Dot(id) {
 
 	this.domElement = new DOMElement(this, {
 		properties: {
-			background: Consts.DOT_COLOR__UNTOUCHED
+			background: Consts.DOT_COLOR__UNTOUCHED,
+			cursor: 'cell'
 		}
 	});
 
