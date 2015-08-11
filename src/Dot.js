@@ -3,6 +3,7 @@
 var famous = require('famous');
 var Consts = require('./Consts.js');
 
+var FamousEngine = famous.core.FamousEngine;
 var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
@@ -48,10 +49,20 @@ function Dot(id) {
 		}
 	};
 
-	this.unplace = function unplace() {
+	this.unplace = function unplace(delay) {
+		var delay = delay || false;
+		var self = this;
 		if (this.state === Consts.DOT_STATE__PLACED) {
-			this.state = Consts.DOT_STATE__UNTOUCHED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			if (delay) {
+				var clock = FamousEngine.getClock();
+				clock.setTimeout(function() {
+					self.state = Consts.DOT_STATE__UNTOUCHED;
+					self.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+				}, Consts.DURATION);
+			} else {
+				this.state = Consts.DOT_STATE__UNTOUCHED;
+				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			}
 		}
 	};
 
