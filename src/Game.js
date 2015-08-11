@@ -180,20 +180,28 @@ function Game(rows, cols) {
 	 * @param {number} id - Id of dot
 	 */
 	this.hoverDot = function (id) {
-		if (id !== undefined && this.dots[id].state === Consts.DOT_STATE__UNTOUCHED) {
-			if (this.hoverDots.indexOf(id) < 0) {
-				if (this.hoverDots.length < 4) {
-					this.hoverDots.push(id);
-				} else {
-					this.dots[this.hoverDots[0]].unhover();
-					this.hoverDots.shift();
-					this.hoverDots.push(id);
+		switch (this.dots[id].state) {
+		case Consts.DOT_STATE__UNTOUCHED:
+				if (this.hoverDots.indexOf(id) < 0) {
+					if (this.hoverDots.length < 4) {
+						this.hoverDots.push(id);
+					} else {
+						this.dots[this.hoverDots[0]].unhover();
+						this.hoverDots.shift();
+						this.hoverDots.push(id);
+					}
+					this.dots[id].hover();
+					if (this.hoverDots.length === 4) {
+						this.checkFigure();
+					}
 				}
-				this.dots[id].hover();
-				if (this.hoverDots.length === 4) {
-					this.checkFigure();
-				}
-			}
+				break;
+		case Consts.DOT_STATE__HOVERED:
+				this.hoverDots.splice(this.hoverDots.indexOf(id), 1);
+				this.dots[id].unhover();
+				break;
+		default:
+				return false;
 		}
 	};
 
