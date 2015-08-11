@@ -207,6 +207,8 @@ function Game(rows, cols) {
 
 	this.orderRows = [].initialize(Consts.ROWS);
 	this.orderColumns = [].initialize(Consts.COLUMNS);
+	this.etalonRows = [];
+	this.etalonColumns = [];
 
 	/**
 	 * Check lines if dots are filled
@@ -242,6 +244,7 @@ function Game(rows, cols) {
 				return x - y;
 			}
 		});
+
 		for (let row = 0; row < filledRows.length; row++) {
 			this.moveLine(filledRows[row], 'y');
 		}
@@ -261,19 +264,22 @@ function Game(rows, cols) {
 
 		let orderRows = this.orderRows;
 		let orderColumns = this.orderColumns;
+		let etalonRows = this.etalonRows;
+		let etalonColumns = this.etalonColumns;
 		let order = [];
+		let etalon = [];
 		let lineHash = 0;
 
 		switch (direction) {
 		case 'x':
 				order = orderColumns;
+				etalon = etalonColumns;
 				lineHash = order.indexOf(line);
 				if (line < (Consts.COLUMNS / 2)) {
 					for (let row = 0; row < Consts.ROWS; row++) {
 						let dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						let position = dot.position;
-						let x = position.getX();
-						position.setX(x - Consts.DOT_SIDE * lineHash, {
+						position.setX(etalon[0], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -283,8 +289,7 @@ function Game(rows, cols) {
 						for (let row = 0; row < Consts.ROWS; row++) {
 							let dot = this.dots[row * Consts.ROWS + order[column]];
 							let position = dot.position;
-							let x = position.getX();
-							position.setX(x + Consts.DOT_SIDE, {
+							position.setX(etalon[column + 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -296,8 +301,7 @@ function Game(rows, cols) {
 					for (let row = 0; row < Consts.ROWS; row++) {
 						let dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						let position = dot.position;
-						let x = position.getX();
-						position.setX(x + Consts.DOT_SIDE * (Consts.ROWS - 1 - lineHash), {
+						position.setX(etalon[Consts.COLUMNS - 1], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -307,8 +311,7 @@ function Game(rows, cols) {
 						for (let row = 0; row < Consts.ROWS; row++) {
 							let dot = this.dots[row * Consts.ROWS + order[column]];
 							let position = dot.position;
-							let x = position.getX();
-							position.setX(x - Consts.DOT_SIDE, {
+							position.setX(etalon[column - 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -320,13 +323,13 @@ function Game(rows, cols) {
 				break;
 		case 'y':
 				order = orderRows;
+				etalon = etalonRows;
 				lineHash = order.indexOf(line);
 				if (line < (Consts.ROWS / 2)) {
 					for (let column = 0; column < Consts.COLUMNS; column++) {
 						let dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						let position = dot.position;
-						let y = position.getY();
-						position.setY(y - Consts.DOT_SIDE * lineHash, {
+						position.setY(etalon[0], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -336,8 +339,7 @@ function Game(rows, cols) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
 							let dot = this.dots[order[row] * Consts.COLUMNS + column];
 							let position = dot.position;
-							let y = position.getY();
-							position.setY(y + Consts.DOT_SIDE, {
+							position.setY(etalon[row + 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -349,8 +351,7 @@ function Game(rows, cols) {
 					for (let column = 0; column < Consts.COLUMNS; column++) {
 						let dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						let position = dot.position;
-						let y = position.getY();
-						position.setY(y + Consts.DOT_SIDE * (Consts.COLUMNS - 1 - lineHash), {
+						position.setY(etalon[Consts.ROWS - 1], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
@@ -360,8 +361,7 @@ function Game(rows, cols) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
 							let dot = this.dots[order[row] * Consts.COLUMNS + column];
 							let position = dot.position;
-							let y = position.getY();
-							position.setY(y - Consts.DOT_SIDE, {
+							position.setY(etalon[row - 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -435,6 +435,7 @@ function Game(rows, cols) {
 		.setPosition(0, 0, 0);
 	this.layout = new Layout(this);
 
+	console.log(this);
 	this.addUIEvent('mousedown');
 	this.addUIEvent('mouseleave');
 	this.addUIEvent('mouseup');
@@ -485,6 +486,12 @@ Layout.prototype.next = function next() {
 	for (let i = 0; i < this.node.dots.length; i++) {
 		let x = bounds[0] + ((dimension) * col++);
 		let y = bounds[1] + ((dimension) * row);
+		if (i < Consts.COLUMNS) {
+			this.node.etalonColumns.push(x);
+		}
+		if (i % Consts.ROWS === 0) {
+			this.node.etalonRows.push(y);
+		}
 		let z = 0;
 		this.node.dots[i].position.set(x, y, z, {
 			duration: i * Consts.ROWS + duration,
