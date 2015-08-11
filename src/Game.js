@@ -5,6 +5,7 @@ var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
 var Player = require('./Player.js');
+//var Menu = require('./Menu.js');
 var getRandomInt = require('./getRandomInt.js');
 
 /*jshint -W079 */
@@ -85,6 +86,10 @@ function Game(rows, cols) {
 	let player = new Player(x, y);
 	this.addChild(player);
 	this.player = player;
+
+//	let menu = new Menu();
+//	this.addChild(menu);
+//	this.menu = menu;
 
 	this.scoreInc = function scoreInc(value) {
 		let player = this.player;
