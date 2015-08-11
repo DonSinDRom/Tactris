@@ -17,6 +17,7 @@ function Game(rows, cols) {
 	Node.call(this);
 	this.domElement = new DOMElement(this, {});
 
+	var scoreMultiplier = 1;
 	var count = 0;
 	this.dots = [];
 	for (let row = 0; row < rows; row++) {
@@ -93,7 +94,7 @@ function Game(rows, cols) {
 
 	this.scoreInc = function scoreInc(value) {
 		let player = this.player;
-		player.scoreInc(value);
+		player.scoreInc(value * scoreMultiplier);
 	};
 	this.scoreReset = function scoreReset() {
 		let player = this.player;
@@ -247,10 +248,13 @@ function Game(rows, cols) {
 
 		for (let row = 0; row < filledRows.length; row++) {
 			this.moveLine(filledRows[row], 'y');
+			scoreMultiplier++;
 		}
 		for (let column = 0; column < filledColumns.length; column++) {
 			this.moveLine(filledColumns[column], 'x');
+			scoreMultiplier++;
 		}
+		scoreMultiplier = 1;
 	};/*jshint +W074 */
 
 	/**
@@ -283,7 +287,7 @@ function Game(rows, cols) {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
 						for (let row = 0; row < Consts.ROWS; row++) {
@@ -305,7 +309,7 @@ function Game(rows, cols) {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (let column = Consts.COLUMNS - 1; column > lineHash; column--) {
 						for (let row = 0; row < Consts.ROWS; row++) {
@@ -333,7 +337,7 @@ function Game(rows, cols) {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -355,7 +359,7 @@ function Game(rows, cols) {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (let row = Consts.ROWS - 1; row > lineHash; row--) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -411,6 +415,7 @@ function Game(rows, cols) {
 				}
 			}
 		}
+		console.log('Game over');
 		return true;
 	};
 
