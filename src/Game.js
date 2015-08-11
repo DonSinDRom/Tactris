@@ -148,6 +148,7 @@ function Game(rows, cols) {
 					this.scoreInc(Consts.SCORE__FIGURE);
 					this.updateFigure(figure);
 					this.checkLines();
+					this.isGameEnded();
 					figure = Consts.FIGURESCOUNT;
 				}
 			}
@@ -361,6 +362,44 @@ function Game(rows, cols) {
 				return false;
 		}
 	};/*jshint +W071, +W074 */
+
+	/**
+	 * Check if player can't place new figure (Game over state)
+	 */
+	this.isGameEnded = function isGameEnded() {
+		let figures = this.figures;
+		let dots = this.dots;
+		let figuresCollection = [];
+		for (let figureCounter = 0, fL = figures.length; figureCounter < fL; figureCounter++) {
+			let figureOrigin = figures[figureCounter];
+			let figureContainer = [];
+			for (let cell = 0; cell < 4; cell++) {
+				figureContainer.push({ x: figureOrigin.cells[cell].x, y: figureOrigin.cells[cell].y });
+			}
+			figuresCollection.push(figureContainer);
+		}
+		for (let figureCounter = 0, fL = figuresCollection.length; figureCounter < fL; figureCounter++) {
+			var curent = figuresCollection[figureCounter];
+			for (let dotCounter = 0, dL = dots.length; dotCounter < dL; dotCounter++ ) {
+				var counter = 0;
+				var tx = Number.parseInt(dotCounter / Consts.ROWS);
+				var ty = parseInt(dotCounter % Consts.COLUMNS);
+				for (let figureCell = 0, cL = curent.length; figureCell < cL; figureCell++) {
+					let cx = curent[figureCell].y;
+					let cy = curent[figureCell].x;
+					if (cx + tx < Consts.COLUMNS && cy + ty < Consts.ROWS) {
+						if (dots[(cx + tx) * Consts.DIMENSION + cy + ty].state !== Consts.DOT_STATE__PLACED) {
+							counter++;
+						}
+					}
+				}
+				if (counter === 4) {
+					return false;
+				}
+			}
+		}
+		return true;
+	};
 
 	var hoverId;
 
