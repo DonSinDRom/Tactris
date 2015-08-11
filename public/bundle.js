@@ -29120,6 +29120,7 @@ var Consts = ({
 
 	SCORE__FIGURE: 2,
 	SCORE__LINE: 10,
+	SCORE__SURCHARGE: 0.5,
 
 	init: function init() {
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
@@ -29139,6 +29140,7 @@ module.exports = Consts;
 var famous = require('famous');
 var Consts = require('./Consts.js');
 
+var FamousEngine = famous.core.FamousEngine;
 var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
@@ -29152,7 +29154,8 @@ function Dot(id) {
 	this.domElement = new DOMElement(this, {
 		properties: {
 			background: Consts.DOT_COLOR__UNTOUCHED
-		}
+		},
+		classes: ['Dot']
 	});
 
 	this.id = id;
@@ -29179,10 +29182,20 @@ function Dot(id) {
 		}
 	};
 
-	this.unplace = function unplace() {
+	this.unplace = function unplace(delay) {
+		var delay = delay || false;
+		var self = this;
 		if (this.state === Consts.DOT_STATE__PLACED) {
-			this.state = Consts.DOT_STATE__UNTOUCHED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			if (delay) {
+				var clock = FamousEngine.getClock();
+				clock.setTimeout(function () {
+					self.state = Consts.DOT_STATE__UNTOUCHED;
+					self.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+				}, Consts.DURATION);
+			} else {
+				this.state = Consts.DOT_STATE__UNTOUCHED;
+				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			}
 		}
 	};
 
@@ -29205,12 +29218,12 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 			break;
 		case 'mousemove':
 			if (this._parent.mousing === true) {
-				this._parent.stateDot(this.id);
+				this._parent.dotState(this.id);
 				this.emit('id', this.domElement.id).emit('state', this.domElement.state);
 			}
 			break;
 		case 'click':
-			this._parent.stateDot(this.id);
+			this._parent.dotState(this.id);
 			this.emit('id', this.domElement.id).emit('state', this.domElement.state);
 			break;
 		case 'mouseup':
@@ -29268,7 +29281,8 @@ Figure.prototype.constructor = Figure;
 Figure.prototype.onReceive = function onReceive(type, ev) {
 	switch (type) {
 		case 'click':
-			this._parent.updateFigure(this.id);
+			this._parent.figureUpdate(this.id);
+			this._parent.scoreSurcharge();
 			this.emit('id', this.id).emit('randomId', this.randomId);
 			break;
 		default:
@@ -29285,7 +29299,8 @@ var famous = require('famous');
 var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
-var Player = require('./Player.js');
+var Score = require('./Score.js');
+//var Menu = require('./Menu.js');
 var getRandomInt = require('./getRandomInt.js');
 
 /*jshint -W079 */
@@ -29297,6 +29312,7 @@ function Game(rows, cols) {
 	Node.call(this);
 	this.domElement = new DOMElement(this, {});
 
+	var scoreMultiplier = 1;
 	var count = 0;
 	this.dots = [];
 	for (var row = 0; row < rows; row++) {
@@ -29309,7 +29325,7 @@ function Game(rows, cols) {
 
 	this.figures = [];
 
-	this.generateFigureIndex = function generateFigureIndex() {
+	this.figureIndexGenerate = function figureIndexGenerate() {
 		var figures = this.figures || [];
 		var rand = getRandomInt(0, Consts.FIGURES.length);
 		if (figures.length < 1) {
@@ -29337,9 +29353,9 @@ function Game(rows, cols) {
 		}
 	};
 
-	this.updateFigure = function updateFigure(index) {
+	this.figureUpdate = function figureUpdate(index) {
 		var figures = this.figures;
-		var uniqueFigureId = this.generateFigureIndex();
+		var uniqueFigureId = this.figureIndexGenerate();
 		var figure = Consts.FIGURES[uniqueFigureId];
 		for (var cellCounter = 0; cellCounter < 4; cellCounter++) {
 			var cell = figures[index].cells[cellCounter];
@@ -29361,7 +29377,7 @@ function Game(rows, cols) {
 		var _position2 = _firstDot.position;
 		var _x2 = _position2.getX();
 		var _y2 = _position2.getY();
-		var randomId = this.generateFigureIndex(figureCounter);
+		var randomId = this.figureIndexGenerate();
 		var figure = new Figure(figureCounter, randomId, _x2, _y2);
 		this.addChild(figure);
 		this.figures.push(figure);
@@ -29371,20 +29387,25 @@ function Game(rows, cols) {
 	var position = firstDot.position;
 	var x = position.getX();
 	var y = position.getY();
-	var player = new Player(x, y);
-	this.addChild(player);
-	this.player = player;
+	var score = new Score(x, y);
+	this.addChild(score);
+	this.score = score;
+
+	//	let menu = new Menu();
+	//	this.addChild(menu);
+	//	this.menu = menu;
 
 	this.scoreInc = function scoreInc(value) {
-		var player = this.player;
-		player.scoreInc(value);
+		this.score.scoreInc(value * scoreMultiplier);
 	};
 	this.scoreReset = function scoreReset() {
-		var player = this.player;
-		player.scoreReset();
+		this.score.scoreReset();
+	};
+	this.scoreSurcharge = function scoreSurcharge() {
+		this.score.scoreSurcharge();
 	};
 
-	this.checkFigure = function checkFigure() {
+	this.figureCheck = function figureCheck() {
 		var _this = this;
 
 		var hovers = this.hoverDots;
@@ -29447,8 +29468,9 @@ function Game(rows, cols) {
 						}
 						_this.hoverDots = [];
 						_this.scoreInc(Consts.SCORE__FIGURE);
-						_this.updateFigure(figure);
-						_this.checkLines();
+						_this.figureUpdate(figure);
+						_this.linesCheck();
+						_this.isGameEnded();
 						figure = Consts.FIGURESCOUNT;
 					}
 				}
@@ -29475,32 +29497,42 @@ function Game(rows, cols) {
   * Check dot for hoverability
   * @param {number} id - Id of dot
   */
-	this.hoverDot = function (id) {
-		if (id !== undefined && this.dots[id].state === Consts.DOT_STATE__UNTOUCHED) {
-			if (this.hoverDots.indexOf(id) < 0) {
-				if (this.hoverDots.length < 4) {
-					this.hoverDots.push(id);
-				} else {
-					this.dots[this.hoverDots[0]].unhover();
-					this.hoverDots.shift();
-					this.hoverDots.push(id);
+	this.dotHover = function (id) {
+		switch (this.dots[id].state) {
+			case Consts.DOT_STATE__UNTOUCHED:
+				if (this.hoverDots.indexOf(id) < 0) {
+					if (this.hoverDots.length < 4) {
+						this.hoverDots.push(id);
+					} else {
+						this.dots[this.hoverDots[0]].unhover();
+						this.hoverDots.shift();
+						this.hoverDots.push(id);
+					}
+					this.dots[id].hover();
+					if (this.hoverDots.length === 4) {
+						this.figureCheck();
+					}
 				}
-				this.dots[id].hover();
-				if (this.hoverDots.length === 4) {
-					this.checkFigure();
-				}
-			}
+				break;
+			case Consts.DOT_STATE__HOVERED:
+				this.hoverDots.splice(this.hoverDots.indexOf(id), 1);
+				this.dots[id].unhover();
+				break;
+			default:
+				return false;
 		}
 	};
 
 	this.orderRows = [].initialize(Consts.ROWS);
 	this.orderColumns = [].initialize(Consts.COLUMNS);
+	this.etalonRows = [];
+	this.etalonColumns = [];
 
 	/**
   * Check lines if dots are filled
   */
 	/*jshint -W074 */
-	this.checkLines = function checkLines() {
+	this.linesCheck = function linesCheck() {
 		var dots = this.dots;
 		var filledRows = [];
 		var filledColumns = [];
@@ -29539,12 +29571,16 @@ function Game(rows, cols) {
 				return x - y;
 			}
 		});
+
 		for (var row = 0; row < filledRows.length; row++) {
-			this.moveLine(filledRows[row], 'y');
+			this.lineMove(filledRows[row], 'y');
+			scoreMultiplier++;
 		}
 		for (var column = 0; column < filledColumns.length; column++) {
-			this.moveLine(filledColumns[column], 'x');
+			this.lineMove(filledColumns[column], 'x');
+			scoreMultiplier++;
 		}
+		scoreMultiplier = 1;
 	}; /*jshint +W074 */
 
 	/**
@@ -29552,36 +29588,38 @@ function Game(rows, cols) {
   * @param {number} id - Id of stateed line
   */
 	/*jshint -W071, -W074 */
-	this.moveLine = function moveLine(line, direction) {
-		console.log('moveLine', line, direction);
+	this.lineMove = function lineMove(line, direction) {
+		console.log('lineMove', line, direction);
 		this.scoreInc(Consts.SCORE__LINE);
 
 		var orderRows = this.orderRows;
 		var orderColumns = this.orderColumns;
+		var etalonRows = this.etalonRows;
+		var etalonColumns = this.etalonColumns;
 		var order = [];
+		var etalon = [];
 		var lineHash = 0;
 
 		switch (direction) {
 			case 'x':
 				order = orderColumns;
+				etalon = etalonColumns;
 				lineHash = order.indexOf(line);
 				if (line < Consts.COLUMNS / 2) {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						var _position3 = dot.position;
-						var _x3 = _position3.getX();
-						_position3.setX(_x3 - Consts.DOT_SIDE * lineHash, {
+						_position3.setX(etalon[0], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (var column = lineHash - 1; column >= 0; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
 							var dot = this.dots[row * Consts.ROWS + order[column]];
 							var _position4 = dot.position;
-							var _x4 = _position4.getX();
-							_position4.setX(_x4 + Consts.DOT_SIDE, {
+							_position4.setX(etalon[column + 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29593,19 +29631,17 @@ function Game(rows, cols) {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						var _position5 = dot.position;
-						var _x5 = _position5.getX();
-						_position5.setX(_x5 + Consts.DOT_SIDE * (Consts.ROWS - 1 - lineHash), {
+						_position5.setX(etalon[Consts.COLUMNS - 1], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (var column = Consts.COLUMNS - 1; column > lineHash; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
 							var dot = this.dots[row * Consts.ROWS + order[column]];
 							var _position6 = dot.position;
-							var _x6 = _position6.getX();
-							_position6.setX(_x6 - Consts.DOT_SIDE, {
+							_position6.setX(etalon[column - 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29617,24 +29653,23 @@ function Game(rows, cols) {
 				break;
 			case 'y':
 				order = orderRows;
+				etalon = etalonRows;
 				lineHash = order.indexOf(line);
 				if (line < Consts.ROWS / 2) {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						var _position7 = dot.position;
-						var _y3 = _position7.getY();
-						_position7.setY(_y3 - Consts.DOT_SIDE * lineHash, {
+						_position7.setY(etalon[0], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (var row = lineHash - 1; row >= 0; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
 							var dot = this.dots[order[row] * Consts.COLUMNS + column];
 							var _position8 = dot.position;
-							var _y4 = _position8.getY();
-							_position8.setY(_y4 + Consts.DOT_SIDE, {
+							_position8.setY(etalon[row + 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29646,19 +29681,17 @@ function Game(rows, cols) {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						var _position9 = dot.position;
-						var _y5 = _position9.getY();
-						_position9.setY(_y5 + Consts.DOT_SIDE * (Consts.COLUMNS - 1 - lineHash), {
+						_position9.setY(etalon[Consts.ROWS - 1], {
 							duration: Consts.DURATION,
 							curve: Consts.CURVE
 						});
-						dot.unplace();
+						dot.unplace(true);
 					}
 					for (var row = Consts.ROWS - 1; row > lineHash; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
 							var dot = this.dots[order[row] * Consts.COLUMNS + column];
 							var _position10 = dot.position;
-							var _y6 = _position10.getY();
-							_position10.setY(_y6 - Consts.DOT_SIDE, {
+							_position10.setY(etalon[row - 1], {
 								duration: Consts.DURATION,
 								curve: Consts.CURVE
 							});
@@ -29673,15 +29706,54 @@ function Game(rows, cols) {
 		}
 	}; /*jshint +W071, +W074 */
 
+	/**
+  * Check if player can't place new figure (Game over state)
+  */
+	this.isGameEnded = function isGameEnded() {
+		var figures = this.figures;
+		var dots = this.dots;
+		var figuresCollection = [];
+		for (var figureCounter = 0, fL = figures.length; figureCounter < fL; figureCounter++) {
+			var figureOrigin = figures[figureCounter];
+			var figureContainer = [];
+			for (var cell = 0; cell < 4; cell++) {
+				figureContainer.push({ x: figureOrigin.cells[cell].x, y: figureOrigin.cells[cell].y });
+			}
+			figuresCollection.push(figureContainer);
+		}
+		for (var figureCounter = 0, fL = figuresCollection.length; figureCounter < fL; figureCounter++) {
+			var curent = figuresCollection[figureCounter];
+			for (var dotCounter = 0, dL = dots.length; dotCounter < dL; dotCounter++) {
+				var counter = 0;
+				var tx = Number.parseInt(dotCounter / Consts.ROWS);
+				var ty = parseInt(dotCounter % Consts.COLUMNS);
+				for (var figureCell = 0, cL = curent.length; figureCell < cL; figureCell++) {
+					var cx = curent[figureCell].y;
+					var cy = curent[figureCell].x;
+					if (cx + tx < Consts.COLUMNS && cy + ty < Consts.ROWS) {
+						if (dots[(cx + tx) * Consts.DIMENSION + cy + ty].state !== Consts.DOT_STATE__PLACED) {
+							counter++;
+						}
+					}
+				}
+				if (counter === 4) {
+					return false;
+				}
+			}
+		}
+		console.log('Game over');
+		return true;
+	};
+
 	var hoverId;
 
 	/**
   * Fill dot
   * @param {number} id - Id of dot
   */
-	this.stateDot = function (id) {
+	this.dotState = function (id) {
 		if (id !== undefined && id !== hoverId) {
-			this.hoverDot(id);
+			this.dotHover(id);
 			hoverId = id;
 		}
 	};
@@ -29690,7 +29762,9 @@ function Game(rows, cols) {
 	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setOrigin(0.5, 0.5, 0).setPosition(0, 0, 0);
 	this.layout = new Layout(this);
 
+	console.log(this);
 	this.addUIEvent('mousedown');
+	this.addUIEvent('mouseleave');
 	this.addUIEvent('mouseup');
 }
 
@@ -29702,6 +29776,10 @@ Game.prototype.onReceive = function onReceive(type, ev) {
 		case 'mousedown':
 			this.emit('x', ev.x).emit('y', ev.y);
 			this.mousing = true;
+			break;
+		case 'mouseleave':
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = false;
 			break;
 		case 'mouseup':
 			this.emit('x', ev.x).emit('y', ev.y);
@@ -29735,6 +29813,12 @@ Layout.prototype.next = function next() {
 	for (var i = 0; i < this.node.dots.length; i++) {
 		var x = bounds[0] + dimension * col++;
 		var y = bounds[1] + dimension * row;
+		if (i < Consts.COLUMNS) {
+			this.node.etalonColumns.push(x);
+		}
+		if (i % Consts.ROWS === 0) {
+			this.node.etalonRows.push(y);
+		}
 		var z = 0;
 		this.node.dots[i].position.set(x, y, z, {
 			duration: i * Consts.ROWS + duration,
@@ -29749,7 +29833,7 @@ Layout.prototype.next = function next() {
 
 module.exports = Game;
 
-},{"./Consts.js":143,"./Dot.js":144,"./Figure.js":145,"./Player.js":147,"./getRandomInt.js":148,"famous":46}],147:[function(require,module,exports){
+},{"./Consts.js":143,"./Dot.js":144,"./Figure.js":145,"./Score.js":147,"./getRandomInt.js":148,"famous":46}],147:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -29759,30 +29843,44 @@ var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
-function Player(x, y) {
+function Score(x, y) {
 	Node.call(this);
 
 	// Center dot.
 	this.setMountPoint(0, 0, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
 
+	//	let score = new Score(0);
+	//	this.addChild(score);
+	//	this.score = score;
+
 	this.score = 0;
 
 	this.domElement = new DOMElement(this, {
+		tagName: 'h2',
 		properties: {
 			color: '#fff',
 			fontSize: '32px'
 		},
-		content: 'Score ' + Number(this.score)
+		content: 'Score: <var class="Score">' + this.score + '</var>'
 	});
+
+	this.scoreSetContent = function scoreSetContent(value) {
+		this.domElement.setContent('Score: <var class="Score">' + value + '</var>');
+	};
 
 	this.scoreInc = function scoreInc(inc) {
 		this.score += inc;
-		this.domElement.setContent('Score ' + this.score);
+		this.scoreSetContent(this.score);
 	};
 
 	this.scoreReset = function scoreReset() {
-		this.domElement.setContent('Score ' + 0);
 		this.score = 0;
+		this.scoreSetContent(this.score);
+	};
+
+	this.scoreSurcharge = function scoreSurcharge() {
+		this.score = Number.parseInt(this.score * Consts.SCORE__SURCHARGE);
+		this.scoreSetContent(this.score);
 	};
 
 	this.position = new Position(this);
@@ -29790,10 +29888,10 @@ function Player(x, y) {
 	this.position.setY(y - Consts.DOT_SIDE * (Consts.DIMENSION - 15), {});
 }
 
-Player.prototype = Object.create(Node.prototype);
-Player.prototype.constructor = Player;
+Score.prototype = Object.create(Node.prototype);
+Score.prototype.constructor = Score;
 
-module.exports = Player;
+module.exports = Score;
 
 },{"./Consts.js":143,"famous":46}],148:[function(require,module,exports){
 'use strict';

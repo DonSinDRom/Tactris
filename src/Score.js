@@ -7,7 +7,7 @@ var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
-function Player(x, y) {
+function Score(x, y) {
 	Node.call(this);
 
 	// Center dot.
@@ -17,24 +17,38 @@ function Player(x, y) {
 		.setSizeMode('absolute', 'absolute', 'absolute')
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
 
+//	let score = new Score(0);
+//	this.addChild(score);
+//	this.score = score;
+
 	this.score = 0;
 
 	this.domElement = new DOMElement(this, {
+		tagName: 'h2',
 		properties: {
 			color: '#fff',
 			fontSize: '32px'
 		},
-		content: 'Score ' + Number(this.score)
+		content: 'Score: <var class="Score">' + this.score + '</var>'
 	});
+
+	this.scoreSetContent = function scoreSetContent(value) {
+		this.domElement.setContent('Score: <var class="Score">' + value + '</var>');
+	}
 
 	this.scoreInc = function scoreInc(inc) {
 		this.score += inc;
-		this.domElement.setContent('Score ' + this.score);
+		this.scoreSetContent(this.score);
 	};
 
 	this.scoreReset = function scoreReset() {
-		this.domElement.setContent('Score ' + 0);
 		this.score = 0;
+		this.scoreSetContent(this.score);
+	};
+
+	this.scoreSurcharge = function scoreSurcharge() {
+		this.score = Number.parseInt(this.score * Consts.SCORE__SURCHARGE);
+		this.scoreSetContent(this.score);
 	};
 
 	this.position = new Position(this);
@@ -42,7 +56,7 @@ function Player(x, y) {
 	this.position.setY(y - Consts.DOT_SIDE * (Consts.DIMENSION - 15), {});
 }
 
-Player.prototype = Object.create(Node.prototype);
-Player.prototype.constructor = Player;
+Score.prototype = Object.create(Node.prototype);
+Score.prototype.constructor = Score;
 
-module.exports = Player;
+module.exports = Score;

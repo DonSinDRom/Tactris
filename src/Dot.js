@@ -85,12 +85,12 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 			break;
 	case 'mousemove':
 			if (this._parent.mousing === true) {
-				this._parent.stateDot(this.id);
+				this._parent.dotState(this.id);
 				this.emit('id', this.domElement.id).emit('state', this.domElement.state);
 			}
 			break;
 	case 'click':
-			this._parent.stateDot(this.id);
+			this._parent.dotState(this.id);
 			this.emit('id', this.domElement.id).emit('state', this.domElement.state);
 			break;
 	case 'mouseup':

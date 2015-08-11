@@ -46,7 +46,8 @@ Figure.prototype.constructor = Figure;
 Figure.prototype.onReceive = function onReceive(type, ev) {
 	switch (type) {
 	case 'click':
-			this._parent.updateFigure(this.id);
+			this._parent.figureUpdate(this.id);
+			this._parent.scoreSurcharge();
 			this.emit('id', this.id).emit('randomId', this.randomId);
 			break;
 	default:

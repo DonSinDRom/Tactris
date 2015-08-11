@@ -386,6 +386,7 @@ const Consts = {
 
 	SCORE__FIGURE: 2,
 	SCORE__LINE: 10,
+	SCORE__SURCHARGE: 0.5,
 
 	init: function() {
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;

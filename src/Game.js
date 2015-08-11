@@ -4,7 +4,7 @@ var famous = require('famous');
 var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
-var Player = require('./Player.js');
+var Score = require('./Score.js');
 //var Menu = require('./Menu.js');
 var getRandomInt = require('./getRandomInt.js');
 
@@ -30,7 +30,7 @@ function Game(rows, cols) {
 
 	this.figures = [];
 
-	this.generateFigureIndex = function generateFigureIndex() {
+	this.figureIndexGenerate = function figureIndexGenerate() {
 		let figures = this.figures || [];
 		let rand = getRandomInt(0, Consts.FIGURES.length);
 		if (figures.length < 1) {
@@ -50,9 +50,9 @@ function Game(rows, cols) {
 		}
 	};
 
-	this.updateFigure = function updateFigure(index) {
+	this.figureUpdate = function figureUpdate(index) {
 		let figures = this.figures;
-		let uniqueFigureId = this.generateFigureIndex();
+		let uniqueFigureId = this.figureIndexGenerate();
 		let figure = Consts.FIGURES[uniqueFigureId];
 		for (let cellCounter = 0; cellCounter < 4; cellCounter++) {
 			let cell = figures[index].cells[cellCounter];
@@ -74,7 +74,7 @@ function Game(rows, cols) {
 		let position = firstDot.position;
 		let x = position.getX();
 		let y = position.getY();
-		let randomId = this.generateFigureIndex(figureCounter);
+		let randomId = this.figureIndexGenerate();
 		let figure = new Figure(figureCounter, randomId, x, y);
 		this.addChild(figure);
 		this.figures.push(figure);
@@ -84,24 +84,25 @@ function Game(rows, cols) {
 	let position = firstDot.position;
 	let x = position.getX();
 	let y = position.getY();
-	let player = new Player(x, y);
-	this.addChild(player);
-	this.player = player;
+	let score = new Score(x, y);
+	this.addChild(score);
+	this.score = score;
 
 //	let menu = new Menu();
 //	this.addChild(menu);
 //	this.menu = menu;
 
 	this.scoreInc = function scoreInc(value) {
-		let player = this.player;
-		player.scoreInc(value * scoreMultiplier);
+		this.score.scoreInc(value * scoreMultiplier);
 	};
 	this.scoreReset = function scoreReset() {
-		let player = this.player;
-		player.scoreReset();
+		this.score.scoreReset();
+	};
+	this.scoreSurcharge = function scoreSurcharge() {
+		this.score.scoreSurcharge();
 	};
 
-	this.checkFigure = function checkFigure() {
+	this.figureCheck = function figureCheck() {
 		let hovers = this.hoverDots;
 
 		if (hovers.length === 4) {
@@ -152,8 +153,8 @@ function Game(rows, cols) {
 					}
 					this.hoverDots = [];
 					this.scoreInc(Consts.SCORE__FIGURE);
-					this.updateFigure(figure);
-					this.checkLines();
+					this.figureUpdate(figure);
+					this.linesCheck();
 					this.isGameEnded();
 					figure = Consts.FIGURESCOUNT;
 				}
@@ -180,7 +181,7 @@ function Game(rows, cols) {
 	 * Check dot for hoverability
 	 * @param {number} id - Id of dot
 	 */
-	this.hoverDot = function (id) {
+	this.dotHover = function (id) {
 		switch (this.dots[id].state) {
 		case Consts.DOT_STATE__UNTOUCHED:
 				if (this.hoverDots.indexOf(id) < 0) {
@@ -193,7 +194,7 @@ function Game(rows, cols) {
 					}
 					this.dots[id].hover();
 					if (this.hoverDots.length === 4) {
-						this.checkFigure();
+						this.figureCheck();
 					}
 				}
 				break;
@@ -215,7 +216,7 @@ function Game(rows, cols) {
 	 * Check lines if dots are filled
 	 */
 	/*jshint -W074 */
-	this.checkLines = function checkLines() {
+	this.linesCheck = function linesCheck() {
 		var dots = this.dots;
 		var filledRows = [];
 		var filledColumns = [];
@@ -247,11 +248,11 @@ function Game(rows, cols) {
 		});
 
 		for (let row = 0; row < filledRows.length; row++) {
-			this.moveLine(filledRows[row], 'y');
+			this.lineMove(filledRows[row], 'y');
 			scoreMultiplier++;
 		}
 		for (let column = 0; column < filledColumns.length; column++) {
-			this.moveLine(filledColumns[column], 'x');
+			this.lineMove(filledColumns[column], 'x');
 			scoreMultiplier++;
 		}
 		scoreMultiplier = 1;
@@ -262,8 +263,8 @@ function Game(rows, cols) {
 	 * @param {number} id - Id of stateed line
 	 */
 	/*jshint -W071, -W074 */
-	this.moveLine = function moveLine(line, direction) {
-		console.log('moveLine', line, direction);
+	this.lineMove = function lineMove(line, direction) {
+		console.log('lineMove', line, direction);
 		this.scoreInc(Consts.SCORE__LINE);
 
 		let orderRows = this.orderRows;
@@ -425,9 +426,9 @@ function Game(rows, cols) {
 	 * Fill dot
 	 * @param {number} id - Id of dot
 	 */
-	this.stateDot = function (id) {
+	this.dotState = function (id) {
 		if (id !== undefined && id !== hoverId) {
-			this.hoverDot(id);
+			this.dotHover(id);
 			hoverId = id;
 		}
 	};
