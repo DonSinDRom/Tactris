@@ -19,9 +19,9 @@ function Dot(id) {
 
 	this.domElement = new DOMElement(this, {
 		properties: {
-			background: Consts.DOT_COLOR__UNTOUCHED,
-			cursor: 'cell'
-		}
+			background: Consts.DOT_COLOR__UNTOUCHED
+		},
+		classes: ['Dot']
 	});
 
 	this.id = id;
