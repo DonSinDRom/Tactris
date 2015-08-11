@@ -423,6 +423,7 @@ function Game(rows, cols) {
 	this.layout = new Layout(this);
 
 	this.addUIEvent('mousedown');
+	this.addUIEvent('mouseleave');
 	this.addUIEvent('mouseup');
 }
 
@@ -434,6 +435,10 @@ Game.prototype.onReceive = function onReceive(type, ev) {
 	case 'mousedown':
 			this.emit('x', ev.x).emit('y', ev.y);
 			this.mousing = true;
+			break;
+	case 'mouseleave':
+			this.emit('x', ev.x).emit('y', ev.y);
+			this.mousing = false;
 			break;
 	case 'mouseup':
 			this.emit('x', ev.x).emit('y', ev.y);
