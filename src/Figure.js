@@ -13,10 +13,10 @@ function Figure(id, randomId, x, y) {
 
 	// Center dot.
 	this
-		.setMountPoint(0, 0, 0)
-		.setAlign(0.5, 0.5, 0)
-		.setSizeMode('absolute', 'absolute', 'absolute')
-		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2, 0);
+		.setMountPoint(0, 0)
+		.setAlign(0.5, 0.5)
+		.setSizeMode('absolute', 'absolute')
+		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
 	this.domElement = new DOMElement(this, {});
 

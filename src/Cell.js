@@ -12,10 +12,10 @@ function Cell(id, x, y) {
 
 	// Center dot.
 	this
-		.setMountPoint(0.5, 0.5, 0)
-		.setAlign(0.5, 0.5, 0)
-		.setSizeMode('absolute', 'absolute', 'absolute')
-		.setAbsoluteSize(Consts.CELL_SIZE, Consts.CELL_SIZE, 0);
+		.setMountPoint(0.5, 0.5)
+		.setAlign(0.5, 0.5)
+		.setSizeMode('absolute', 'absolute')
+		.setAbsoluteSize(Consts.CELL_SIZE, Consts.CELL_SIZE);
 
 	this.domElement = new DOMElement(this, {
 		properties: {
