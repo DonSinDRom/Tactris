@@ -10,7 +10,7 @@ const Consts = {
 
 	CELL_MARGIN: 1,
 
-	DIMENSION: 10,
+	DIMENSION: 12,
 	DURATION: 600,
 	CURVE: 'outBounce',
 	FIGURES: [

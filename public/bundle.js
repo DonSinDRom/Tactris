@@ -28802,7 +28802,7 @@ var Consts = ({
 
 	CELL_MARGIN: 1,
 
-	DIMENSION: 10,
+	DIMENSION: 12,
 	DURATION: 600,
 	CURVE: 'outBounce',
 	FIGURES: [[{ //             ╔══════╗ ╔══════╗                      //
@@ -29998,7 +29998,7 @@ function Score(x, y) {
 
 	this.position = new Position(this);
 	this.position.setX(x - Consts.DOT_SIDE * Consts.DIMENSION / 2, {});
-	this.position.setY(y - Consts.DOT_SIDE * (Consts.DIMENSION - 15), {});
+	this.position.setY(y - Consts.DOT_SIDE * Consts.DIMENSION / -2, {});
 }
 
 Score.prototype = Object.create(Node.prototype);
