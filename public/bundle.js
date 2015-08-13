@@ -28758,7 +28758,7 @@ function Cell(id, x, y) {
 	Node.call(this);
 
 	// Center dot.
-	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.CELL_SIDE, Consts.CELL_SIDE, Consts.CELL_SIDE);
+	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.CELL_SIZE, Consts.CELL_SIZE, 0);
 
 	this.domElement = new DOMElement(this, {
 		properties: {
@@ -28800,6 +28800,7 @@ var Consts = ({
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
+	CELL_SIZE: 21,
 	CELL_MARGIN: 1,
 
 	DIMENSION: 12,
@@ -29134,7 +29135,6 @@ var Consts = ({
 
 	init: function init() {
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
-		this.CELL_SIZE = this.DOT_SIZE / 2;
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN, this.ROWS = this.DIMENSION;
 		this.COLUMNS = this.DIMENSION;
 		return this;
@@ -29264,7 +29264,7 @@ function Figure(id, randomId, x, y) {
 	Node.call(this);
 
 	// Center dot.
-	this.setMountPoint(0, 0, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
+	this.setMountPoint(0, 0, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2, 0);
 
 	this.domElement = new DOMElement(this, {});
 

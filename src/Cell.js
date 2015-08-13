@@ -15,7 +15,7 @@ function Cell(id, x, y) {
 		.setMountPoint(0.5, 0.5, 0)
 		.setAlign(0.5, 0.5, 0)
 		.setSizeMode('absolute', 'absolute', 'absolute')
-		.setAbsoluteSize(Consts.CELL_SIDE, Consts.CELL_SIDE, Consts.CELL_SIDE);
+		.setAbsoluteSize(Consts.CELL_SIZE, Consts.CELL_SIZE, 0);
 
 	this.domElement = new DOMElement(this, {
 		properties: {

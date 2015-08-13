@@ -8,6 +8,7 @@ const Consts = {
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
+	CELL_SIZE: 21,
 	CELL_MARGIN: 1,
 
 	DIMENSION: 12,
@@ -401,7 +402,6 @@ const Consts = {
 
 	init: function() {
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
-		this.CELL_SIZE = this.DOT_SIZE / 2;
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN,
 		this.ROWS = this.DIMENSION;
 		this.COLUMNS = this.DIMENSION;

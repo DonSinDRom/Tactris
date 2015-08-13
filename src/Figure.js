@@ -16,7 +16,7 @@ function Figure(id, randomId, x, y) {
 		.setMountPoint(0, 0, 0)
 		.setAlign(0.5, 0.5, 0)
 		.setSizeMode('absolute', 'absolute', 'absolute')
-		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
+		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2, 0);
 
 	this.domElement = new DOMElement(this, {});
 
