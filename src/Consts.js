@@ -1,3 +1,9 @@
+/*
+* Curves:
+*/
+//linear easeIn easeOut easeInOut easeOutBounce spring inQuad outQuad inOutQuad inCubic outCubic inOutCubic inQuart outQuart inOutQuart inQuint outQuint inOutQuint inSine outSine inOutSine inExpo outExpo inOutExpo inCirc outCirc inOutCirc inElastic outElastic inOutElastic inBack outBack inOutBack inBounce outBounce inOutBounce
+
+
 const Consts = {
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
@@ -6,8 +12,7 @@ const Consts = {
 
 	DIMENSION: 10,
 	DURATION: 600,
-	CURVE: 'outBounce', //outQuint outElastic inElastic inOutEase inBounce outBounce
-
+	CURVE: 'outBounce',
 	FIGURES: [
 		[
 			{//             ╔══════╗ ╔══════╗                      //
@@ -383,6 +388,12 @@ const Consts = {
 	DOT_COLOR__HOVERED: '#e87461',
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
 	DOT_COLOR__PLACED: '#e0c879',
+
+	DOT_CURVE__POSITION: 'inOutElastic',
+	DOT_DURATION__POSITION: 800,
+
+	DOT_CURVE__ROTATION: 'inExpo',
+	DOT_DURATION__ROTATION: 800,
 
 	SCORE__FIGURE: 2,
 	SCORE__LINE: 10,

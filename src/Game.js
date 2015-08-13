@@ -220,6 +220,8 @@ function Game(rows, cols) {
 		var dots = this.dots;
 		var filledRows = [];
 		var filledColumns = [];
+		let orderRows = this.orderRows;
+		let orderColumns = this.orderColumns;
 		for (let line = 0; line < Consts.DIMENSION; line++) {
 			let row = dots.filter((element) => Number.parseInt(element.id / Consts.ROWS) === line && element.state === Consts.DOT_STATE__PLACED);
 			let column = dots.filter((element) => element.id % Consts.COLUMNS === line && element.state === Consts.DOT_STATE__PLACED);
@@ -247,14 +249,25 @@ function Game(rows, cols) {
 			}
 		});
 
-		for (let row = 0; row < filledRows.length; row++) {
-			this.lineMove(filledRows[row], 'y');
+		if (filledRows.length === 1 && (filledRows[0] === orderRows[0] || filledRows[0] === orderRows[Consts.ROWS - 1])) {
+			this.lineRotate(filledRows[0], 'y');
 			scoreMultiplier++;
+		} else {
+			for (let row = 0; row < filledRows.length; row++) {
+				this.lineMove(filledRows[row], 'y');
+				scoreMultiplier++;
+			}
 		}
-		for (let column = 0; column < filledColumns.length; column++) {
-			this.lineMove(filledColumns[column], 'x');
+		if (filledColumns.length === 1 && (filledColumns[0] === orderColumns[0] || filledColumns[0] === orderColumns[Consts.COLUMNS - 1])) {
+			this.lineRotate(filledColumns[0], 'x');
 			scoreMultiplier++;
+		} else {
+			for (let column = 0; column < filledColumns.length; column++) {
+				this.lineMove(filledColumns[column], 'x');
+				scoreMultiplier++;
+			}
 		}
+
 		scoreMultiplier = 1;
 	};/*jshint +W074 */
 
@@ -285,8 +298,8 @@ function Game(rows, cols) {
 						let dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						let position = dot.position;
 						position.setX(etalon[0], {
-							duration: Consts.DURATION,
-							curve: Consts.CURVE
+							duration: Consts.DOT_DURATION__POSITION,
+							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.unplace(true);
 					}
@@ -295,8 +308,8 @@ function Game(rows, cols) {
 							let dot = this.dots[row * Consts.ROWS + order[column]];
 							let position = dot.position;
 							position.setX(etalon[column + 1], {
-								duration: Consts.DURATION,
-								curve: Consts.CURVE
+								duration: Consts.DOT_DURATION__POSITION,
+								curve: Consts.DOT_CURVE__POSITION
 							});
 						}
 					}
@@ -307,8 +320,8 @@ function Game(rows, cols) {
 						let dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						let position = dot.position;
 						position.setX(etalon[Consts.COLUMNS - 1], {
-							duration: Consts.DURATION,
-							curve: Consts.CURVE
+							duration: Consts.DOT_DURATION__POSITION,
+							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.unplace(true);
 					}
@@ -317,8 +330,8 @@ function Game(rows, cols) {
 							let dot = this.dots[row * Consts.ROWS + order[column]];
 							let position = dot.position;
 							position.setX(etalon[column - 1], {
-								duration: Consts.DURATION,
-								curve: Consts.CURVE
+								duration: Consts.DOT_DURATION__POSITION,
+								curve: Consts.DOT_CURVE__POSITION
 							});
 						}
 					}
@@ -335,8 +348,8 @@ function Game(rows, cols) {
 						let dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						let position = dot.position;
 						position.setY(etalon[0], {
-							duration: Consts.DURATION,
-							curve: Consts.CURVE
+							duration: Consts.DOT_DURATION__POSITION,
+							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.unplace(true);
 					}
@@ -345,8 +358,8 @@ function Game(rows, cols) {
 							let dot = this.dots[order[row] * Consts.COLUMNS + column];
 							let position = dot.position;
 							position.setY(etalon[row + 1], {
-								duration: Consts.DURATION,
-								curve: Consts.CURVE
+								duration: Consts.DOT_DURATION__POSITION,
+								curve: Consts.DOT_CURVE__POSITION
 							});
 						}
 					}
@@ -357,8 +370,8 @@ function Game(rows, cols) {
 						let dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						let position = dot.position;
 						position.setY(etalon[Consts.ROWS - 1], {
-							duration: Consts.DURATION,
-							curve: Consts.CURVE
+							duration: Consts.DOT_DURATION__POSITION,
+							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.unplace(true);
 					}
@@ -367,8 +380,8 @@ function Game(rows, cols) {
 							let dot = this.dots[order[row] * Consts.COLUMNS + column];
 							let position = dot.position;
 							position.setY(etalon[row - 1], {
-								duration: Consts.DURATION,
-								curve: Consts.CURVE
+								duration: Consts.DOT_DURATION__POSITION,
+								curve: Consts.DOT_CURVE__POSITION
 							});
 						}
 					}
@@ -380,6 +393,93 @@ function Game(rows, cols) {
 				return false;
 		}
 	};/*jshint +W071, +W074 */
+
+	/**
+	 * Rotate stateed line
+	 * @param {number} id - Id of stateed line
+	 */
+	/*jshint -W071, -W074 */
+	this.lineRotate = function lineRotate(line, direction) {
+		console.log('lineRotate', line, direction);
+		this.scoreInc(Consts.SCORE__LINE);
+
+		let orderRows = this.orderRows;
+		let orderColumns = this.orderColumns;
+		let etalonRows = this.etalonRows;
+		let etalonColumns = this.etalonColumns;
+		let order = [];
+		let etalon = [];
+		let lineHash = 0;
+
+		switch (direction) {
+		case 'x':
+				order = orderColumns;
+				etalon = etalonColumns;
+				lineHash = order.indexOf(line);
+				if (line === 0) {
+					for (let row = 0; row < Consts.ROWS; row++) {
+						let dot = this.dots[row * Consts.ROWS + order[lineHash]];
+						let rotation = dot.rotation;
+						let x = rotation.getX();
+						let y = rotation.getY();
+						let inc = 2 * Math.PI;
+						rotation.set(x + inc, y + inc, 0, {
+							duration: Consts.DOT_DURATION__ROTATION,
+							curve: Consts.DOT_CURVE__ROTATION
+						});
+						dot.unplace(true);
+					}
+				} else {
+					for (let row = 0; row < Consts.ROWS; row++) {
+						let dot = this.dots[row * Consts.ROWS + order[lineHash]];
+						let rotation = dot.rotation;
+						let x = rotation.getX();
+						let y = rotation.getY();
+						let inc = 2 * Math.PI;
+						rotation.set(x + inc, y + inc, 0, {
+							duration: Consts.DOT_DURATION__ROTATION,
+							curve: Consts.DOT_CURVE__ROTATION
+						});
+						dot.unplace(true);
+					}
+				}
+				break;
+		case 'y':
+				order = orderRows;
+				etalon = etalonRows;
+				lineHash = order.indexOf(line);
+				if (line < (Consts.ROWS / 2)) {
+					for (let column = 0; column < Consts.COLUMNS; column++) {
+						let dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
+						let rotation = dot.rotation;
+						let x = rotation.getX();
+						let y = rotation.getY();
+						let inc = 2 * Math.PI;
+						rotation.set(x + inc, y + inc, 0, {
+							duration: Consts.DOT_DURATION__ROTATION,
+							curve: Consts.DOT_CURVE__ROTATION
+						});
+						dot.unplace(true);
+					}
+				} else {
+					for (let column = 0; column < Consts.COLUMNS; column++) {
+						let dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
+						let rotation = dot.rotation;
+						let x = rotation.getX();
+						let y = rotation.getY();
+						let inc = 2 * Math.PI;
+						rotation.set(x + inc, y + inc, 0, {
+							duration: Consts.DOT_DURATION__ROTATION,
+							curve: Consts.DOT_CURVE__ROTATION
+						});
+						dot.unplace(true);
+					}
+				}
+				break;
+		default:
+				return false;
+		}
+	}
 
 	/**
 	 * Check if player can't place new figure (Game over state)

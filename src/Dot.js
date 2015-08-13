@@ -6,6 +6,7 @@ var Consts = require('./Consts.js');
 var FamousEngine = famous.core.FamousEngine;
 var Node = famous.core.Node;
 var Position = famous.components.Position;
+var Rotation = famous.components.Rotation;
 var DOMElement = famous.domRenderables.DOMElement;
 
 function Dot(id) {
@@ -15,6 +16,7 @@ function Dot(id) {
 	this
 		.setMountPoint(0.5, 0.5, 0)
 		.setAlign(0.5, 0.5, 0)
+		.setOrigin(0.5,0.5)
 		.setSizeMode('absolute', 'absolute', 'absolute')
 		.setAbsoluteSize(Consts.DOT_SIZE, Consts.DOT_SIZE, Consts.DOT_SIZE);
 
@@ -67,6 +69,8 @@ function Dot(id) {
 	};
 
 	this.position = new Position(this);
+	this.rotation = new Rotation(this);
+	this.rotation.set(0, 0, 0, 0);
 
 	this.addUIEvent('mousedown');
 	this.addUIEvent('mousemove');
