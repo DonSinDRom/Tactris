@@ -14,11 +14,11 @@ function Dot(id) {
 
 	// Center dot.
 	this
-		.setMountPoint(0.5, 0.5, 0)
-		.setAlign(0.5, 0.5, 0)
+		.setMountPoint(0.5, 0.5)
+		.setAlign(0.5, 0.5)
 		.setOrigin(0.5,0.5)
-		.setSizeMode('absolute', 'absolute', 'absolute')
-		.setAbsoluteSize(Consts.DOT_SIZE, Consts.DOT_SIZE, Consts.DOT_SIZE);
+		.setSizeMode('absolute', 'absolute')
+		.setAbsoluteSize(Consts.DOT_SIZE, Consts.DOT_SIZE);
 
 	this.domElement = new DOMElement(this, {
 		properties: {
