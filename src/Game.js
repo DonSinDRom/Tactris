@@ -516,7 +516,7 @@ function Game(rows, cols) {
 				}
 			}
 		}
-		console.log('Game over');
+		alert('Game over');
 		return true;
 	};
 
