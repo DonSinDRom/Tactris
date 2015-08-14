@@ -15,7 +15,10 @@ var DOMElement = famous.domRenderables.DOMElement;
 
 function Game(rows, cols) {
 	Node.call(this);
-	this.domElement = new DOMElement(this, {});
+	this.domElement = new DOMElement(this, {
+		tagName: 'main',
+		classes: ['Game']
+	});
 
 	this.domElement.setAttribute('role', 'grid');
 	this.domElement.setAttribute('aria-multiselectable', true);
