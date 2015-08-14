@@ -7,7 +7,7 @@ var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
-function Score(x, y) {
+function Score() {
 	Node.call(this);
 
 	// Center dot.
@@ -16,10 +16,6 @@ function Score(x, y) {
 		.setAlign(0.5, 0.5, 0)
 		.setSizeMode('absolute', 'absolute', 'absolute')
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
-
-//	let score = new Score(0);
-//	this.addChild(score);
-//	this.score = score;
 
 	this.score = 0;
 
@@ -56,8 +52,6 @@ function Score(x, y) {
 	};
 
 	this.position = new Position(this);
-	this.position.setX(x - Consts.DOT_SIDE * Consts.DIMENSION / 2, {});
-	this.position.setY(y - Consts.DOT_SIDE * Consts.DIMENSION / -2, {});
 }
 
 Score.prototype = Object.create(Node.prototype);

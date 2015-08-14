@@ -80,21 +80,13 @@ function Game(rows, cols) {
 	};
 
 	for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
-		let firstDot = this.dots[0];
-		let position = firstDot.position;
-		let x = position.getX();
-		let y = position.getY();
 		let randomId = this.figureIndexGenerate();
-		let figure = new Figure(figureCounter, randomId, x, y);
+		let figure = new Figure(figureCounter, randomId);
 		this.addChild(figure);
 		this.figures.push(figure);
 	}
 
-	let firstDot = this.dots[0];
-	let position = firstDot.position;
-	let x = position.getX();
-	let y = position.getY();
-	let score = new Score(x, y);
+	let score = new Score();
 	this.addChild(score);
 	this.score = score;
 
@@ -593,6 +585,26 @@ function Layout(node) {
 	this.current = 0;
 	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
 	this.duration = [0.5 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 0.5 * Consts.DURATION];
+
+	let width = document.body.clientWidth;
+	let height = document.body.clientHeight;
+	for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
+		let figure = this.node.figures[figureCounter];
+		let position = figure.position;
+		if (width > height) {
+			position.set(-Consts.ROWS * Consts.DOT_SIDE, (figureCounter -1) * Consts.ROWS * Consts.DOT_SIDE / 2);
+		} else {
+			position.set(-figureCounter * Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE);
+		}
+	}
+
+	let score = this.node.score;
+	let position = score.position;
+	if (width > height) {
+		position.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
+	} else {
+		position.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
+	}
 
 	this.next();
 }

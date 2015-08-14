@@ -8,7 +8,7 @@ var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
-function Figure(id, randomId, x, y) {
+function Figure(id, randomId) {
 	Node.call(this);
 
 	// Center dot.
@@ -37,10 +37,6 @@ function Figure(id, randomId, x, y) {
 	}
 
 	this.position = new Position(this);
-	if (id === 0) {
-		this.position.setX(x - Consts.DOT_SIDE * Consts.DIMENSION / 2, {});
-	}
-	this.position.setY(y - Consts.DOT_SIDE * Consts.DIMENSION, {});
 
 	this.addUIEvent('click');
 }
