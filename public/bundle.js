@@ -28758,7 +28758,7 @@ function Cell(id, x, y) {
 	Node.call(this);
 
 	// Center dot.
-	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.CELL_SIZE, Consts.CELL_SIZE, 0);
+	this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.CELL_SIZE, Consts.CELL_SIZE);
 
 	this.domElement = new DOMElement(this, {
 		properties: {
@@ -28766,16 +28766,15 @@ function Cell(id, x, y) {
 		}
 	});
 
+	this.domElement.setAttribute('role', 'gridcell');
+	this.domElement.setAttribute('aria-readonly', true);
+	this.domElement.setAttribute('aria-live', 'polite');
+	this.domElement.setAttribute('aria-rowindex', y);
+	this.domElement.setAttribute('aria-colindex', x);
+
 	this.id = id;
 	this.x = x;
 	this.y = y;
-
-	this.generate = function generate() {
-		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
-			this.state = Consts.DOT_STATE__HOVERED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__HOVERED);
-		}
-	};
 
 	this.state = Consts.DOT_STATE__UNTOUCHED;
 	this.position = new Position(this);
@@ -28800,7 +28799,7 @@ var Consts = ({
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
-	CELL_SIZE: 21,
+	CELL_RATIO: 0.8,
 	CELL_MARGIN: 1,
 
 	DIMENSION: 12,
@@ -29130,13 +29129,23 @@ var Consts = ({
 	DOT_DURATION__ROTATION: 800,
 
 	SCORE__FIGURE: 2,
-	SCORE__LINE: 10,
-	SCORE__SURCHARGE: 0.5,
+	SCORE__SURCHARGE: 0.8,
 
 	init: function init() {
+		var w = document.body.clientWidth;
+		var h = document.body.clientHeight;
+		this.WIDTH = w;
+		this.HEIGHT = h;
+		var vmin = w > h ? h : w;
+		if (vmin / this.DIMENSION < this.DOT_SIZE) {
+			this.DOT_SIZE = vmin / this.DIMENSION - this.DOT_MARGIN;
+		}
+		this.CELL_SIZE = this.DOT_SIZE * this.CELL_RATIO;
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN, this.ROWS = this.DIMENSION;
 		this.COLUMNS = this.DIMENSION;
+
+		this.SCORE__LINE = this.DIMENSION;
 		return this;
 	}
 
@@ -29160,7 +29169,7 @@ function Dot(id) {
 	Node.call(this);
 
 	// Center dot.
-	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIZE, Consts.DOT_SIZE, Consts.DOT_SIZE);
+	this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIZE, Consts.DOT_SIZE);
 
 	this.domElement = new DOMElement(this, {
 		properties: {
@@ -29169,6 +29178,12 @@ function Dot(id) {
 		classes: ['Dot']
 	});
 
+	this.domElement.setAttribute('role', 'gridcell');
+	this.domElement.setAttribute('aria-selected', false);
+	this.domElement.setAttribute('aria-live', 'polite');
+	this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / Consts.ROWS));
+	this.domElement.setAttribute('aria-colindex', id % Consts.COLUMNS);
+
 	this.id = id;
 	this.state = Consts.DOT_STATE__UNTOUCHED;
 
@@ -29176,6 +29191,7 @@ function Dot(id) {
 		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
 			this.state = Consts.DOT_STATE__HOVERED;
 			this.domElement.setProperty('background-color', Consts.DOT_COLOR__HOVERED);
+			this.domElement.setAttribute('aria-selected', true);
 		}
 	};
 
@@ -29183,6 +29199,7 @@ function Dot(id) {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__UNTOUCHED;
 			this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 
@@ -29190,6 +29207,7 @@ function Dot(id) {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__PLACED;
 			this.domElement.setProperty('background-color', Consts.DOT_COLOR__PLACED);
+			this.domElement.setAttribute('aria-readonly', true);
 		}
 	};
 
@@ -29207,6 +29225,8 @@ function Dot(id) {
 				this.state = Consts.DOT_STATE__UNTOUCHED;
 				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
 			}
+			this.domElement.setAttribute('aria-readonly', false);
+			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 
@@ -29260,13 +29280,19 @@ var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
-function Figure(id, randomId, x, y) {
+function Figure(id, randomId) {
 	Node.call(this);
 
 	// Center dot.
-	this.setMountPoint(0, 0, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2, 0);
+	this.setMountPoint(0, 0).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
-	this.domElement = new DOMElement(this, {});
+	this.domElement = new DOMElement(this, {
+		tagName: 'h1',
+		classes: ['Figure']
+	});
+
+	this.domElement.setAttribute('role', 'grid');
+	this.domElement.setAttribute('aria-live', 'polite');
 
 	this.id = id;
 	this.randomId = randomId;
@@ -29279,10 +29305,6 @@ function Figure(id, randomId, x, y) {
 	}
 
 	this.position = new Position(this);
-	if (id === 0) {
-		this.position.setX(x - Consts.DOT_SIDE * Consts.DIMENSION / 2, {});
-	}
-	this.position.setY(y - Consts.DOT_SIDE * Consts.DIMENSION, {});
 
 	this.addUIEvent('click');
 }
@@ -29323,7 +29345,15 @@ var DOMElement = famous.domRenderables.DOMElement;
 
 function Game(rows, cols) {
 	Node.call(this);
-	this.domElement = new DOMElement(this, {});
+	this.domElement = new DOMElement(this, {
+		tagName: 'main',
+		classes: ['Game']
+	});
+
+	this.domElement.setAttribute('role', 'grid');
+	this.domElement.setAttribute('aria-multiselectable', true);
+	this.domElement.setAttribute('aria-colcount', Consts.COLUMNS);
+	this.domElement.setAttribute('aria-rowcount', Consts.ROWS);
 
 	var scoreMultiplier = 1;
 	var count = 0;
@@ -29372,35 +29402,27 @@ function Game(rows, cols) {
 		var figure = Consts.FIGURES[uniqueFigureId];
 		for (var cellCounter = 0; cellCounter < 4; cellCounter++) {
 			var cell = figures[index].cells[cellCounter];
-			var _position = cell.position;
-			var _x = _position.getX();
-			var _y = _position.getY();
-			_position.set(_x - (cell.x - figure[cellCounter].x) * Consts.CELL_SIDE, _y - (cell.y - figure[cellCounter].y) * Consts.CELL_SIDE, 0, {
+			var position = cell.position;
+			position.set(figure[cellCounter].x * Consts.CELL_SIDE, figure[cellCounter].y * Consts.CELL_SIDE, 0, {
 				duration: Consts.DURATION,
 				curve: Consts.CURVE
 			});
 			cell.x = figure[cellCounter].x;
 			cell.y = figure[cellCounter].y;
+			cell.domElement.setAttribute('aria-colindex', figure[cellCounter].x);
+			cell.domElement.setAttribute('aria-rowindex', figure[cellCounter].y);
 		}
 		figures[index].randomId = uniqueFigureId;
 	};
 
 	for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
-		var _firstDot = this.dots[0];
-		var _position2 = _firstDot.position;
-		var _x2 = _position2.getX();
-		var _y2 = _position2.getY();
 		var randomId = this.figureIndexGenerate();
-		var figure = new Figure(figureCounter, randomId, _x2, _y2);
+		var figure = new Figure(figureCounter, randomId);
 		this.addChild(figure);
 		this.figures.push(figure);
 	}
 
-	var firstDot = this.dots[0];
-	var position = firstDot.position;
-	var x = position.getX();
-	var y = position.getY();
-	var score = new Score(x, y);
+	var score = new Score();
 	this.addChild(score);
 	this.score = score;
 
@@ -29634,21 +29656,23 @@ function Game(rows, cols) {
 				if (line < Consts.COLUMNS / 2) {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var _position3 = dot.position;
-						_position3.setX(etalon[0], {
+						var position = dot.position;
+						position.setX(etalon[0], {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-colindex', 0);
 						dot.unplace(true);
 					}
 					for (var column = lineHash - 1; column >= 0; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
 							var dot = this.dots[row * Consts.ROWS + order[column]];
-							var _position4 = dot.position;
-							_position4.setX(etalon[column + 1], {
+							var position = dot.position;
+							position.setX(etalon[column + 1], {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-colindex', column + 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -29656,21 +29680,23 @@ function Game(rows, cols) {
 				} else {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var _position5 = dot.position;
-						_position5.setX(etalon[Consts.COLUMNS - 1], {
+						var position = dot.position;
+						position.setX(etalon[Consts.COLUMNS - 1], {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
 						dot.unplace(true);
 					}
 					for (var column = Consts.COLUMNS - 1; column > lineHash; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
 							var dot = this.dots[row * Consts.ROWS + order[column]];
-							var _position6 = dot.position;
-							_position6.setX(etalon[column - 1], {
+							var position = dot.position;
+							position.setX(etalon[column - 1], {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-colindex', column - 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -29684,21 +29710,23 @@ function Game(rows, cols) {
 				if (line < Consts.ROWS / 2) {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var _position7 = dot.position;
-						_position7.setY(etalon[0], {
+						var position = dot.position;
+						position.setY(etalon[0], {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-rowindex', 0);
 						dot.unplace(true);
 					}
 					for (var row = lineHash - 1; row >= 0; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
 							var dot = this.dots[order[row] * Consts.COLUMNS + column];
-							var _position8 = dot.position;
-							_position8.setY(etalon[row + 1], {
+							var position = dot.position;
+							position.setY(etalon[row + 1], {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-rowindex', row + 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -29706,21 +29734,23 @@ function Game(rows, cols) {
 				} else {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var _position9 = dot.position;
-						_position9.setY(etalon[Consts.ROWS - 1], {
+						var position = dot.position;
+						position.setY(etalon[Consts.ROWS - 1], {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
 						dot.unplace(true);
 					}
 					for (var row = Consts.ROWS - 1; row > lineHash; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
 							var dot = this.dots[order[row] * Consts.COLUMNS + column];
-							var _position10 = dot.position;
-							_position10.setY(etalon[row - 1], {
+							var position = dot.position;
+							position.setY(etalon[row - 1], {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-rowindex', row - 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -29758,10 +29788,10 @@ function Game(rows, cols) {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						var rotation = dot.rotation;
-						var _x3 = rotation.getX();
-						var _y3 = rotation.getY();
+						var x = rotation.getX();
+						var y = rotation.getY();
 						var inc = 2 * Math.PI;
-						rotation.set(_x3 + inc, _y3 + inc, 0, {
+						rotation.set(x + inc, y + inc, 0, {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
@@ -29771,10 +29801,10 @@ function Game(rows, cols) {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
 						var rotation = dot.rotation;
-						var _x4 = rotation.getX();
-						var _y4 = rotation.getY();
+						var x = rotation.getX();
+						var y = rotation.getY();
 						var inc = 2 * Math.PI;
-						rotation.set(_x4 + inc, _y4 + inc, 0, {
+						rotation.set(x + inc, y + inc, 0, {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
@@ -29790,10 +29820,10 @@ function Game(rows, cols) {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						var rotation = dot.rotation;
-						var _x5 = rotation.getX();
-						var _y5 = rotation.getY();
+						var x = rotation.getX();
+						var y = rotation.getY();
 						var inc = 2 * Math.PI;
-						rotation.set(_x5 + inc, _y5 + inc, 0, {
+						rotation.set(x + inc, y + inc, 0, {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
@@ -29803,10 +29833,10 @@ function Game(rows, cols) {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
 						var rotation = dot.rotation;
-						var _x6 = rotation.getX();
-						var _y6 = rotation.getY();
+						var x = rotation.getX();
+						var y = rotation.getY();
 						var inc = 2 * Math.PI;
-						rotation.set(_x6 + inc, _y6 + inc, 0, {
+						rotation.set(x + inc, y + inc, 0, {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
@@ -29854,7 +29884,7 @@ function Game(rows, cols) {
 				}
 			}
 		}
-		console.log('Game over');
+		alert('Game over');
 		return true;
 	};
 
@@ -29910,6 +29940,26 @@ function Layout(node) {
 	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
 	this.duration = [0.5 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 0.5 * Consts.DURATION];
 
+	var width = document.body.clientWidth;
+	var height = document.body.clientHeight;
+	for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
+		var figure = this.node.figures[figureCounter];
+		var _position = figure.position;
+		if (width > height) {
+			_position.set(-Consts.ROWS * Consts.DOT_SIDE, (figureCounter - 1) * Consts.ROWS * Consts.DOT_SIDE / 2);
+		} else {
+			_position.set(-figureCounter * Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE);
+		}
+	}
+
+	var score = this.node.score;
+	var position = score.position;
+	if (width > height) {
+		position.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
+	} else {
+		position.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
+	}
+
 	this.next();
 }
 
@@ -29956,26 +30006,26 @@ var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
-function Score(x, y) {
+function Score() {
 	Node.call(this);
 
 	// Center dot.
 	this.setMountPoint(0, 0, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
 
-	//	let score = new Score(0);
-	//	this.addChild(score);
-	//	this.score = score;
-
 	this.score = 0;
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
+		classes: ['Scores'],
 		properties: {
 			color: '#fff',
 			fontSize: '32px'
 		},
 		content: 'Score: <var class="Score">' + this.score + '</var>'
 	});
+
+	this.domElement.setAttribute('role', 'log');
+	this.domElement.setAttribute('aria-live', 'polite');
 
 	this.scoreSetContent = function scoreSetContent(value) {
 		this.domElement.setContent('Score: <var class="Score">' + value + '</var>');
@@ -29997,8 +30047,6 @@ function Score(x, y) {
 	};
 
 	this.position = new Position(this);
-	this.position.setX(x - Consts.DOT_SIDE * Consts.DIMENSION / 2, {});
-	this.position.setY(y - Consts.DOT_SIDE * Consts.DIMENSION / -2, {});
 }
 
 Score.prototype = Object.create(Node.prototype);
@@ -30036,6 +30084,234 @@ if (!Array.prototype.initialize) {
 			arr.push(i);
 		}
 		return arr;
+	};
+}
+if (!Array.prototype.every) {
+	Array.prototype.every = function (callbackfn, thisArg) {
+		'use strict';
+		var T, k;
+
+		if (this == null) {
+			throw new TypeError('this is null or not defined');
+		}
+
+		// 1. Let O be the result of calling ToObject passing the this
+		//    value as the argument.
+		var O = Object(this);
+
+		// 2. Let lenValue be the result of calling the Get internal method
+		//    of O with the argument "length".
+		// 3. Let len be ToUint32(lenValue).
+		var len = O.length >>> 0;
+
+		// 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+		if (typeof callbackfn !== 'function') {
+			throw new TypeError();
+		}
+
+		// 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
+		if (arguments.length > 1) {
+			T = thisArg;
+		}
+
+		// 6. Let k be 0.
+		k = 0;
+
+		// 7. Repeat, while k < len
+		while (k < len) {
+
+			var kValue;
+
+			// a. Let Pk be ToString(k).
+			//   This is implicit for LHS operands of the in operator
+			// b. Let kPresent be the result of calling the HasProperty internal
+			//    method of O with argument Pk.
+			//   This step can be combined with c
+			// c. If kPresent is true, then
+			if (k in O) {
+
+				// i. Let kValue be the result of calling the Get internal method
+				//    of O with argument Pk.
+				kValue = O[k];
+
+				// ii. Let testResult be the result of calling the Call internal method
+				//     of callbackfn with T as the this value and argument list
+				//     containing kValue, k, and O.
+				var testResult = callbackfn.call(T, kValue, k, O);
+
+				// iii. If ToBoolean(testResult) is false, return false.
+				if (!testResult) {
+					return false;
+				}
+			}
+			k++;
+		}
+		return true;
+	};
+}
+if (!Array.prototype.filter) {
+	Array.prototype.filter = function (fun /*, thisArg*/) {
+		'use strict';
+
+		if (this === void 0 || this === null) {
+			throw new TypeError();
+		}
+
+		var t = Object(this);
+		var len = t.length >>> 0;
+		if (typeof fun !== 'function') {
+			throw new TypeError();
+		}
+
+		var res = [];
+		var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+		for (var i = 0; i < len; i++) {
+			if (i in t) {
+				var val = t[i];
+
+				// NOTE: Technically this should Object.defineProperty at
+				//       the next index, as push can be affected by
+				//       properties on Object.prototype and Array.prototype.
+				//       But that method's new, and collisions should be
+				//       rare, so use the more-compatible alternative.
+				if (fun.call(thisArg, val, i, t)) {
+					res.push(val);
+				}
+			}
+		}
+
+		return res;
+	};
+}
+if (!Array.prototype.find) {
+	Array.prototype.find = function (predicate) {
+		if (this === null) {
+			throw new TypeError('Array.prototype.find called on null or undefined');
+		}
+		if (typeof predicate !== 'function') {
+			throw new TypeError('predicate must be a function');
+		}
+		var list = Object(this);
+		var length = list.length >>> 0;
+		var thisArg = arguments[1];
+		var value;
+
+		for (var i = 0; i < length; i++) {
+			value = list[i];
+			if (predicate.call(thisArg, value, i, list)) {
+				return value;
+			}
+		}
+		return undefined;
+	};
+}
+if (!Array.prototype.findIndex) {
+	Array.prototype.findIndex = function (predicate) {
+		if (this === null) {
+			throw new TypeError('Array.prototype.findIndex called on null or undefined');
+		}
+		if (typeof predicate !== 'function') {
+			throw new TypeError('predicate must be a function');
+		}
+		var list = Object(this);
+		var length = list.length >>> 0;
+		var thisArg = arguments[1];
+		var value;
+
+		for (var i = 0; i < length; i++) {
+			value = list[i];
+			if (predicate.call(thisArg, value, i, list)) {
+				return i;
+			}
+		}
+		return -1;
+	};
+}
+// Production steps of ECMA-262, Edition 5, 15.4.4.18
+// Reference: http://es5.github.io/#x15.4.4.18
+if (!Array.prototype.forEach) {
+
+	Array.prototype.forEach = function (callback, thisArg) {
+
+		var T, k;
+
+		if (this == null) {
+			throw new TypeError(' this is null or not defined');
+		}
+
+		// 1. Let O be the result of calling ToObject passing the |this| value as the argument.
+		var O = Object(this);
+
+		// 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
+		// 3. Let len be ToUint32(lenValue).
+		var len = O.length >>> 0;
+
+		// 4. If IsCallable(callback) is false, throw a TypeError exception.
+		// See: http://es5.github.com/#x9.11
+		if (typeof callback !== "function") {
+			throw new TypeError(callback + ' is not a function');
+		}
+
+		// 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
+		if (arguments.length > 1) {
+			T = thisArg;
+		}
+
+		// 6. Let k be 0
+		k = 0;
+
+		// 7. Repeat, while k < len
+		while (k < len) {
+
+			var kValue;
+
+			// a. Let Pk be ToString(k).
+			//   This is implicit for LHS operands of the in operator
+			// b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
+			//   This step can be combined with c
+			// c. If kPresent is true, then
+			if (k in O) {
+
+				// i. Let kValue be the result of calling the Get internal method of O with argument Pk.
+				kValue = O[k];
+
+				// ii. Call the Call internal method of callback with T as the this value and
+				// argument list containing kValue, k, and O.
+				callback.call(T, kValue, k, O);
+			}
+			// d. Increase k by 1.
+			k++;
+		}
+		// 8. return undefined
+	};
+}
+if (!Array.prototype.includes) {
+	Array.prototype.includes = function (searchElement /*, fromIndex*/) {
+		'use strict';
+		var O = Object(this);
+		var len = parseInt(O.length) || 0;
+		if (len === 0) {
+			return false;
+		}
+		var n = parseInt(arguments[1]) || 0;
+		var k;
+		if (n >= 0) {
+			k = n;
+		} else {
+			k = len + n;
+			if (k < 0) {
+				k = 0;
+			}
+		}
+		var currentElement;
+		while (k < len) {
+			currentElement = O[k];
+			if (searchElement === currentElement || searchElement !== searchElement && currentElement !== currentElement) {
+				return true;
+			}
+			k++;
+		}
+		return false;
 	};
 }
 Array.prototype.max = function () {
