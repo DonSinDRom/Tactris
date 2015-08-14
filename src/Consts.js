@@ -8,7 +8,7 @@ const Consts = {
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
-	CELL_SIZE: 21,
+	CELL_RATIO: 0.75,
 	CELL_MARGIN: 1,
 
 	DIMENSION: 12,
@@ -398,7 +398,7 @@ const Consts = {
 
 	SCORE__FIGURE: 2,
 	SCORE__LINE: 10,
-	SCORE__SURCHARGE: 0.5,
+	SCORE__SURCHARGE: 0.8,
 
 	init: function() {
 		var w = document.body.clientWidth;
@@ -408,8 +408,8 @@ const Consts = {
 		var vmin = w > h ? h : w;
 		if (vmin / this.DIMENSION < this.DOT_SIZE) {
 			this.DOT_SIZE = vmin / this.DIMENSION - this.DOT_MARGIN;
-			this.CELL_SIZE = this.DOT_SIZE * 0.8;
 		}
+		this.CELL_SIZE = this.DOT_SIZE * this.CELL_RATIO;
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN,
 		this.ROWS = this.DIMENSION;
