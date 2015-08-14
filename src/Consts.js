@@ -401,6 +401,15 @@ const Consts = {
 	SCORE__SURCHARGE: 0.5,
 
 	init: function() {
+		var w = document.body.clientWidth;
+		var h = document.body.clientHeight;
+		this.WIDTH = w;
+		this.HEIGHT = h;
+		var vmin = w > h ? h : w;
+		if (vmin / this.DIMENSION < this.DOT_SIZE) {
+			this.DOT_SIZE = vmin / this.DIMENSION - this.DOT_MARGIN;
+			this.CELL_SIZE = this.DOT_SIZE * 0.8;
+		}
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN,
 		this.ROWS = this.DIMENSION;
