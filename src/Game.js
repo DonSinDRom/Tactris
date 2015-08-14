@@ -65,9 +65,7 @@ function Game(rows, cols) {
 		for (let cellCounter = 0; cellCounter < 4; cellCounter++) {
 			let cell = figures[index].cells[cellCounter];
 			let position = cell.position;
-			let x = position.getX();
-			let y = position.getY();
-			position.set(x - (cell.x - figure[cellCounter].x) * Consts.CELL_SIDE, y - (cell.y - figure[cellCounter].y) * Consts.CELL_SIDE, 0, {
+			position.set(figure[cellCounter].x * Consts.CELL_SIDE, figure[cellCounter].y * Consts.CELL_SIDE, 0, {
 				duration: Consts.DURATION,
 				curve: Consts.CURVE
 			});
