@@ -9,6 +9,7 @@ When one or more lines are filled by placed blocks then this line is moving. All
 
 You can generate new figure by clicking on it. But this operation costs 20% of your scores!
 
+## Dimensions:
 > ###[8x8](http://donsindrom.github.io/Grid/8/)
 >> ###[10x10](http://donsindrom.github.io/Grid/10/)
 >>> ###[12x12](http://donsindrom.github.io/Grid/)
