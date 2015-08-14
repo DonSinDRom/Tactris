@@ -18,7 +18,12 @@ function Figure(id, randomId, x, y) {
 		.setSizeMode('absolute', 'absolute')
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
-	this.domElement = new DOMElement(this, {});
+	this.domElement = new DOMElement(this, {
+		tagName: 'h1',
+	});
+
+	this.domElement.setAttribute('role', 'grid');
+	this.domElement.setAttribute('aria-live', 'polite');
 
 	this.id = id;
 	this.randomId = randomId;

@@ -23,6 +23,12 @@ function Cell(id, x, y) {
 		}
 	});
 
+	this.domElement.setAttribute('role', 'gridcell');
+	this.domElement.setAttribute('aria-readonly', true);
+	this.domElement.setAttribute('aria-live', 'polite');
+	this.domElement.setAttribute('aria-rowindex', y);
+	this.domElement.setAttribute('aria-colindex', x);
+
 	this.id = id;
 	this.x = x;
 	this.y = y;

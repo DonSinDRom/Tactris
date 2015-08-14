@@ -25,12 +25,16 @@ function Score(x, y) {
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
+		classes: ['Scores'],
 		properties: {
 			color: '#fff',
 			fontSize: '32px'
 		},
 		content: 'Score: <var class="Score">' + this.score + '</var>'
 	});
+
+	this.domElement.setAttribute('role', 'log');
+	this.domElement.setAttribute('aria-live', 'polite');
 
 	this.scoreSetContent = function scoreSetContent(value) {
 		this.domElement.setContent('Score: <var class="Score">' + value + '</var>');

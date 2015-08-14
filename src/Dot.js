@@ -27,6 +27,12 @@ function Dot(id) {
 		classes: ['Dot']
 	});
 
+	this.domElement.setAttribute('role', 'gridcell');
+	this.domElement.setAttribute('aria-selected', false);
+	this.domElement.setAttribute('aria-live', 'polite');
+	this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / Consts.ROWS));
+	this.domElement.setAttribute('aria-colindex', id % Consts.COLUMNS);
+
 	this.id = id;
 	this.state = Consts.DOT_STATE__UNTOUCHED;
 
@@ -34,6 +40,7 @@ function Dot(id) {
 		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
 			this.state = Consts.DOT_STATE__HOVERED;
 			this.domElement.setProperty('background-color', Consts.DOT_COLOR__HOVERED);
+			this.domElement.setAttribute('aria-selected', true);
 		}
 	};
 
@@ -41,6 +48,7 @@ function Dot(id) {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__UNTOUCHED;
 			this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 
@@ -48,6 +56,7 @@ function Dot(id) {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__PLACED;
 			this.domElement.setProperty('background-color', Consts.DOT_COLOR__PLACED);
+			this.domElement.setAttribute('aria-readonly', true);
 		}
 	};
 
@@ -65,6 +74,8 @@ function Dot(id) {
 				this.state = Consts.DOT_STATE__UNTOUCHED;
 				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
 			}
+			this.domElement.setAttribute('aria-readonly', false);
+			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
 

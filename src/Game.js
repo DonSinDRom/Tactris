@@ -17,6 +17,11 @@ function Game(rows, cols) {
 	Node.call(this);
 	this.domElement = new DOMElement(this, {});
 
+	this.domElement.setAttribute('role', 'grid');
+	this.domElement.setAttribute('aria-multiselectable', true);
+	this.domElement.setAttribute('aria-colcount', Consts.COLUMNS);
+	this.domElement.setAttribute('aria-rowcount', Consts.ROWS);
+
 	var scoreMultiplier = 1;
 	var count = 0;
 	this.dots = [];
@@ -65,6 +70,8 @@ function Game(rows, cols) {
 			});
 			cell.x = figure[cellCounter].x;
 			cell.y = figure[cellCounter].y;
+			cell.domElement.setAttribute('aria-colindex', figure[cellCounter].x);
+			cell.domElement.setAttribute('aria-rowindex', figure[cellCounter].y);
 		}
 		figures[index].randomId = uniqueFigureId;
 	};
@@ -301,6 +308,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-colindex', 0);
 						dot.unplace(true);
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
@@ -311,6 +319,7 @@ function Game(rows, cols) {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-colindex', column + 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -323,6 +332,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
 						dot.unplace(true);
 					}
 					for (let column = Consts.COLUMNS - 1; column > lineHash; column--) {
@@ -333,6 +343,7 @@ function Game(rows, cols) {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-colindex', column - 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -351,6 +362,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-rowindex', 0);
 						dot.unplace(true);
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
@@ -361,6 +373,7 @@ function Game(rows, cols) {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-rowindex', row + 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -373,6 +386,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
+						dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
 						dot.unplace(true);
 					}
 					for (let row = Consts.ROWS - 1; row > lineHash; row--) {
@@ -383,6 +397,7 @@ function Game(rows, cols) {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
+							dot.domElement.setAttribute('aria-rowindex', row - 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
