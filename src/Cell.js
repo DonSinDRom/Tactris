@@ -33,13 +33,6 @@ function Cell(id, x, y) {
 	this.x = x;
 	this.y = y;
 
-	this.generate = function generate() {
-		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
-			this.state = Consts.DOT_STATE__HOVERED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__HOVERED);
-		}
-	};
-
 	this.state = Consts.DOT_STATE__UNTOUCHED;
 	this.position = new Position(this);
 	this.position.setX(x * Consts.CELL_SIDE, {});
