@@ -8,7 +8,7 @@ const Consts = {
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
-	CELL_RATIO: 0.75,
+	CELL_RATIO: 0.8,
 	CELL_MARGIN: 1,
 
 	DIMENSION: 12,
@@ -397,7 +397,6 @@ const Consts = {
 	DOT_DURATION__ROTATION: 800,
 
 	SCORE__FIGURE: 2,
-	SCORE__LINE: 10,
 	SCORE__SURCHARGE: 0.8,
 
 	init: function() {
@@ -414,6 +413,8 @@ const Consts = {
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN,
 		this.ROWS = this.DIMENSION;
 		this.COLUMNS = this.DIMENSION;
+
+		this.SCORE__LINE = this.DIMENSION;
 		return this;
 	}
 
