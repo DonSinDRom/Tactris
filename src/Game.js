@@ -102,12 +102,25 @@ function Game(rows, cols) {
 		this.score.scoreSurcharge();
 	};
 
+	this.figureSet = function figureSet(figure) {
+		let dots = this.dots;
+		let hovers = this.hoverDots;
+
+		for (let hover = 0; hover < 4; hover++) {
+			dots[hovers[hover]].place();
+		}
+		this.hoverDots = [];
+		this.scoreInc(Consts.SCORE__FIGURE);
+		this.figureUpdate(figure);
+		this.linesCheck();
+		this.isGameEnded();
+	};
+
 	this.figureCheck = function figureCheck() {
 		let hovers = this.hoverDots;
 
 		if (hovers.length === 4) {
 			let figures = this.figures;
-			let dots = this.dots;
 			let rows = this.orderRows;
 			let columns = this.orderColumns;
 
@@ -148,14 +161,7 @@ function Game(rows, cols) {
 			for (var figure = 0; figure < Consts.FIGURESCOUNT; figure++) {
 				let f = figures[figure].cells;
 				if (f.every(function(element, index) { return element.x === data[index].x && element.y === data[index].y; })) {
-					for (let hover = 0; hover < 4; hover++) {
-						dots[hovers[hover]].place();
-					}
-					this.hoverDots = [];
-					this.scoreInc(Consts.SCORE__FIGURE);
-					this.figureUpdate(figure);
-					this.linesCheck();
-					this.isGameEnded();
+					this.figureSet(figure);
 					figure = Consts.FIGURESCOUNT;
 				}
 			}
@@ -269,6 +275,11 @@ function Game(rows, cols) {
 		}
 
 		scoreMultiplier = 1;
+		if (filledRows.length > 0 || filledColumns.length > 0) {
+			return true;
+		} else {
+			return false;
+		}
 	};/*jshint +W074 */
 
 	/**
@@ -494,6 +505,8 @@ function Game(rows, cols) {
 	 */
 	this.isGameEnded = function isGameEnded() {
 		let figures = this.figures;
+		let orderRows = this.orderRows;
+		let orderColumns = this.orderColumns;
 		let dots = this.dots;
 		let figuresCollection = [];
 		for (let figureCounter = 0, fL = figures.length; figureCounter < fL; figureCounter++) {
@@ -504,28 +517,40 @@ function Game(rows, cols) {
 			}
 			figuresCollection.push(figureContainer);
 		}
-		for (let figureCounter = 0, fL = figuresCollection.length; figureCounter < fL; figureCounter++) {
-			var curent = figuresCollection[figureCounter];
-			for (let dotCounter = 0, dL = dots.length; dotCounter < dL; dotCounter++ ) {
-				var counter = 0;
-				var tx = Number.parseInt(dotCounter / Consts.ROWS);
-				var ty = parseInt(dotCounter % Consts.COLUMNS);
-				for (let figureCell = 0, cL = curent.length; figureCell < cL; figureCell++) {
-					let cx = curent[figureCell].y;
-					let cy = curent[figureCell].x;
-					if (cx + tx < Consts.COLUMNS && cy + ty < Consts.ROWS) {
-						if (dots[(cx + tx) * Consts.DIMENSION + cy + ty].state !== Consts.DOT_STATE__PLACED) {
-							counter++;
-						}
+		for (let y = 0, yL = Consts.ROWS; y < yL; y++) {
+			for (let x = 0, xL = Consts.COLUMNS; x < xL; x++) {
+				let canPlaceFigure = figuresCollection.some(function(element, index) {
+					let figure = element;
+					let column = orderColumns[x];
+					let row = orderRows[y];
+					let xs = figure.map(function (element) { return element.x; });
+					let ys = figure.map(function (element) { return element.y; });
+					let dx = xs.max() - xs.min() + 1;
+					let dy = ys.max() - ys.min() + 1;
+					//let select = [];
+					if (row + dy > Consts.ROWS || column + dx > Consts.COLUMNS) {
+						return false;
+					} else {
+						let _canPlaceFigure = figure.every(function(element, index) {
+							let id = (orderRows[row + element.y]) * Consts.ROWS + (orderColumns[column + element.x]);
+							if (dots[id].state !== Consts.DOT_STATE__PLACED) {
+								//select.push(id);
+								return true;
+							} else {
+								return false;
+							}
+						});
+						//console.log(select);
+						return _canPlaceFigure;
 					}
-				}
-				if (counter === 4) {
-					return false;
+				});
+				if (canPlaceFigure === true) {
+					return canPlaceFigure;
 				}
 			}
 		}
 		alert('Game over');
-		return true;
+		return false;
 	};
 
 	var hoverId;
