@@ -1,4 +1,4 @@
-#Grid
+#Tactris
 
 ## Tactris Rules
 ![Screenshot of Tactris](https://hsto.org/files/0db/03b/1fc/0db03b1fc15c410f96cd29d1af16eecb.png)
@@ -10,10 +10,10 @@ When one or more lines are filled by placed blocks then this line is moving. All
 You can generate new figure by clicking on it. But this operation costs 20% of your scores!
 
 ## Dimensions:
-> ###[8x8](http://donsindrom.github.io/Grid/8/)
->> ###[10x10](http://donsindrom.github.io/Grid/10/)
->>> ###[12x12](http://donsindrom.github.io/Grid/)
->>>> ###[14x14](http://donsindrom.github.io/Grid/14/)
->>>>> ###[16x16](http://donsindrom.github.io/Grid/16/)
->>>>>> ###[18x18](http://donsindrom.github.io/Grid/18/)
->>>>>>> ###[20x20](http://donsindrom.github.io/Grid/20/)
+> ###[8x8](http://donsindrom.github.io/Tactris/8/)
+>> ###[10x10](http://donsindrom.github.io/Tactris/10/)
+>>> ###[12x12](http://donsindrom.github.io/Tactris/)
+>>>> ###[14x14](http://donsindrom.github.io/Tactris/14/)
+>>>>> ###[16x16](http://donsindrom.github.io/Tactris/16/)
+>>>>>> ###[18x18](http://donsindrom.github.io/Tactris/18/)
+>>>>>>> ###[20x20](http://donsindrom.github.io/Tactris/20/)
