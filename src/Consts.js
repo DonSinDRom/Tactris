@@ -386,9 +386,11 @@ const Consts = {
 	DOT_STATE__PLACED: -1,
 
 	//'#7ac74f' '#a1cf6b' '#d5d887' '#e0c879' '#e87461'
-	DOT_COLOR__HOVERED: 'linear-gradient(45deg, #ed9986 0%, #ed9986 51%, #e87461 51%, #e87461 100%)',
+	//#d5d887 + rgba(0,0,0,.2) = #ABAD6C
+	//#e87461 + rgba(0,0,0,.2) = #BA5D4E
+	DOT_COLOR__HOVERED: 'linear-gradient(45deg, #333 0%, #333 25%, #e87461 25%, #e87461 100%)',
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
-	DOT_COLOR__PLACED: 'linear-gradient(135deg, #d5d887 0%, #d5d887 51%, #F4822B 51%, #F4822B 100%)',
+	DOT_COLOR__PLACED: 'linear-gradient(135deg, #d5d887 0%, #d5d887 75%, #333 75%, #333 100%)',
 
 	DOT_CURVE__POSITION: 'inOutElastic',
 	DOT_DURATION__POSITION: 800,
