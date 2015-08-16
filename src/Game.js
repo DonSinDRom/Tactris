@@ -273,11 +273,6 @@ function Game(rows, cols) {
 		}
 
 		scoreMultiplier = 1;
-		if (filledRows.length > 0 || filledColumns.length > 0) {
-			return true;
-		} else {
-			return false;
-		}
 	};/*jshint +W074 */
 
 	/**
