@@ -66,15 +66,15 @@ function Dot(id) {
 		}
 	};
 
-	this.unplace = function unplace(delay) {
-		var delay = delay || false;
+	this.unplace = function unplace(delayArg) {
+		var delay = delayArg || false;
 		var self = this;
 		if (this.state === Consts.DOT_STATE__PLACED) {
 			if (delay) {
 				var clock = FamousEngine.getClock();
 				clock.setTimeout(function() {
 					self.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
-				}, Consts.DURATION);
+				}, Consts.DURATION * delayArg);
 			} else {
 				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
 			}

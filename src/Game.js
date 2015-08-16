@@ -313,7 +313,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-colindex', 0);
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
 						for (let row = 0; row < Consts.ROWS; row++) {
@@ -337,7 +337,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 					for (let column = Consts.COLUMNS - 1; column > lineHash; column--) {
 						for (let row = 0; row < Consts.ROWS; row++) {
@@ -367,7 +367,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-rowindex', 0);
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -391,7 +391,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 					for (let row = Consts.ROWS - 1; row > lineHash; row--) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -446,7 +446,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				} else {
 					for (let row = 0; row < Consts.ROWS; row++) {
@@ -459,7 +459,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				}
 				break;
@@ -478,7 +478,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				} else {
 					for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -491,7 +491,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				}
 				break;
