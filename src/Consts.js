@@ -388,7 +388,7 @@ const Consts = {
 	//'#7ac74f' '#a1cf6b' '#d5d887' '#e0c879' '#e87461'
 	DOT_COLOR__HOVERED: '#e87461',
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
-	DOT_COLOR__PLACED: '#e0c879',
+	DOT_COLOR__PLACED: 'linear-gradient(135deg, #d5d887 0%, #d5d887 51%, #F4822B 51%, #F4822B 100%)',
 
 	DOT_CURVE__POSITION: 'inOutElastic',
 	DOT_DURATION__POSITION: 800,

@@ -39,7 +39,7 @@ function Dot(id) {
 	this.hover = function hover() {
 		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
 			this.state = Consts.DOT_STATE__HOVERED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__HOVERED);
+			this.domElement.setProperty('background', Consts.DOT_COLOR__HOVERED);
 			this.domElement.setAttribute('aria-selected', true);
 		}
 	};
@@ -47,7 +47,7 @@ function Dot(id) {
 	this.unhover = function unhover() {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__UNTOUCHED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
 			this.domElement.setAttribute('aria-selected', false);
 		}
 	};
@@ -55,7 +55,7 @@ function Dot(id) {
 	this.place = function place() {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__PLACED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__PLACED);
+			this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
 			this.domElement.setAttribute('aria-readonly', true);
 		}
 	};
@@ -67,10 +67,10 @@ function Dot(id) {
 			if (delay) {
 				var clock = FamousEngine.getClock();
 				clock.setTimeout(function() {
-					self.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+					self.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
 				}, Consts.DURATION * delayArg);
 			} else {
-				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+				this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
 			}
 			this.state = Consts.DOT_STATE__UNTOUCHED;
 			this.domElement.setAttribute('aria-readonly', false);
