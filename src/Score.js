@@ -12,10 +12,10 @@ function Score() {
 
 	// Center dot.
 	this
-		.setMountPoint(0, 0, 0)
-		.setAlign(0.5, 0.5, 0)
-		.setSizeMode('absolute', 'absolute', 'absolute')
-		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
+		.setMountPoint(0, 0)
+		.setAlign(0.5, 0.5)
+		.setSizeMode('absolute', 'absolute')
+		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
 	this.score = 0;
 
