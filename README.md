@@ -17,3 +17,16 @@ You can generate new figure by clicking on it. But this operation costs 20% of y
 >>>>> ###[16x16](http://donsindrom.github.io/Tactris/16/)
 >>>>>> ###[18x18](http://donsindrom.github.io/Tactris/18/)
 >>>>>>> ###[20x20](http://donsindrom.github.io/Tactris/20/)
+
+### Credits
+
+Thanks to [birdlab](https://github.com/birdlab).
+
+
+### License
+
+Note that Tactris is distributed under the [MIT License](http://opensource.org/licenses/MIT).
+
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/DonSinDRom/Tactris/master/LICENSE)
+
+Tactris will be free forever! Enjoy (:
