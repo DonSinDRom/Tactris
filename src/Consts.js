@@ -8,7 +8,7 @@ const Consts = {
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
-	CELL_RATIO: 0.8,
+	CELL_RATIO: 0.6,
 	CELL_MARGIN: 1,
 
 	DIMENSION: 12,
