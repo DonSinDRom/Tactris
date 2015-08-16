@@ -60,12 +60,6 @@ function Dot(id) {
 		}
 	};
 
-	this.select = function select() {
-		if (this.state !== Consts.DOT_STATE__PLACED) {
-			this.domElement.setProperty('background-color', '#ccddee');
-		}
-	};
-
 	this.unplace = function unplace(delayArg) {
 		var delay = delayArg || false;
 		var self = this;

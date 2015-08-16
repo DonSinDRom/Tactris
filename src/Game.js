@@ -232,12 +232,10 @@ function Game(rows, cols) {
 			let row = dots.filter((element) => Number.parseInt(element.id / Consts.ROWS) === line && element.state === Consts.DOT_STATE__PLACED);
 			let column = dots.filter((element) => element.id % Consts.COLUMNS === line && element.state === Consts.DOT_STATE__PLACED);
 			if (row.length === Consts.ROWS) {
-				console.log('Filled row: ', line);
 				filledRows.push(line);
 			}
 			if (column.length === Consts.COLUMNS) {
 				filledColumns.push(line);
-				console.log('Filled column: ', line);
 			}
 		}
 		filledRows.sort(function (x, y) {
@@ -288,7 +286,6 @@ function Game(rows, cols) {
 	 */
 	/*jshint -W071, -W074 */
 	this.lineMove = function lineMove(line, direction) {
-		console.log('lineMove', line, direction);
 		this.scoreInc(Consts.SCORE__LINE);
 
 		let orderRows = this.orderRows;
@@ -419,7 +416,6 @@ function Game(rows, cols) {
 	 */
 	/*jshint -W071, -W074 */
 	this.lineRotate = function lineRotate(line, direction) {
-		console.log('lineRotate', line, direction);
 		this.scoreInc(Consts.SCORE__LINE);
 
 		let orderRows = this.orderRows;
@@ -527,25 +523,21 @@ function Game(rows, cols) {
 					let ys = figure.map(function (element) { return element.y; });
 					let dx = xs.max() - xs.min() + 1;
 					let dy = ys.max() - ys.min() + 1;
-					//let select = [];
 					if (row + dy > Consts.ROWS || column + dx > Consts.COLUMNS) {
 						return false;
 					} else {
-						let _canPlaceFigure = figure.every(function(element, index) {
+						return figure.every(function(element, index) {
 							let id = (orderRows[row + element.y]) * Consts.ROWS + (orderColumns[column + element.x]);
 							if (dots[id].state !== Consts.DOT_STATE__PLACED) {
-								//select.push(id);
 								return true;
 							} else {
 								return false;
 							}
 						});
-						//console.log(select);
-						return _canPlaceFigure;
 					}
 				});
 				if (canPlaceFigure === true) {
-					return canPlaceFigure;
+					return true;
 				}
 			}
 		}
