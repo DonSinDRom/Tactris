@@ -111,9 +111,9 @@ function Game(rows, cols) {
 		}
 		this.hoverDots = [];
 		this.scoreInc(Consts.SCORE__FIGURE);
-		this.figureUpdate(figure);
 		this.linesCheck();
-		this.isGameEnded();
+		this.figureUpdate(figure);
+		setTimeout(this.isGameEnded(), 10);
 	};
 
 	this.figureCheck = function figureCheck() {

@@ -60,6 +60,12 @@ function Dot(id) {
 		}
 	};
 
+	this.select = function select() {
+		if (this.state !== Consts.DOT_STATE__PLACED) {
+			this.domElement.setProperty('background-color', '#ccddee');
+		}
+	};
+
 	this.unplace = function unplace(delay) {
 		var delay = delay || false;
 		var self = this;
@@ -67,13 +73,12 @@ function Dot(id) {
 			if (delay) {
 				var clock = FamousEngine.getClock();
 				clock.setTimeout(function() {
-					self.state = Consts.DOT_STATE__UNTOUCHED;
 					self.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
 				}, Consts.DURATION);
 			} else {
-				this.state = Consts.DOT_STATE__UNTOUCHED;
 				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
 			}
+			this.state = Consts.DOT_STATE__UNTOUCHED;
 			this.domElement.setAttribute('aria-readonly', false);
 			this.domElement.setAttribute('aria-selected', false);
 		}
