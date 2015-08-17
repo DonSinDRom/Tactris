@@ -28,12 +28,20 @@ function Game(rows, cols) {
 	var scoreMultiplier = 1;
 	var count = 0;
 	this.dots = [];
+	let _dots = [];
+	let dots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
 	for (let row = 0; row < rows; row++) {
 		for (let col = 0; col < cols; col++) {
 			let dot = new Dot(count++);
 			this.addChild(dot);
 			this.dots.push(dot);
+			if (dots.length === 0) {
+				_dots.push(Consts.DOT_STATE__UNTOUCHED);
+			}
 		}
+	}
+	if (dots.length === 0) {
+		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_dots));
 	}
 
 	this.figures = [];
@@ -75,13 +83,30 @@ function Game(rows, cols) {
 			cell.domElement.setAttribute('aria-rowindex', figure[cellCounter].y);
 		}
 		figures[index].randomId = uniqueFigureId;
+		let _figures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
+		_figures[index] = uniqueFigureId;
+		if (_figures.length !== 0) {
+			localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_figures));
+		}
 	};
 
+	let _figures = [];
+	let figures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
 	for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
-		let randomId = this.figureIndexGenerate();
-		let figure = new Figure(figureCounter, randomId);
-		this.addChild(figure);
-		this.figures.push(figure);
+		if (figures.length === 0) {
+			let randomId = this.figureIndexGenerate();
+			let figure = new Figure(figureCounter, randomId);
+			this.addChild(figure);
+			this.figures.push(figure);
+			_figures.push(randomId);
+		} else {
+			let figure = new Figure(figureCounter, figures[figureCounter]);
+			this.addChild(figure);
+			this.figures.push(figure);
+		}
+	}
+	if (figures.length === 0) {
+		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_figures));
 	}
 
 	let score = new Score();
@@ -104,12 +129,12 @@ function Game(rows, cols) {
 
 	this.figureSet = function figureSet(figure) {
 		let dots = this.dots;
-		let hovers = this.hoverDots;
+		let hovers = this.dotHovers;
 
 		for (let hover = 0; hover < 4; hover++) {
 			dots[hovers[hover]].place();
 		}
-		this.hoverDots = [];
+		this.dotHovers = [];
 		this.scoreInc(Consts.SCORE__FIGURE);
 		this.linesCheck();
 		this.figureUpdate(figure);
@@ -117,7 +142,7 @@ function Game(rows, cols) {
 	};
 
 	this.figureCheck = function figureCheck() {
-		let hovers = this.hoverDots;
+		let hovers = this.dotHovers;
 
 		if (hovers.length === 4) {
 			let figures = this.figures;
@@ -181,7 +206,7 @@ function Game(rows, cols) {
 		this.mousing = 0;
 	};
 
-	this.hoverDots = [];
+	this.dotHovers = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dotHovers')) || [];
 
 	/**
 	 * Check dot for hoverability
@@ -190,31 +215,33 @@ function Game(rows, cols) {
 	this.dotHover = function (id) {
 		switch (this.dots[id].state) {
 		case Consts.DOT_STATE__UNTOUCHED:
-				if (this.hoverDots.indexOf(id) < 0) {
-					if (this.hoverDots.length < 4) {
-						this.hoverDots.push(id);
+				if (this.dotHovers.indexOf(id) < 0) {
+					if (this.dotHovers.length < 4) {
+						this.dotHovers.push(id);
 					} else {
-						this.dots[this.hoverDots[0]].unhover();
-						this.hoverDots.shift();
-						this.hoverDots.push(id);
+						this.dots[this.dotHovers[0]].unhover();
+						this.dotHovers.shift();
+						this.dotHovers.push(id);
 					}
 					this.dots[id].hover();
-					if (this.hoverDots.length === 4) {
+					if (this.dotHovers.length === 4) {
 						this.figureCheck();
 					}
+					localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 				}
 				break;
 		case Consts.DOT_STATE__HOVERED:
-				this.hoverDots.splice(this.hoverDots.indexOf(id), 1);
+				this.dotHovers.splice(this.dotHovers.indexOf(id), 1);
 				this.dots[id].unhover();
+				localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 				break;
 		default:
 				return false;
 		}
 	};
 
-	this.orderRows = [].initialize(Consts.ROWS);
-	this.orderColumns = [].initialize(Consts.COLUMNS);
+	this.orderRows = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [].initialize(Consts.ROWS);
+	this.orderColumns = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [].initialize(Consts.COLUMNS);
 	this.etalonRows = [];
 	this.etalonColumns = [];
 
@@ -320,6 +347,7 @@ function Game(rows, cols) {
 					}
 					orderColumns.splice(lineHash, 1);
 					orderColumns.unshift(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
 				} else {
 					for (let row = 0; row < Consts.ROWS; row++) {
 						let dot = this.dots[row * Consts.ROWS + order[lineHash]];
@@ -344,6 +372,7 @@ function Game(rows, cols) {
 					}
 					orderColumns.splice(lineHash, 1);
 					orderColumns.push(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
 				}
 				break;
 		case 'y':
@@ -374,6 +403,7 @@ function Game(rows, cols) {
 					}
 					orderRows.splice(lineHash, 1);
 					orderRows.unshift(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(orderRows));
 				} else {
 					for (let column = 0; column < Consts.COLUMNS; column++) {
 						let dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
@@ -398,6 +428,7 @@ function Game(rows, cols) {
 					}
 					orderRows.splice(lineHash, 1);
 					orderRows.push(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(orderRows));
 				}
 				break;
 		default:
@@ -594,7 +625,7 @@ function Layout(node) {
 	this.id = this.node.addComponent(this);
 	this.current = 0;
 	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
-	this.duration = [0.5 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 0.5 * Consts.DURATION];
+	this.duration = [2 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 2 * Consts.DURATION];
 
 	let width = document.body.clientWidth;
 	let height = document.body.clientHeight;
@@ -620,31 +651,34 @@ function Layout(node) {
 }
 
 Layout.prototype.next = function next() {
+	let orderColumns = this.node.orderColumns;
+	let orderRows = this.node.orderRows;
+
 	if (this.current++ === Consts.ROWS) {
 		this.current = 0;
 	}
 	let duration = this.duration[this.current];
 	let curve = this.curve[this.current];
 	let row = 0;
-	let col = 0;
-	let dimension = Consts.DOT_SIDE;
-	let bounds = [-(((dimension) * Consts.ROWS / 2) - (dimension / 2)), -(((dimension) * Consts.COLUMNS / 2) - (dimension / 2))];
+	let column = 0;
+	let bounds = [Consts.DOT_SIDE * (1 - Consts.ROWS) / 2, Consts.DOT_SIDE * (1 - Consts.COLUMNS) / 2];
+
 	for (let i = 0; i < this.node.dots.length; i++) {
-		let x = bounds[0] + ((dimension) * col++);
-		let y = bounds[1] + ((dimension) * row);
+		let x = bounds[0] + (Consts.DOT_SIDE * column++);
+		let y = bounds[1] + (Consts.DOT_SIDE * row);
 		if (i < Consts.COLUMNS) {
 			this.node.etalonColumns.push(x);
 		}
 		if (i % Consts.ROWS === 0) {
 			this.node.etalonRows.push(y);
 		}
-		let z = 0;
-		this.node.dots[i].position.set(x, y, z, {
+		let id = orderRows[row ] * Consts.COLUMNS + orderColumns[column - 1];
+		this.node.dots[id].position.set(x, y, 0, {
 			duration: i * Consts.ROWS + duration,
 			curve: curve
 		});
-		if (col >= Consts.COLUMNS) {
-			col = 0;
+		if (column >= Consts.COLUMNS) {
+			column = 0;
 			row++;
 		}
 	}

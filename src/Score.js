@@ -17,8 +17,8 @@ function Score() {
 		.setSizeMode('absolute', 'absolute')
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
-	this.score = 0;
-	this.scoreBest = localStorage.getItem('scoreBest__' + Consts.DIMENSION) || 0;
+	this.score = +localStorage.getItem(Consts.DIMENSION + '__score') || 0;;
+	this.scoreBest = +localStorage.getItem(Consts.DIMENSION + '__scoreBest') || 0;
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
@@ -56,7 +56,7 @@ function Score() {
 						${value}
 					</var>
 				</p>`);
-			localStorage.setItem('scoreBest__' + Consts.DIMENSION, value);
+			localStorage.setItem(Consts.DIMENSION + '__scoreBest', value);
 		} else {
 			this.domElement.setContent(`
 				<p class="Score">Score:
@@ -69,7 +69,8 @@ function Score() {
 						${this.scoreBest}
 					</var>
 				</p>`);
-		}
+		};
+		localStorage.setItem(Consts.DIMENSION + '__score', value);
 	}
 
 	this.scoreInc = function scoreInc(inc) {

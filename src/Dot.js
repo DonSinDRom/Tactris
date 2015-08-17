@@ -34,13 +34,44 @@ function Dot(id) {
 	this.domElement.setAttribute('aria-colindex', id % Consts.COLUMNS);
 
 	this.id = id;
-	this.state = Consts.DOT_STATE__UNTOUCHED;
+
+	let dots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
+	if (dots.length > 0) {
+		let _state = dots[id];
+		this.state = _state;
+		switch (_state) {
+		case Consts.DOT_STATE__PLACED:
+				this.state = Consts.DOT_STATE__PLACED;
+				this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
+				this.domElement.setAttribute('aria-readonly', true);
+				this.domElement.setAttribute('aria-selected', true);
+				break;
+		case Consts.DOT_STATE__HOVERED:
+				this.state = Consts.DOT_STATE__HOVERED;
+				this.domElement.setProperty('background', Consts.DOT_COLOR__HOVERED);
+				this.domElement.setAttribute('aria-readonly', false);
+				this.domElement.setAttribute('aria-selected', true);
+				break;
+		case Consts.DOT_STATE__UNTOUCHED:
+		default:
+				this.state = Consts.DOT_STATE__UNTOUCHED;
+				this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
+				this.domElement.setAttribute('aria-readonly', false);
+				this.domElement.setAttribute('aria-selected', false);
+				break;
+		}
+	} else {
+		this.state = Consts.DOT_STATE__UNTOUCHED;
+	}
 
 	this.hover = function hover() {
 		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
 			this.state = Consts.DOT_STATE__HOVERED;
 			this.domElement.setProperty('background', Consts.DOT_COLOR__HOVERED);
 			this.domElement.setAttribute('aria-selected', true);
+			let _dots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_dots[id] = Consts.DOT_STATE__HOVERED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_dots));
 		}
 	};
 
@@ -49,6 +80,9 @@ function Dot(id) {
 			this.state = Consts.DOT_STATE__UNTOUCHED;
 			this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
 			this.domElement.setAttribute('aria-selected', false);
+			let _dots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_dots[id] = Consts.DOT_STATE__UNTOUCHED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_dots));
 		}
 	};
 
@@ -57,6 +91,9 @@ function Dot(id) {
 			this.state = Consts.DOT_STATE__PLACED;
 			this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
 			this.domElement.setAttribute('aria-readonly', true);
+			let _dots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_dots[id] = Consts.DOT_STATE__PLACED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_dots));
 		}
 	};
 
@@ -75,6 +112,9 @@ function Dot(id) {
 			this.state = Consts.DOT_STATE__UNTOUCHED;
 			this.domElement.setAttribute('aria-readonly', false);
 			this.domElement.setAttribute('aria-selected', false);
+			let _dots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_dots[id] = Consts.DOT_STATE__UNTOUCHED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_dots));
 		}
 	};
 
