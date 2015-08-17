@@ -18,6 +18,7 @@ function Score() {
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
 	this.score = 0;
+	this.scoreBest = localStorage.getItem('scoreBest') || 0;
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
@@ -26,14 +27,49 @@ function Score() {
 			color: '#fff',
 			fontSize: '32px'
 		},
-		content: 'Score: <var class="Score">' + this.score + '</var>'
+		content: `
+			<p class="Score">Score:
+				<var class="ScoreValue">
+					${this.score}
+				</var>
+			</p>
+			<p class="Score">Best:
+				<var class="ScoreValue">
+					${this.scoreBest}
+				</var>
+			</p>`
 	});
 
 	this.domElement.setAttribute('role', 'log');
 	this.domElement.setAttribute('aria-live', 'polite');
 
 	this.scoreSetContent = function scoreSetContent(value) {
-		this.domElement.setContent('Score: <var class="Score">' + value + '</var>');
+		if (value >= this.scoreBest) {
+			this.domElement.setContent(`
+				<p class="Score">Score:
+					<var class="ScoreValue">
+						${value}
+					</var>
+				</p>
+				<p class="Score">Best:
+					<var class="ScoreValue">
+						${value}
+					</var>
+				</p>`);
+			localStorage.setItem('scoreBest', value);
+		} else {
+			this.domElement.setContent(`
+				<p class="Score">Score:
+					<var class="ScoreValue">
+						${value}
+					</var>
+				</p>
+				<p class="Score">Best:
+					<var class="ScoreValue">
+						${this.scoreBest}
+					</var>
+				</p>`);
+		}
 	}
 
 	this.scoreInc = function scoreInc(inc) {
