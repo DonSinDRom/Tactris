@@ -28,20 +28,20 @@ function Game(rows, cols) {
 	var scoreMultiplier = 1;
 	var count = 0;
 	this.dots = [];
-	let _dots = [];
-	let dots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
+	let _localStorageDots = [];
+	let localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
 	for (let row = 0; row < rows; row++) {
 		for (let col = 0; col < cols; col++) {
 			let dot = new Dot(count++);
 			this.addChild(dot);
 			this.dots.push(dot);
-			if (dots.length === 0) {
-				_dots.push(Consts.DOT_STATE__UNTOUCHED);
+			if (localStorageDots.length === 0) {
+				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
 			}
 		}
 	}
-	if (dots.length === 0) {
-		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_dots));
+	if (localStorageDots.length === 0) {
+		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 	}
 
 	this.figures = [];
@@ -83,30 +83,30 @@ function Game(rows, cols) {
 			cell.domElement.setAttribute('aria-rowindex', figure[cellCounter].y);
 		}
 		figures[index].randomId = uniqueFigureId;
-		let _figures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
-		_figures[index] = uniqueFigureId;
-		if (_figures.length !== 0) {
-			localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_figures));
+		let _localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
+		_localStorageFigures[index] = uniqueFigureId;
+		if (_localStorageFigures.length !== 0) {
+			localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
 		}
 	};
 
-	let _figures = [];
-	let figures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
+	let _localStorageFigures = [];
+	let localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
 	for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
-		if (figures.length === 0) {
+		if (localStorageFigures.length === 0) {
 			let randomId = this.figureIndexGenerate();
 			let figure = new Figure(figureCounter, randomId);
 			this.addChild(figure);
 			this.figures.push(figure);
-			_figures.push(randomId);
+			_localStorageFigures.push(randomId);
 		} else {
-			let figure = new Figure(figureCounter, figures[figureCounter]);
+			let figure = new Figure(figureCounter, localStorageFigures[figureCounter]);
 			this.addChild(figure);
 			this.figures.push(figure);
 		}
 	}
-	if (figures.length === 0) {
-		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_figures));
+	if (localStorageFigures.length === 0) {
+		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
 	}
 
 	let score = new Score();
@@ -206,7 +206,13 @@ function Game(rows, cols) {
 		this.mousing = 0;
 	};
 
-	this.dotHovers = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dotHovers')) || [];
+	let localStorageDotHovers = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dotHovers')) || [];
+	if (localStorageDotHovers.length === 0) {
+		this.dotHovers = [];
+		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+	} else {
+		this.dotHovers = localStorageDotHovers;
+	}
 
 	/**
 	 * Check dot for hoverability
@@ -240,8 +246,22 @@ function Game(rows, cols) {
 		}
 	};
 
-	this.orderRows = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [].initialize(Consts.ROWS);
-	this.orderColumns = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [].initialize(Consts.COLUMNS);
+	let localStorageOrderRows = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [];
+	if (localStorageOrderRows.length === 0) {
+		this.orderRows = [].initialize(Consts.ROWS);
+		localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
+	} else {
+		this.orderRows = localStorageOrderRows;
+	}
+
+	let localStorageOrderColumns = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderColumns')) || [];
+	if (localStorageOrderColumns.length === 0) {
+		this.orderColumns = [].initialize(Consts.COLUMNS);
+		localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+	} else {
+		this.orderColumns = localStorageOrderColumns;
+	}
+
 	this.etalonRows = [];
 	this.etalonColumns = [];
 
@@ -568,6 +588,7 @@ function Game(rows, cols) {
 			}
 		}
 		alert('Game over');
+		this.reset();
 		return false;
 	};
 
@@ -582,6 +603,13 @@ function Game(rows, cols) {
 			this.dotHover(id);
 			hoverId = id;
 		}
+	};
+
+	this.reset = function reset() {
+		let keys = ['__dots', '__dotHovers', '__figures', '__orderRows', '__orderColumns', '__score'];
+		keys.forEach(function(element, index) {
+			localStorage.removeItem(Consts.DIMENSION + element);
+		});
 	};
 
 	// Centering

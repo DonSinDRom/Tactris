@@ -17,8 +17,21 @@ function Score() {
 		.setSizeMode('absolute', 'absolute')
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
-	this.score = +localStorage.getItem(Consts.DIMENSION + '__score') || 0;;
-	this.scoreBest = +localStorage.getItem(Consts.DIMENSION + '__scoreBest') || 0;
+	let localStorageScore = +localStorage.getItem(Consts.DIMENSION + '__score');
+	if (localStorageScore > 0) {
+		this.score = localStorageScore;
+	} else {
+		this.score = 0;
+		localStorage.setItem(Consts.DIMENSION + '__score', 0);
+	}
+
+	let localStorageScoreBest = +localStorage.getItem(Consts.DIMENSION + '__scoreBest');
+	if (localStorageScoreBest > 0) {
+		this.scoreBest = localStorageScoreBest;
+	} else {
+		this.scoreBest = 0;
+		localStorage.setItem(Consts.DIMENSION + '__scoreBest', 0);
+	}
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
