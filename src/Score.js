@@ -18,7 +18,7 @@ function Score() {
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
 	this.score = 0;
-	this.scoreBest = localStorage.getItem('scoreBest') || 0;
+	this.scoreBest = localStorage.getItem('scoreBest__' + Consts.DIMENSION) || 0;
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
@@ -56,7 +56,7 @@ function Score() {
 						${value}
 					</var>
 				</p>`);
-			localStorage.setItem('scoreBest', value);
+			localStorage.setItem('scoreBest__' + Consts.DIMENSION, value);
 		} else {
 			this.domElement.setContent(`
 				<p class="Score">Score:
