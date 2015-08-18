@@ -13,8 +13,8 @@ var Node = famous.core.Node;/*jshint +W079 */
 var Curves = famous.transitions.Curves;
 var DOMElement = famous.domRenderables.DOMElement;
 
-var audioLineMove = new Audio('./audio/lineMove.wav');
-var audioFigureSet = new Audio('./audio/figureSet.wav');
+var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
+var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
 
 function Game(rows, cols) {
 	Node.call(this);
