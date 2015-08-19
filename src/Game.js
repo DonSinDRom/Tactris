@@ -13,8 +13,8 @@ var Node = famous.core.Node;/*jshint +W079 */
 var Curves = famous.transitions.Curves;
 var DOMElement = famous.domRenderables.DOMElement;
 
-var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
-var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
+//var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
+//var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
 
 function Game(rows, cols) {
 	Node.call(this);
@@ -131,7 +131,7 @@ function Game(rows, cols) {
 	};
 
 	this.figureSet = function figureSet(figure) {
-		audioFigureSet.play();
+		//audioFigureSet.play();
 
 		let dots = this.dots;
 		let hovers = this.dotHovers;
@@ -334,7 +334,7 @@ function Game(rows, cols) {
 	/*jshint -W071, -W074 */
 	this.lineMove = function lineMove(line, direction) {
 		console.log('lineMove', line, direction);
-		audioLineMove.play();
+		//audioLineMove.play();
 
 		this.scoreInc(Consts.SCORE__LINE);
 
