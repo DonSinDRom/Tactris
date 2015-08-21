@@ -112,6 +112,44 @@ function Game(rows, cols) {
 		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
 	}
 
+	let stat = {};
+	let localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat'));
+	if (localStorageStat) {
+		stat = localStorageStat;
+	} else {
+		stat = {
+			rowsMoved: 0,
+			columnsMoved: 0,
+			figuresPlaced: 0,
+			maxScorePerAction: 0
+		};
+		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
+	}
+
+	this.statInc = function statInc(statArg) {
+		let localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
+		let keys = Object.keys(statArg);
+		keys.forEach(function(key) {
+			stat[key] += statArg[key];
+			if (stat[key] !== localStorageStat[key]) {
+				localStorageStat[key] = stat[key];
+			}
+		});
+		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
+	}
+
+	this.statSet = function statSet(statArg) {
+		let localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
+		let keys = Object.keys(statArg);
+		keys.forEach(function(key) {
+			stat[key] = statArg[key];
+			if (stat[key] !== localStorageStat[key]) {
+				localStorageStat[key] = stat[key];
+			}
+		});
+		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
+	}
+
 	let nav = new Nav();
 	this.addChild(nav);
 	this.nav = nav;
@@ -144,6 +182,7 @@ function Game(rows, cols) {
 		this.linesCheck();
 		this.figureUpdate(figure);
 		setTimeout(this.isGameEnded(), 10);
+		this.statInc({ figuresPlaced: 1 });
 	};
 
 	this.figureCheck = function figureCheck() {
@@ -331,6 +370,7 @@ function Game(rows, cols) {
 			}
 		}
 
+		this.statInc({ rowsMoved: filledRows.length, columnsMoved: filledColumns.length });
 		scoreMultiplier = 1;
 	};/*jshint +W074 */
 
