@@ -3,6 +3,7 @@
 var famous = require('famous');
 var Consts = require('./Consts.js');
 var Game = require('./Game.js');
+var Polyfills = require('./Polyfills.js');
 var getRandomInt = require('./getRandomInt.js');
 
 var FamousEngine = famous.core.FamousEngine;
@@ -17,26 +18,30 @@ if (!Array.prototype.max) {
 if (!Array.prototype.min) {
 	Array.prototype.min = require('./Array.js').min;
 }
+//Polyfills
 if (!Array.prototype.every) {
-	Array.prototype.every = require('./Array.js').every;
+	Array.prototype.every = require('./Polyfills.js').ArrayEvery;
 }
 if (!Array.prototype.some) {
-	Array.prototype.some = require('./Array.js').some;
+	Array.prototype.some = require('./Polyfills.js').ArraySome;
 }
 if (!Array.prototype.filter) {
-	Array.prototype.filter = require('./Array.js').filter;
+	Array.prototype.filter = require('./Polyfills.js').ArrayFilter;
 }
 if (!Array.prototype.find) {
-	Array.prototype.find = require('./Array.js').find;
+	Array.prototype.find = require('./Polyfills.js').ArrayFind;
 }
 if (!Array.prototype.findIndex) {
-	Array.prototype.findIndex = require('./Array.js').findIndex;
+	Array.prototype.findIndex = require('./Polyfills.js').ArrayFindIndex;
 }
 if (!Array.prototype.forEach) {
-	Array.prototype.forEach = require('./Array.js').forEach;
+	Array.prototype.forEach = require('./Polyfills.js').ArrayForEach;
 }
 if (!Array.prototype.includes) {
-	Array.prototype.includes = require('./Array.js').includes;
+	Array.prototype.includes = require('./Polyfills.js').ArrayIncludes;
+}
+if (!Object.keys) {
+	Object.keys = require('./Polyfills.js').ObjectKeys;
 }
 /*jshint +W121 */
 
