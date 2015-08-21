@@ -18,9 +18,18 @@ You can generate new figure by clicking on it. But this operation costs 20% of y
 >>>>>> ###[18x18](http://donsindrom.github.io/Tactris/18/)
 >>>>>>> ###[20x20](http://donsindrom.github.io/Tactris/20/)
 
+### TODO:
+
+- [ ] normal layout
+- [ ] figures drag and drop
+- [ ] game over modal window
+- [ ] canvas fallback
+
+
 ### Credits
 
 Thanks to [birdlab](https://github.com/birdlab).
+Inspired by [birdlab/Tactris](http://github.com/birdlab/Tactris).
 
 
 ### License
