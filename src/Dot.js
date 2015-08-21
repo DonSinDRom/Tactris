@@ -118,6 +118,17 @@ function Dot(id) {
 		}
 	};
 
+	this.select = function select() {
+		if (this.state !== Consts.DOT_STATE__PLACED) {
+			this.state = Consts.DOT_STATE__PLACED;
+			this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
+			this.domElement.setAttribute('aria-readonly', true);
+			let _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_localStorageDots[id] = Consts.DOT_STATE__PLACED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+		}
+	};
+
 	this.position = new Position(this);
 	this.rotation = new Rotation(this);
 	this.rotation.set(0, 0, 0, 0);
