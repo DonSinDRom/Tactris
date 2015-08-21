@@ -4,9 +4,7 @@ var famous = require('famous');
 var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
-var Score = require('./Score.js');
 var Nav = require('./Nav.js').Nav;
-var Button = require('./Nav.js').Button;
 //var Menu = require('./Menu.js');
 var getRandomInt = require('./getRandomInt.js');
 
@@ -114,10 +112,6 @@ function Game(rows, cols) {
 		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
 	}
 
-	let score = new Score();
-	this.addChild(score);
-	this.score = score;
-
 	let nav = new Nav();
 	this.addChild(nav);
 	this.nav = nav;
@@ -127,13 +121,13 @@ function Game(rows, cols) {
 //	this.menu = menu;
 
 	this.scoreInc = function scoreInc(value) {
-		this.score.scoreInc(value * scoreMultiplier);
+		this.nav.scoreInc(value * scoreMultiplier);
 	};
 	this.scoreReset = function scoreReset() {
-		this.score.scoreReset();
+		this.nav.scoreReset();
 	};
 	this.scoreSurcharge = function scoreSurcharge() {
-		this.score.scoreSurcharge();
+		this.nav.scoreSurcharge();
 	};
 
 	this.figureSet = function figureSet(figure) {
@@ -723,17 +717,9 @@ function Layout(node) {
 	let nav = this.node.nav;
 	let navPosition = nav.position;
 	if (width > height) {
-		navPosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, 0);
+		navPosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
 	} else {
-		navPosition.set(0, Consts.ROWS * Consts.DOT_SIDE / 2);
-	}
-
-	let score = this.node.score;
-	let scorePosition = score.position;
-	if (width > height) {
-		scorePosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
-	} else {
-		scorePosition.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
+		navPosition.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
 	}
 
 	this.next();
