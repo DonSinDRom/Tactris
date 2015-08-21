@@ -5,6 +5,8 @@ var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
 var Score = require('./Score.js');
+var Nav = require('./Nav.js').Nav;
+var Button = require('./Nav.js').Button;
 //var Menu = require('./Menu.js');
 var getRandomInt = require('./getRandomInt.js');
 
@@ -116,6 +118,10 @@ function Game(rows, cols) {
 	this.addChild(score);
 	this.score = score;
 
+	let nav = new Nav();
+	this.addChild(nav);
+	this.nav = nav;
+
 //	let menu = new Menu();
 //	this.addChild(menu);
 //	this.menu = menu;
@@ -217,6 +223,13 @@ function Game(rows, cols) {
 		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 	} else {
 		this.dotHovers = localStorageDotHovers;
+	}
+
+	this.dotSelect = function dotSelect(id) {
+		if (this.dots[id].state !== Consts.DOT_STATE__PLACED) {
+			this.dots[id].select();
+			this.linesCheck();
+		}
 	}
 
 	/**
@@ -596,7 +609,6 @@ function Game(rows, cols) {
 			}
 		}
 		alert('Game over');
-		this.reset();
 		return false;
 	};
 
@@ -613,11 +625,44 @@ function Game(rows, cols) {
 		}
 	};
 
-	this.reset = function reset() {
-		let keys = ['__dots', '__dotHovers', '__figures', '__orderRows', '__orderColumns', '__score'];
-		keys.forEach(function(element, index) {
-			localStorage.removeItem(Consts.DIMENSION + element);
-		});
+	this.gameStart = function gameStart() {
+		var dots = this.dots;
+
+		let etalonRows = this.etalonRows;
+		let etalonColumns = this.etalonColumns;
+
+		this.dotHovers.forEach((element) => dots[element].unhover());
+		this.dotHovers = [];
+		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+		hoverId = undefined;
+
+		let _localStorageDots = [];
+		for (let column = 0; column < Consts.COLUMNS; column++) {
+			for (let row = 0; row < Consts.ROWS; row++) {
+				let dot = dots[row * Consts.ROWS + column];
+				let position = dot.position;
+				position.set(etalonColumns[column], etalonRows[row], 0, {
+					duration: Consts.DOT_DURATION__POSITION * 4,
+					curve: Consts.DOT_CURVE__POSITION
+				});
+				dot.unplace((row + column) / 2);
+				dot.domElement.setAttribute('aria-colindex', column);
+				dot.domElement.setAttribute('aria-rowindex', row);
+				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
+			}
+		}
+		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+
+		this.orderRows = [].initialize(Consts.ROWS);
+		this.orderColumns = [].initialize(Consts.COLUMNS);
+		localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
+		localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+
+		this.scoreReset();
+
+		for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
+			this.figureUpdate(figureCounter);
+		}
 	};
 
 	// Centering
@@ -675,12 +720,20 @@ function Layout(node) {
 		}
 	}
 
-	let score = this.node.score;
-	let position = score.position;
+	let nav = this.node.nav;
+	let navPosition = nav.position;
 	if (width > height) {
-		position.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
+		navPosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, 0);
 	} else {
-		position.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
+		navPosition.set(0, Consts.ROWS * Consts.DOT_SIDE / 2);
+	}
+
+	let score = this.node.score;
+	let scorePosition = score.position;
+	if (width > height) {
+		scorePosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
+	} else {
+		scorePosition.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
 	}
 
 	this.next();
