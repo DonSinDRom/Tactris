@@ -17,6 +17,9 @@ You can generate new figure by clicking on it. But this operation costs 20% of y
 >>>>> ###[16x16](http://donsindrom.github.io/Tactris/16/)
 >>>>>> ###[18x18](http://donsindrom.github.io/Tactris/18/)
 >>>>>>> ###[20x20](http://donsindrom.github.io/Tactris/20/)
+>>>>>>>> ###[24x24](http://donsindrom.github.io/Tactris/24/)
+>>>>>>>>> ###[36x36](http://donsindrom.github.io/Tactris/36/)
+
 
 ### TODO:
 
