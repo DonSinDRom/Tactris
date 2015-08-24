@@ -61,27 +61,22 @@ Button.prototype.onReceive = function onReceive(type, ev) {
 function Score() {
 	Node.call(this);
 
-	// Center dot.
 	this
 		.setMountPoint(0, 0)
 		.setAlign(0, 0)
 		.setSizeMode('absolute', 'absolute')
 		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
-	let localStorageScore = +localStorage.getItem(Consts.DIMENSION + '__score');
-	if (localStorageScore > 0) {
+	this.score = {};
+	let localStorageScore = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__score'));
+	if (localStorageScore) {
 		this.score = localStorageScore;
 	} else {
-		this.score = 0;
-		localStorage.setItem(Consts.DIMENSION + '__score', 0);
-	}
-
-	let localStorageScoreBest = +localStorage.getItem(Consts.DIMENSION + '__scoreBest');
-	if (localStorageScoreBest > 0) {
-		this.scoreBest = localStorageScoreBest;
-	} else {
-		this.scoreBest = 0;
-		localStorage.setItem(Consts.DIMENSION + '__scoreBest', 0);
+		this.score = {
+			best: 0,
+			current: 0
+		};
+		localStorage.setItem(Consts.DIMENSION + '__score', JSON.stringify(this.score));
 	}
 
 	this.domElement = new DOMElement(this, {
@@ -95,12 +90,12 @@ function Score() {
 		content: `
 			<p class="Score">Score:
 				<var class="ScoreValue">
-					${this.score}
+					${this.score.current}
 				</var>
 			</p>
 			<p class="Score">Best:
 				<var class="ScoreValue">
-					${this.scoreBest}
+					${this.score.best}
 				</var>
 			</p>`
 	});
@@ -109,7 +104,7 @@ function Score() {
 	this.domElement.setAttribute('aria-live', 'polite');
 
 	this.scoreSetContent = function scoreSetContent(value) {
-		if (value >= this.scoreBest) {
+		if (value >= this.score.best) {
 			this.domElement.setContent(`
 				<p class="Score">Score:
 					<var class="ScoreValue">
@@ -121,7 +116,7 @@ function Score() {
 						${value}
 					</var>
 				</p>`);
-			localStorage.setItem(Consts.DIMENSION + '__scoreBest', value);
+			this.score.best = value;
 		} else {
 			this.domElement.setContent(`
 				<p class="Score">Score:
@@ -131,26 +126,26 @@ function Score() {
 				</p>
 				<p class="Score">Best:
 					<var class="ScoreValue">
-						${this.scoreBest}
+						${this.score.best}
 					</var>
 				</p>`);
 		};
-		localStorage.setItem(Consts.DIMENSION + '__score', value);
+		localStorage.setItem(Consts.DIMENSION + '__score', JSON.stringify(this.score));
 	}
 
 	this.scoreInc = function scoreInc(inc) {
-		this.score += inc;
-		this.scoreSetContent(this.score);
+		this.score.current += inc;
+		this.scoreSetContent(this.score.current);
 	};
 
 	this.scoreReset = function scoreReset() {
-		this.score = 0;
-		this.scoreSetContent(this.score);
+		this.score.current = 0;
+		this.scoreSetContent(this.score.current);
 	};
 
 	this.scoreSurcharge = function scoreSurcharge() {
-		this.score = Number.parseInt(this.score * Consts.SCORE__SURCHARGE);
-		this.scoreSetContent(this.score);
+		this.score.current = Number.parseInt(this.score.current * Consts.SCORE__SURCHARGE);
+		this.scoreSetContent(this.score.current);
 	};
 
 	this.position = new Position(this);
