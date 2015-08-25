@@ -395,11 +395,14 @@ const Consts = {
 	DOT_CURVE__POSITION: 'inOutElastic',
 	DOT_DURATION__POSITION: 800,
 
-	DOT_CURVE__ROTATION: 'inExpo',
+	DOT_CURVE__ROTATION: 'outCubic',
 	DOT_DURATION__ROTATION: 800,
 
 	SCORE__FIGURE: 2,
 	SCORE__SURCHARGE: 0.8,
+
+	MODAL_CURVE: 'outBounce',
+	MODAL_DURATION: 1200,
 
 	init: function() {
 		var w = document.body.clientWidth;

@@ -5,7 +5,7 @@ var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
 var Nav = require('./Nav.js').Nav;
-//var Menu = require('./Menu.js');
+var Modal = require('./Modal.js');
 var getRandomInt = require('./getRandomInt.js');
 
 /*jshint -W079 */
@@ -120,8 +120,7 @@ function Game(rows, cols) {
 		stat = {
 			rowsMoved: 0,
 			columnsMoved: 0,
-			figuresPlaced: 0,
-			maxScorePerAction: 0
+			figuresPlaced: 0
 		};
 		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
 	}
@@ -154,9 +153,9 @@ function Game(rows, cols) {
 	this.addChild(nav);
 	this.nav = nav;
 
-//	let menu = new Menu();
-//	this.addChild(menu);
-//	this.menu = menu;
+	let modal = new Modal();
+	this.addChild(modal);
+	this.modal = modal;
 
 	this.scoreInc = function scoreInc(value) {
 		this.nav.scoreInc(value * scoreMultiplier);
@@ -181,8 +180,8 @@ function Game(rows, cols) {
 		this.scoreInc(Consts.SCORE__FIGURE);
 		this.linesCheck();
 		this.figureUpdate(figure);
-		setTimeout(this.isGameEnded(), 10);
 		this.statInc({ figuresPlaced: 1 });
+		setTimeout(this.isGameEnded(), 10);
 	};
 
 	this.figureCheck = function figureCheck() {
@@ -642,7 +641,7 @@ function Game(rows, cols) {
 				}
 			}
 		}
-		alert('Game over');
+		this.modal.show();
 		return false;
 	};
 
@@ -679,7 +678,7 @@ function Game(rows, cols) {
 					duration: Consts.DOT_DURATION__POSITION * 4,
 					curve: Consts.DOT_CURVE__POSITION
 				});
-				dot.unplace((row + column) / 2);
+				dot.unplace();
 				dot.domElement.setAttribute('aria-colindex', column);
 				dot.domElement.setAttribute('aria-rowindex', row);
 				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
@@ -701,10 +700,12 @@ function Game(rows, cols) {
 
 	// Centering
 	this
-		.setMountPoint(0.5, 0.5, 0)
-		.setAlign(0.5, 0.5, 0)
-		.setOrigin(0.5, 0.5, 0)
-		.setPosition(0, 0, 0);
+		.setMountPoint(0.5, 0.5)
+		.setAlign(0.5, 0.5)
+		.setOrigin(0.5,0.5)
+		.setSizeMode('absolute', 'absolute')
+		.setAbsoluteSize(Consts.COLUMNS * Consts.DOT_SIDE, Consts.ROWS * Consts.DOT_SIDE);
+
 	this.layout = new Layout(this);
 
 	console.log(this);
