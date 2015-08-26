@@ -335,6 +335,17 @@ function Game(rows, cols) {
 				filledColumns.push(line);
 			}
 		}
+
+		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
+		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
+		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
+		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
+
+		toTop.sort((a, b) => b - a);
+		toRight.sort((a, b) => b - a);
+		toBottom.sort((a, b) => a - b);
+		toLeft.sort((a, b) => a - b);
+
 		filledRows.sort(function (x, y) {
 			if (x < (Consts.ROWS / 2)) {
 				return y - x;
@@ -355,7 +366,11 @@ function Game(rows, cols) {
 			scoreMultiplier++;
 		} else {
 			for (let row = 0; row < filledRows.length; row++) {
-				this.lineMove(filledRows[row], 'y');
+				this.lineMove(toTop[row], 'y', row + 1);
+				scoreMultiplier++;
+			}
+			for (let row = 0; row < filledRows.length; row++) {
+				this.lineMove(toBottom[row], 'y', row + 1);
 				scoreMultiplier++;
 			}
 		}
@@ -363,8 +378,12 @@ function Game(rows, cols) {
 			this.lineRotate(filledColumns[0], 'x');
 			scoreMultiplier++;
 		} else {
-			for (let column = 0; column < filledColumns.length; column++) {
-				this.lineMove(filledColumns[column], 'x');
+			for (let column = 0; column < toLeft.length; column++) {
+				let i = this.lineMove(toLeft[column], 'x', column + 1);
+				scoreMultiplier++;
+			}
+			for (let column = 0; column < toRight.length; column++) {
+				let i = this.lineMove(toRight[column], 'x', column + 1);
 				scoreMultiplier++;
 			}
 		}
@@ -378,8 +397,8 @@ function Game(rows, cols) {
 	 * @param {number} id - Id of stateed line
 	 */
 	/*jshint -W071, -W074 */
-	this.lineMove = function lineMove(line, direction) {
-		console.log('lineMove', line, direction);
+	this.lineMove = function lineMove(line, direction, delay) {
+		console.log('lineMove', line, direction, delay);
 		//audioLineMove.play();
 
 		this.scoreInc(Consts.SCORE__LINE);
@@ -406,7 +425,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-colindex', 0);
-						dot.unplace(scoreMultiplier);
+						dot.unplace(delay);
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
 						for (let row = 0; row < Consts.ROWS; row++) {
@@ -431,7 +450,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
-						dot.unplace(scoreMultiplier);
+						dot.unplace(delay);
 					}
 					for (let column = Consts.COLUMNS - 1; column > lineHash; column--) {
 						for (let row = 0; row < Consts.ROWS; row++) {
@@ -462,7 +481,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-rowindex', 0);
-						dot.unplace(scoreMultiplier);
+						dot.unplace(delay);
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -487,7 +506,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
-						dot.unplace(scoreMultiplier);
+						dot.unplace(delay);
 					}
 					for (let row = Consts.ROWS - 1; row > lineHash; row--) {
 						for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -508,6 +527,7 @@ function Game(rows, cols) {
 		default:
 				return false;
 		}
+		return true;
 	};/*jshint +W071, +W074 */
 
 	/**
