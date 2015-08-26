@@ -336,15 +336,15 @@ function Game(rows, cols) {
 			}
 		}
 
-		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
-		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
-		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
-		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
-
-		toTop.sort((a, b) => b - a);
-		toRight.sort((a, b) => b - a);
-		toBottom.sort((a, b) => a - b);
-		toLeft.sort((a, b) => a - b);
+//		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
+//		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
+//		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
+//		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
+//
+//		toTop.sort((a, b) => b - a);
+//		toRight.sort((a, b) => b - a);
+//		toBottom.sort((a, b) => a - b);
+//		toLeft.sort((a, b) => a - b);
 
 		filledRows.sort(function (x, y) {
 			if (x < (Consts.ROWS / 2)) {
@@ -366,11 +366,7 @@ function Game(rows, cols) {
 			scoreMultiplier++;
 		} else {
 			for (let row = 0; row < filledRows.length; row++) {
-				this.lineMove(toTop[row], 'y', row + 1);
-				scoreMultiplier++;
-			}
-			for (let row = 0; row < filledRows.length; row++) {
-				this.lineMove(toBottom[row], 'y', row + 1);
+				this.lineMove(filledRows[row], 'y', row + 1);
 				scoreMultiplier++;
 			}
 		}
@@ -379,11 +375,7 @@ function Game(rows, cols) {
 			scoreMultiplier++;
 		} else {
 			for (let column = 0; column < toLeft.length; column++) {
-				let i = this.lineMove(toLeft[column], 'x', column + 1);
-				scoreMultiplier++;
-			}
-			for (let column = 0; column < toRight.length; column++) {
-				let i = this.lineMove(toRight[column], 'x', column + 1);
+				let i = this.lineMove(filledColumns[column], 'x', column + 1);
 				scoreMultiplier++;
 			}
 		}
