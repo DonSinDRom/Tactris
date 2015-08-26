@@ -37,24 +37,9 @@ function Figure(id, randomId) {
 	}
 
 	this.position = new Position(this);
-
-	this.addUIEvent('click');
 }
 
 Figure.prototype = Object.create(Node.prototype);
 Figure.prototype.constructor = Figure;
-
-/*jshint -W074 */
-Figure.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-	case 'click':
-			this._parent.figureUpdate(this.id);
-			this._parent.scoreSurcharge();
-			this.emit('id', this.id).emit('randomId', this.randomId);
-			break;
-	default:
-			return false;
-	}
-};/*jshint +W074 */
 
 module.exports = Figure;
