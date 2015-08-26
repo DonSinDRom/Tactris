@@ -48,7 +48,7 @@ FamousEngine.init();
 var scene = FamousEngine.createScene();
 var game = new Game(Consts.ROWS, Consts.COLUMNS);
 
-if (localStorage.getItem('reset') == true) {
+if (!localStorage.getItem('reset')) {
 	localStorage.clear();
 	localStorage.setItem('reset', true);
 }
