@@ -37,6 +37,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"babelify": "^6.0.1",
+		"core-js": "^1.1.1",
 		"famous": "^0.7.0",
 		"underscore": "^1.8.3"
 	}
