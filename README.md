@@ -23,6 +23,7 @@ You can generate new figure by clicking on it. But this operation costs 20% of y
 
 ### TODO:
 
+- [ ] HotFix LocalStorage clear
 - [ ] normal layout
 - [ ] figures drag and drop
 - [x] game over modal window
