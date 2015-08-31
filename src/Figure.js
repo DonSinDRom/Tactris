@@ -20,7 +20,7 @@ function Figure(id, randomId) {
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h1',
-		classes: ['Figure']
+		classes: ['Figure', 'interactive']
 	});
 
 	this.domElement.setAttribute('role', 'grid');
