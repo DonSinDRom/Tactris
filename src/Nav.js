@@ -37,7 +37,7 @@ function Button() {
 			padding: '1rem'
 		},
 		content: 'New Game',
-		classes: ['Button']
+		classes: ['Button', 'interactive']
 	});
 
 	this.addUIEvent('click');

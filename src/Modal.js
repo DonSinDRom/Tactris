@@ -15,7 +15,7 @@ function Modal() {
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'center',
-		classes: ['Modal'],
+		classes: ['Modal', 'interactive'],
 		properties: {
 			color: '#fff',
 			fontSize: '24px',

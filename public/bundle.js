@@ -28738,13 +28738,197 @@ module.exports = radixSort;
 
 
 var shaders = {
-    vertex: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates transpose inverse matrix from transform\n * \n * @method random\n * @private\n *\n *\n */\n\n\nmat3 getNormalMatrix_1_0(in mat4 t) {\n   mat3 matNorm;\n   mat4 a = t;\n\n   float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3],\n   a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3],\n   a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3],\n   a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3],\n   b00 = a00 * a11 - a01 * a10,\n   b01 = a00 * a12 - a02 * a10,\n   b02 = a00 * a13 - a03 * a10,\n   b03 = a01 * a12 - a02 * a11,\n   b04 = a01 * a13 - a03 * a11,\n   b05 = a02 * a13 - a03 * a12,\n   b06 = a20 * a31 - a21 * a30,\n   b07 = a20 * a32 - a22 * a30,\n   b08 = a20 * a33 - a23 * a30,\n   b09 = a21 * a32 - a22 * a31,\n   b10 = a21 * a33 - a23 * a31,\n   b11 = a22 * a33 - a23 * a32,\n\n   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n   det = 1.0 / det;\n\n   matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n   matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n   matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n\n   matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n   matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n   matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n\n   matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n   matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n   matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n\n   return matNorm;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates a matrix that creates the identity when multiplied by m\n * \n * @method inverse\n * @private\n *\n *\n */\n\n\nfloat inverse_2_1(float m) {\n    return 1.0 / m;\n}\n\nmat2 inverse_2_1(mat2 m) {\n    return mat2(m[1][1],-m[0][1],\n               -m[1][0], m[0][0]) / (m[0][0]*m[1][1] - m[0][1]*m[1][0]);\n}\n\nmat3 inverse_2_1(mat3 m) {\n    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n\n    float b01 =  a22 * a11 - a12 * a21;\n    float b11 = -a22 * a10 + a12 * a20;\n    float b21 =  a21 * a10 - a11 * a20;\n\n    float det = a00 * b01 + a01 * b11 + a02 * b21;\n\n    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),\n                b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),\n                b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\n\nmat4 inverse_2_1(mat4 m) {\n    float\n        a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n        a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n        a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n        a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n\n        b00 = a00 * a11 - a01 * a10,\n        b01 = a00 * a12 - a02 * a10,\n        b02 = a00 * a13 - a03 * a10,\n        b03 = a01 * a12 - a02 * a11,\n        b04 = a01 * a13 - a03 * a11,\n        b05 = a02 * a13 - a03 * a12,\n        b06 = a20 * a31 - a21 * a30,\n        b07 = a20 * a32 - a22 * a30,\n        b08 = a20 * a33 - a23 * a30,\n        b09 = a21 * a32 - a22 * a31,\n        b10 = a21 * a33 - a23 * a31,\n        b11 = a22 * a33 - a23 * a32,\n\n        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Reflects a matrix over its main diagonal.\n * \n * @method transpose\n * @private\n *\n *\n */\n\n\nfloat transpose_3_2(float m) {\n    return m;\n}\n\nmat2 transpose_3_2(mat2 m) {\n    return mat2(m[0][0], m[1][0],\n                m[0][1], m[1][1]);\n}\n\nmat3 transpose_3_2(mat3 m) {\n    return mat3(m[0][0], m[1][0], m[2][0],\n                m[0][1], m[1][1], m[2][1],\n                m[0][2], m[1][2], m[2][2]);\n}\n\nmat4 transpose_3_2(mat4 m) {\n    return mat4(m[0][0], m[1][0], m[2][0], m[3][0],\n                m[0][1], m[1][1], m[2][1], m[3][1],\n                m[0][2], m[1][2], m[2][2], m[3][2],\n                m[0][3], m[1][3], m[2][3], m[3][3]);\n}\n\n\n\n\n/**\n * Converts vertex from modelspace to screenspace using transform\n * information from context.\n *\n * @method applyTransform\n * @private\n *\n *\n */\n\nvec4 applyTransform(vec4 pos) {\n    //TODO: move this multiplication to application code. \n\n    /**\n     * Currently multiplied in the vertex shader to avoid consuming the complexity of holding an additional\n     * transform as state on the mesh object in WebGLRenderer. Multiplies the object's transformation from object space\n     * to world space with its transformation from world space to eye space.\n     */\n    mat4 MVMatrix = u_view * u_transform;\n\n    //TODO: move the origin, sizeScale and y axis inversion to application code in order to amortize redundant per-vertex calculations.\n\n    /**\n     * The transform uniform should be changed to the result of the transformation chain:\n     *\n     * view * modelTransform * invertYAxis * sizeScale * origin\n     *\n     * which could be simplified to:\n     *\n     * view * modelTransform * convertToDOMSpace\n     *\n     * where convertToDOMSpace represents the transform matrix:\n     *\n     *                           size.x 0       0       size.x \n     *                           0      -size.y 0       size.y\n     *                           0      0       1       0\n     *                           0      0       0       1\n     *\n     */\n\n    /**\n     * Assuming a unit volume, moves the object space origin [0, 0, 0] to the \"top left\" [1, -1, 0], the DOM space origin.\n     * Later in the transformation chain, the projection transform negates the rigidbody translation.\n     * Equivalent to (but much faster than) multiplying a translation matrix \"origin\"\n     *\n     *                           1 0 0 1 \n     *                           0 1 0 -1\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.x += 1.0;\n    pos.y -= 1.0;\n\n    /**\n     * Assuming a unit volume, scales an object to the amount of pixels in the size uniform vector's specified dimensions.\n     * Later in the transformation chain, the projection transform transforms the point into clip space by scaling\n     * by the inverse of the canvas' resolution.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"sizeScale\"\n     *\n     *                           size.x 0      0      0 \n     *                           0      size.y 0      0\n     *                           0      0      size.z 0\n     *                           0      0      0      1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.xyz *= u_size * 0.5;\n\n    /**\n     * Inverts the object space's y axis in order to match DOM space conventions. \n     * Later in the transformation chain, the projection transform reinverts the y axis to convert to clip space.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"invertYAxis\"\n     *\n     *                           1 0 0 0 \n     *                           0 -1 0 0\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.y *= -1.0;\n\n    /**\n     * Exporting the vertex's position as a varying, in DOM space, to be used for lighting calculations. This has to be in DOM space\n     * since light position and direction is derived from the scene graph, calculated in DOM space.\n     */\n\n    v_position = (MVMatrix * pos).xyz;\n\n    /**\n    * Exporting the eye vector (a vector from the center of the screen) as a varying, to be used for lighting calculations.\n    * In clip space deriving the eye vector is a matter of simply taking the inverse of the position, as the position is a vector\n    * from the center of the screen. However, since our points are represented in DOM space,\n    * the position is a vector from the top left corner of the screen, so some additional math is needed (specifically, subtracting\n    * the position from the center of the screen, i.e. half the resolution of the canvas).\n    */\n\n    v_eyeVector = (u_resolution * 0.5) - v_position;\n\n    /**\n     * Transforming the position (currently represented in dom space) into view space (with our dom space view transform)\n     * and then projecting the point into raster both by applying a perspective transformation and converting to clip space\n     * (the perspective matrix is a combination of both transformations, therefore it's probably more apt to refer to it as a\n     * projection transform).\n     */\n\n    pos = u_perspective * MVMatrix * pos;\n\n    return pos;\n}\n\n/**\n * Placeholder for positionOffset chunks to be templated in.\n * Used for mesh deformation.\n *\n * @method calculateOffset\n * @private\n *\n *\n */\n#vert_definitions\nvec3 calculateOffset(vec3 ID) {\n    #vert_applications\n    return vec3(0.0);\n}\n\n/**\n * Writes the position of the vertex onto the screen.\n * Passes texture coordinate and normal attributes as varyings\n * and passes the position attribute through position pipeline.\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    v_textureCoordinate = a_texCoord;\n    vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n    invertedNormals.y *= -1.0;\n    v_normal = transpose_3_2(mat3(inverse_2_1(u_transform))) * invertedNormals;\n    vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n    gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}\n",
+    vertex: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates transpose inverse matrix from transform\n * \n * @method random\n * @private\n *\n *\n */\n\n\nmat3 getNormalMatrix_3_0(in mat4 t) {\n   mat3 matNorm;\n   mat4 a = t;\n\n   float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3],\n   a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3],\n   a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3],\n   a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3],\n   b00 = a00 * a11 - a01 * a10,\n   b01 = a00 * a12 - a02 * a10,\n   b02 = a00 * a13 - a03 * a10,\n   b03 = a01 * a12 - a02 * a11,\n   b04 = a01 * a13 - a03 * a11,\n   b05 = a02 * a13 - a03 * a12,\n   b06 = a20 * a31 - a21 * a30,\n   b07 = a20 * a32 - a22 * a30,\n   b08 = a20 * a33 - a23 * a30,\n   b09 = a21 * a32 - a22 * a31,\n   b10 = a21 * a33 - a23 * a31,\n   b11 = a22 * a33 - a23 * a32,\n\n   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n   det = 1.0 / det;\n\n   matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n   matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n   matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n\n   matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n   matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n   matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n\n   matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n   matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n   matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n\n   return matNorm;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates a matrix that creates the identity when multiplied by m\n * \n * @method inverse\n * @private\n *\n *\n */\n\n\nfloat inverse_1_1(float m) {\n    return 1.0 / m;\n}\n\nmat2 inverse_1_1(mat2 m) {\n    return mat2(m[1][1],-m[0][1],\n               -m[1][0], m[0][0]) / (m[0][0]*m[1][1] - m[0][1]*m[1][0]);\n}\n\nmat3 inverse_1_1(mat3 m) {\n    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n\n    float b01 =  a22 * a11 - a12 * a21;\n    float b11 = -a22 * a10 + a12 * a20;\n    float b21 =  a21 * a10 - a11 * a20;\n\n    float det = a00 * b01 + a01 * b11 + a02 * b21;\n\n    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),\n                b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),\n                b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\n\nmat4 inverse_1_1(mat4 m) {\n    float\n        a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n        a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n        a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n        a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n\n        b00 = a00 * a11 - a01 * a10,\n        b01 = a00 * a12 - a02 * a10,\n        b02 = a00 * a13 - a03 * a10,\n        b03 = a01 * a12 - a02 * a11,\n        b04 = a01 * a13 - a03 * a11,\n        b05 = a02 * a13 - a03 * a12,\n        b06 = a20 * a31 - a21 * a30,\n        b07 = a20 * a32 - a22 * a30,\n        b08 = a20 * a33 - a23 * a30,\n        b09 = a21 * a32 - a22 * a31,\n        b10 = a21 * a33 - a23 * a31,\n        b11 = a22 * a33 - a23 * a32,\n\n        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Reflects a matrix over its main diagonal.\n * \n * @method transpose\n * @private\n *\n *\n */\n\n\nfloat transpose_2_2(float m) {\n    return m;\n}\n\nmat2 transpose_2_2(mat2 m) {\n    return mat2(m[0][0], m[1][0],\n                m[0][1], m[1][1]);\n}\n\nmat3 transpose_2_2(mat3 m) {\n    return mat3(m[0][0], m[1][0], m[2][0],\n                m[0][1], m[1][1], m[2][1],\n                m[0][2], m[1][2], m[2][2]);\n}\n\nmat4 transpose_2_2(mat4 m) {\n    return mat4(m[0][0], m[1][0], m[2][0], m[3][0],\n                m[0][1], m[1][1], m[2][1], m[3][1],\n                m[0][2], m[1][2], m[2][2], m[3][2],\n                m[0][3], m[1][3], m[2][3], m[3][3]);\n}\n\n\n\n\n/**\n * Converts vertex from modelspace to screenspace using transform\n * information from context.\n *\n * @method applyTransform\n * @private\n *\n *\n */\n\nvec4 applyTransform(vec4 pos) {\n    //TODO: move this multiplication to application code. \n\n    /**\n     * Currently multiplied in the vertex shader to avoid consuming the complexity of holding an additional\n     * transform as state on the mesh object in WebGLRenderer. Multiplies the object's transformation from object space\n     * to world space with its transformation from world space to eye space.\n     */\n    mat4 MVMatrix = u_view * u_transform;\n\n    //TODO: move the origin, sizeScale and y axis inversion to application code in order to amortize redundant per-vertex calculations.\n\n    /**\n     * The transform uniform should be changed to the result of the transformation chain:\n     *\n     * view * modelTransform * invertYAxis * sizeScale * origin\n     *\n     * which could be simplified to:\n     *\n     * view * modelTransform * convertToDOMSpace\n     *\n     * where convertToDOMSpace represents the transform matrix:\n     *\n     *                           size.x 0       0       size.x \n     *                           0      -size.y 0       size.y\n     *                           0      0       1       0\n     *                           0      0       0       1\n     *\n     */\n\n    /**\n     * Assuming a unit volume, moves the object space origin [0, 0, 0] to the \"top left\" [1, -1, 0], the DOM space origin.\n     * Later in the transformation chain, the projection transform negates the rigidbody translation.\n     * Equivalent to (but much faster than) multiplying a translation matrix \"origin\"\n     *\n     *                           1 0 0 1 \n     *                           0 1 0 -1\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.x += 1.0;\n    pos.y -= 1.0;\n\n    /**\n     * Assuming a unit volume, scales an object to the amount of pixels in the size uniform vector's specified dimensions.\n     * Later in the transformation chain, the projection transform transforms the point into clip space by scaling\n     * by the inverse of the canvas' resolution.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"sizeScale\"\n     *\n     *                           size.x 0      0      0 \n     *                           0      size.y 0      0\n     *                           0      0      size.z 0\n     *                           0      0      0      1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.xyz *= u_size * 0.5;\n\n    /**\n     * Inverts the object space's y axis in order to match DOM space conventions. \n     * Later in the transformation chain, the projection transform reinverts the y axis to convert to clip space.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"invertYAxis\"\n     *\n     *                           1 0 0 0 \n     *                           0 -1 0 0\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.y *= -1.0;\n\n    /**\n     * Exporting the vertex's position as a varying, in DOM space, to be used for lighting calculations. This has to be in DOM space\n     * since light position and direction is derived from the scene graph, calculated in DOM space.\n     */\n\n    v_position = (MVMatrix * pos).xyz;\n\n    /**\n    * Exporting the eye vector (a vector from the center of the screen) as a varying, to be used for lighting calculations.\n    * In clip space deriving the eye vector is a matter of simply taking the inverse of the position, as the position is a vector\n    * from the center of the screen. However, since our points are represented in DOM space,\n    * the position is a vector from the top left corner of the screen, so some additional math is needed (specifically, subtracting\n    * the position from the center of the screen, i.e. half the resolution of the canvas).\n    */\n\n    v_eyeVector = (u_resolution * 0.5) - v_position;\n\n    /**\n     * Transforming the position (currently represented in dom space) into view space (with our dom space view transform)\n     * and then projecting the point into raster both by applying a perspective transformation and converting to clip space\n     * (the perspective matrix is a combination of both transformations, therefore it's probably more apt to refer to it as a\n     * projection transform).\n     */\n\n    pos = u_perspective * MVMatrix * pos;\n\n    return pos;\n}\n\n/**\n * Placeholder for positionOffset chunks to be templated in.\n * Used for mesh deformation.\n *\n * @method calculateOffset\n * @private\n *\n *\n */\n#vert_definitions\nvec3 calculateOffset(vec3 ID) {\n    #vert_applications\n    return vec3(0.0);\n}\n\n/**\n * Writes the position of the vertex onto the screen.\n * Passes texture coordinate and normal attributes as varyings\n * and passes the position attribute through position pipeline.\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    v_textureCoordinate = a_texCoord;\n    vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n    invertedNormals.y *= -1.0;\n    v_normal = transpose_2_2(mat3(inverse_1_1(u_transform))) * invertedNormals;\n    vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n    gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}\n",
     fragment: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Placeholder for fragmentShader  chunks to be templated in.\n * Used for normal mapping, gloss mapping and colors.\n * \n * @method applyMaterial\n * @private\n *\n *\n */\n\n#float_definitions\nfloat applyMaterial_1_0(float ID) {\n    #float_applications\n    return 1.;\n}\n\n#vec3_definitions\nvec3 applyMaterial_1_0(vec3 ID) {\n    #vec3_applications\n    return vec3(0);\n}\n\n#vec4_definitions\nvec4 applyMaterial_1_0(vec4 ID) {\n    #vec4_applications\n\n    return vec4(0);\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates the intensity of light on a surface.\n *\n * @method applyLight\n * @private\n *\n */\nvec4 applyLight_2_1(in vec4 baseColor, in vec3 normal, in vec4 glossiness, int numLights, vec3 ambientColor, vec3 eyeVector, mat4 lightPosition, mat4 lightColor, vec3 v_position) {\n    vec3 diffuse = vec3(0.0);\n    bool hasGlossiness = glossiness.a > 0.0;\n    bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n\n    for(int i = 0; i < 4; i++) {\n        if (i >= numLights) break;\n        vec3 lightDirection = normalize(lightPosition[i].xyz - v_position);\n        float lambertian = max(dot(lightDirection, normal), 0.0);\n\n        if (lambertian > 0.0) {\n            diffuse += lightColor[i].rgb * baseColor.rgb * lambertian;\n            if (hasGlossiness) {\n                vec3 halfVector = normalize(lightDirection + eyeVector);\n                float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n                vec3 specularColor = hasSpecularColor ? glossiness.rgb : lightColor[i].rgb;\n                diffuse += specularColor * specularWeight * lambertian;\n            }\n        }\n\n    }\n\n    return vec4(ambientColor + diffuse, baseColor.a);\n}\n\n\n\n\n\n/**\n * Writes the color of the pixel onto the screen\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : applyMaterial_1_0(u_baseColor);\n\n    /**\n     * Apply lights only if flat shading is false\n     * and at least one light is added to the scene\n     */\n    bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n\n    vec3 normal = normalize(v_normal);\n    vec4 glossiness = u_glossiness.x < 0.0 ? applyMaterial_1_0(u_glossiness) : u_glossiness;\n\n    vec4 color = lightsEnabled ?\n    applyLight_2_1(material, normalize(v_normal), glossiness,\n               int(u_numLights),\n               u_ambientLight * u_baseColor.rgb,\n               normalize(v_eyeVector),\n               u_lightPosition,\n               u_lightColor,   \n               v_position)\n    : material;\n\n    gl_FragColor = color;\n    gl_FragColor.a *= u_opacity;   \n}\n"
 };
 
 module.exports = shaders;
 
 },{}],142:[function(require,module,exports){
+'use strict';
+
+module.exports.initialize = function (length) {
+	'use strict';
+	var arr = [];
+	for (var i = 0; i < length; i++) {
+		arr.push(i);
+	}
+	return arr;
+};
+
+module.exports.max = function () {
+	return Math.max.apply(null, this);
+};
+
+module.exports.min = function () {
+	return Math.min.apply(null, this);
+};
+
+// Polyfills
+module.exports.every = function (callbackfn, thisArg) {
+	'use strict';
+	var T, k;
+	if (this == null) {
+		throw new TypeError('this is null or not defined');
+	}
+	var O = Object(this);
+	var len = O.length >>> 0;
+	if (typeof callbackfn !== 'function') {
+		throw new TypeError();
+	}
+	if (arguments.length > 1) {
+		T = thisArg;
+	}
+	k = 0;
+	while (k < len) {
+		var kValue;
+		if (k in O) {
+			kValue = O[k];
+			var testResult = callbackfn.call(T, kValue, k, O);
+			if (!testResult) {
+				return false;
+			}
+		}
+		k++;
+	}
+	return true;
+};
+
+module.exports.some = function (fun /*, thisArg*/) {
+	'use strict';
+	if (this == null) {
+		throw new TypeError('Array.prototype.some called on null or undefined');
+	}
+	if (typeof fun !== 'function') {
+		throw new TypeError();
+	}
+	var t = Object(this);
+	var len = t.length >>> 0;
+	var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+	for (var i = 0; i < len; i++) {
+		if (i in t && fun.call(thisArg, t[i], i, t)) {
+			return true;
+		}
+	}
+	return false;
+};
+
+module.exports.filter = function (fun /*, thisArg*/) {
+	'use strict';
+	if (this === void 0 || this === null) {
+		throw new TypeError();
+	}
+	var t = Object(this);
+	var len = t.length >>> 0;
+	if (typeof fun !== 'function') {
+		throw new TypeError();
+	}
+	var res = [];
+	var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+	for (var i = 0; i < len; i++) {
+		if (i in t) {
+			var val = t[i];
+			if (fun.call(thisArg, val, i, t)) {
+				res.push(val);
+			}
+		}
+	}
+	return res;
+};
+
+module.exports.find = function (predicate) {
+	if (this === null) {
+		throw new TypeError('Array.prototype.find called on null or undefined');
+	}
+	if (typeof predicate !== 'function') {
+		throw new TypeError('predicate must be a function');
+	}
+	var list = Object(this);
+	var length = list.length >>> 0;
+	var thisArg = arguments[1];
+	var value;
+	for (var i = 0; i < length; i++) {
+		value = list[i];
+		if (predicate.call(thisArg, value, i, list)) {
+			return value;
+		}
+	}
+	return undefined;
+};
+
+module.exports.findIndex = function (predicate) {
+	if (this === null) {
+		throw new TypeError('Array.prototype.findIndex called on null or undefined');
+	}
+	if (typeof predicate !== 'function') {
+		throw new TypeError('predicate must be a function');
+	}
+	var list = Object(this);
+	var length = list.length >>> 0;
+	var thisArg = arguments[1];
+	var value;
+	for (var i = 0; i < length; i++) {
+		value = list[i];
+		if (predicate.call(thisArg, value, i, list)) {
+			return i;
+		}
+	}
+	return -1;
+};
+
+module.exports.forEach = function (callback, thisArg) {
+	var T, k;
+	if (this == null) {
+		throw new TypeError(' this is null or not defined');
+	}
+	var O = Object(this);
+	var len = O.length >>> 0;
+	if (typeof callback !== "function") {
+		throw new TypeError(callback + ' is not a function');
+	}
+	if (arguments.length > 1) {
+		T = thisArg;
+	}
+	k = 0;
+	while (k < len) {
+		var kValue;
+		if (k in O) {
+			kValue = O[k];
+			callback.call(T, kValue, k, O);
+		}
+		k++;
+	}
+};
+
+module.exports.includes = function (searchElement /*, fromIndex*/) {
+	'use strict';
+	var O = Object(this);
+	var len = parseInt(O.length) || 0;
+	if (len === 0) {
+		return false;
+	}
+	var n = parseInt(arguments[1]) || 0;
+	var k;
+	if (n >= 0) {
+		k = n;
+	} else {
+		k = len + n;
+		if (k < 0) {
+			k = 0;
+		}
+	}
+	var currentElement;
+	while (k < len) {
+		currentElement = O[k];
+		if (searchElement === currentElement || searchElement !== searchElement && currentElement !== currentElement) {
+			return true;
+		}
+		k++;
+	}
+	return false;
+};
+
+},{}],143:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -28787,7 +28971,7 @@ Cell.prototype.constructor = Cell;
 
 module.exports = Cell;
 
-},{"./Consts.js":143,"famous":46}],143:[function(require,module,exports){
+},{"./Consts.js":144,"famous":46}],144:[function(require,module,exports){
 /*
 * Curves:
 */
@@ -28799,7 +28983,7 @@ var Consts = ({
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
-	CELL_RATIO: 0.8,
+	CELL_RATIO: 0.6,
 	CELL_MARGIN: 1,
 
 	DIMENSION: 12,
@@ -29118,18 +29302,23 @@ var Consts = ({
 	DOT_STATE__PLACED: -1,
 
 	//'#7ac74f' '#a1cf6b' '#d5d887' '#e0c879' '#e87461'
-	DOT_COLOR__HOVERED: '#e87461',
+	//#d5d887 + rgba(0,0,0,.2) = #ABAD6C
+	//#e87461 + rgba(0,0,0,.2) = #BA5D4E
+	DOT_COLOR__HOVERED: 'linear-gradient(45deg, #333 0%, #333 25%, #e87461 25%, #e87461 100%)',
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
-	DOT_COLOR__PLACED: '#e0c879',
+	DOT_COLOR__PLACED: 'linear-gradient(135deg, #d5d887 0%, #d5d887 75%, #333 75%, #333 100%)',
 
 	DOT_CURVE__POSITION: 'inOutElastic',
 	DOT_DURATION__POSITION: 800,
 
-	DOT_CURVE__ROTATION: 'inExpo',
+	DOT_CURVE__ROTATION: 'outCubic',
 	DOT_DURATION__ROTATION: 800,
 
 	SCORE__FIGURE: 2,
 	SCORE__SURCHARGE: 0.8,
+
+	MODAL_CURVE: 'outBounce',
+	MODAL_DURATION: 1200,
 
 	init: function init() {
 		var w = document.body.clientWidth;
@@ -29153,7 +29342,7 @@ var Consts = ({
 
 module.exports = Consts;
 
-},{}],144:[function(require,module,exports){
+},{}],145:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -29185,48 +29374,98 @@ function Dot(id) {
 	this.domElement.setAttribute('aria-colindex', id % Consts.COLUMNS);
 
 	this.id = id;
-	this.state = Consts.DOT_STATE__UNTOUCHED;
+
+	var localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
+	if (localStorageDots.length > 0) {
+		var _state = localStorageDots[id];
+		this.state = _state;
+		switch (_state) {
+			case Consts.DOT_STATE__PLACED:
+				this.state = Consts.DOT_STATE__PLACED;
+				this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
+				this.domElement.setAttribute('aria-readonly', true);
+				this.domElement.setAttribute('aria-selected', true);
+				break;
+			case Consts.DOT_STATE__HOVERED:
+				this.state = Consts.DOT_STATE__HOVERED;
+				this.domElement.setProperty('background', Consts.DOT_COLOR__HOVERED);
+				this.domElement.setAttribute('aria-readonly', false);
+				this.domElement.setAttribute('aria-selected', true);
+				break;
+			case Consts.DOT_STATE__UNTOUCHED:
+			default:
+				this.state = Consts.DOT_STATE__UNTOUCHED;
+				this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
+				this.domElement.setAttribute('aria-readonly', false);
+				this.domElement.setAttribute('aria-selected', false);
+				break;
+		}
+	} else {
+		this.state = Consts.DOT_STATE__UNTOUCHED;
+	}
 
 	this.hover = function hover() {
 		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
 			this.state = Consts.DOT_STATE__HOVERED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__HOVERED);
+			this.domElement.setProperty('background', Consts.DOT_COLOR__HOVERED);
 			this.domElement.setAttribute('aria-selected', true);
+			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_localStorageDots[id] = Consts.DOT_STATE__HOVERED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 		}
 	};
 
 	this.unhover = function unhover() {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__UNTOUCHED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+			this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
 			this.domElement.setAttribute('aria-selected', false);
+			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_localStorageDots[id] = Consts.DOT_STATE__UNTOUCHED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 		}
 	};
 
 	this.place = function place() {
 		if (this.state === Consts.DOT_STATE__HOVERED) {
 			this.state = Consts.DOT_STATE__PLACED;
-			this.domElement.setProperty('background-color', Consts.DOT_COLOR__PLACED);
+			this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
 			this.domElement.setAttribute('aria-readonly', true);
+			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_localStorageDots[id] = Consts.DOT_STATE__PLACED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 		}
 	};
 
-	this.unplace = function unplace(delay) {
-		var delay = delay || false;
+	this.unplace = function unplace(delayArg) {
+		var delay = delayArg || false;
 		var self = this;
 		if (this.state === Consts.DOT_STATE__PLACED) {
 			if (delay) {
 				var clock = FamousEngine.getClock();
 				clock.setTimeout(function () {
-					self.state = Consts.DOT_STATE__UNTOUCHED;
-					self.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
-				}, Consts.DURATION);
+					self.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
+				}, Consts.DURATION * delayArg);
 			} else {
-				this.state = Consts.DOT_STATE__UNTOUCHED;
-				this.domElement.setProperty('background-color', Consts.DOT_COLOR__UNTOUCHED);
+				this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
 			}
+			this.state = Consts.DOT_STATE__UNTOUCHED;
 			this.domElement.setAttribute('aria-readonly', false);
 			this.domElement.setAttribute('aria-selected', false);
+			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_localStorageDots[id] = Consts.DOT_STATE__UNTOUCHED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+		}
+	};
+
+	this.select = function select() {
+		if (this.state !== Consts.DOT_STATE__PLACED) {
+			this.state = Consts.DOT_STATE__PLACED;
+			this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
+			this.domElement.setAttribute('aria-readonly', true);
+			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
+			_localStorageDots[id] = Consts.DOT_STATE__PLACED;
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 		}
 	};
 
@@ -29269,7 +29508,7 @@ Dot.prototype.onReceive = function onReceive(type, ev) {
 
 module.exports = Dot;
 
-},{"./Consts.js":143,"famous":46}],145:[function(require,module,exports){
+},{"./Consts.js":144,"famous":46}],146:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -29288,7 +29527,7 @@ function Figure(id, randomId) {
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h1',
-		classes: ['Figure']
+		classes: ['Figure', 'interactive']
 	});
 
 	this.domElement.setAttribute('role', 'grid');
@@ -29305,43 +29544,31 @@ function Figure(id, randomId) {
 	}
 
 	this.position = new Position(this);
-
-	this.addUIEvent('click');
 }
 
 Figure.prototype = Object.create(Node.prototype);
 Figure.prototype.constructor = Figure;
 
-/*jshint -W074 */
-Figure.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-		case 'click':
-			this._parent.figureUpdate(this.id);
-			this._parent.scoreSurcharge();
-			this.emit('id', this.id).emit('randomId', this.randomId);
-			break;
-		default:
-			return false;
-	}
-}; /*jshint +W074 */
-
 module.exports = Figure;
 
-},{"./Cell.js":142,"./Consts.js":143,"famous":46}],146:[function(require,module,exports){
+},{"./Cell.js":143,"./Consts.js":144,"famous":46}],147:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
 var Consts = require('./Consts.js');
 var Figure = require('./Figure.js');
 var Dot = require('./Dot.js');
-var Score = require('./Score.js');
-//var Menu = require('./Menu.js');
+var Nav = require('./Nav.js').Nav;
+var Modal = require('./Modal.js');
 var getRandomInt = require('./getRandomInt.js');
 
 /*jshint -W079 */
 var Node = famous.core.Node; /*jshint +W079 */
 var Curves = famous.transitions.Curves;
 var DOMElement = famous.domRenderables.DOMElement;
+
+//var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
+//var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
 
 function Game(rows, cols) {
 	Node.call(this);
@@ -29358,12 +29585,20 @@ function Game(rows, cols) {
 	var scoreMultiplier = 1;
 	var count = 0;
 	this.dots = [];
+	var _localStorageDots = [];
+	var localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
 	for (var row = 0; row < rows; row++) {
 		for (var col = 0; col < cols; col++) {
 			var dot = new Dot(count++);
 			this.addChild(dot);
 			this.dots.push(dot);
+			if (localStorageDots.length === 0) {
+				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
+			}
 		}
+	}
+	if (localStorageDots.length === 0) {
+		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 	}
 
 	this.figures = [];
@@ -29413,44 +29648,114 @@ function Game(rows, cols) {
 			cell.domElement.setAttribute('aria-rowindex', figure[cellCounter].y);
 		}
 		figures[index].randomId = uniqueFigureId;
+		var _localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
+		_localStorageFigures[index] = uniqueFigureId;
+		if (_localStorageFigures.length !== 0) {
+			localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
+		}
 	};
 
+	var _localStorageFigures = [];
+	var localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
 	for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
-		var randomId = this.figureIndexGenerate();
-		var figure = new Figure(figureCounter, randomId);
-		this.addChild(figure);
-		this.figures.push(figure);
+		if (localStorageFigures.length === 0) {
+			var randomId = this.figureIndexGenerate();
+			var figure = new Figure(figureCounter, randomId);
+			this.addChild(figure);
+			this.figures.push(figure);
+			_localStorageFigures.push(randomId);
+		} else {
+			var figure = new Figure(figureCounter, localStorageFigures[figureCounter]);
+			this.addChild(figure);
+			this.figures.push(figure);
+		}
+	}
+	if (localStorageFigures.length === 0) {
+		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
 	}
 
-	var score = new Score();
-	this.addChild(score);
-	this.score = score;
+	var stat = {};
+	var localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat'));
+	if (localStorageStat) {
+		stat = localStorageStat;
+	} else {
+		stat = {
+			rowsMoved: 0,
+			columnsMoved: 0,
+			figuresPlaced: 0
+		};
+		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
+	}
 
-	//	let menu = new Menu();
-	//	this.addChild(menu);
-	//	this.menu = menu;
+	this.statInc = function statInc(statArg) {
+		var localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
+		var keys = Object.keys(statArg);
+		keys.forEach(function (key) {
+			stat[key] += statArg[key];
+			if (stat[key] !== localStorageStat[key]) {
+				localStorageStat[key] = stat[key];
+			}
+		});
+		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
+	};
+
+	this.statSet = function statSet(statArg) {
+		var localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
+		var keys = Object.keys(statArg);
+		keys.forEach(function (key) {
+			stat[key] = statArg[key];
+			if (stat[key] !== localStorageStat[key]) {
+				localStorageStat[key] = stat[key];
+			}
+		});
+		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
+	};
+
+	var nav = new Nav();
+	this.addChild(nav);
+	this.nav = nav;
+
+	var modal = new Modal();
+	this.addChild(modal);
+	this.modal = modal;
 
 	this.scoreInc = function scoreInc(value) {
-		this.score.scoreInc(value * scoreMultiplier);
+		this.nav.scoreInc(value * scoreMultiplier);
 	};
 	this.scoreReset = function scoreReset() {
-		this.score.scoreReset();
+		this.nav.scoreReset();
 	};
 	this.scoreSurcharge = function scoreSurcharge() {
-		this.score.scoreSurcharge();
+		this.nav.scoreSurcharge();
+	};
+
+	this.figureSet = function figureSet(figure) {
+		//audioFigureSet.play();
+
+		var dots = this.dots;
+		var hovers = this.dotHovers;
+
+		for (var hover = 0; hover < 4; hover++) {
+			dots[hovers[hover]].place();
+		}
+		this.dotHovers = [];
+		this.scoreInc(Consts.SCORE__FIGURE);
+		this.linesCheck();
+		this.figureUpdate(figure);
+		this.statInc({ figuresPlaced: 1 });
+		setTimeout(this.isGameEnded(), 10);
 	};
 
 	this.figureCheck = function figureCheck() {
 		var _this = this;
 
-		var hovers = this.hoverDots;
+		var hovers = this.dotHovers;
 
 		if (hovers.length === 4) {
 			var figure;
 
 			(function () {
 				var figures = _this.figures;
-				var dots = _this.dots;
 				var rows = _this.orderRows;
 				var columns = _this.orderColumns;
 
@@ -29498,14 +29803,7 @@ function Game(rows, cols) {
 					if (f.every(function (element, index) {
 						return element.x === data[index].x && element.y === data[index].y;
 					})) {
-						for (var hover = 0; hover < 4; hover++) {
-							dots[hovers[hover]].place();
-						}
-						_this.hoverDots = [];
-						_this.scoreInc(Consts.SCORE__FIGURE);
-						_this.figureUpdate(figure);
-						_this.linesCheck();
-						_this.isGameEnded();
+						_this.figureSet(figure);
 						figure = Consts.FIGURESCOUNT;
 					}
 				}
@@ -29526,7 +29824,20 @@ function Game(rows, cols) {
 		this.mousing = 0;
 	};
 
-	this.hoverDots = [];
+	var localStorageDotHovers = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dotHovers')) || [];
+	if (localStorageDotHovers.length === 0) {
+		this.dotHovers = [];
+		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+	} else {
+		this.dotHovers = localStorageDotHovers;
+	}
+
+	this.dotSelect = function dotSelect(id) {
+		if (this.dots[id].state !== Consts.DOT_STATE__PLACED) {
+			this.dots[id].select();
+			this.linesCheck();
+		}
+	};
 
 	/**
   * Check dot for hoverability
@@ -29535,31 +29846,47 @@ function Game(rows, cols) {
 	this.dotHover = function (id) {
 		switch (this.dots[id].state) {
 			case Consts.DOT_STATE__UNTOUCHED:
-				if (this.hoverDots.indexOf(id) < 0) {
-					if (this.hoverDots.length < 4) {
-						this.hoverDots.push(id);
+				if (this.dotHovers.indexOf(id) < 0) {
+					if (this.dotHovers.length < 4) {
+						this.dotHovers.push(id);
 					} else {
-						this.dots[this.hoverDots[0]].unhover();
-						this.hoverDots.shift();
-						this.hoverDots.push(id);
+						this.dots[this.dotHovers[0]].unhover();
+						this.dotHovers.shift();
+						this.dotHovers.push(id);
 					}
 					this.dots[id].hover();
-					if (this.hoverDots.length === 4) {
+					if (this.dotHovers.length === 4) {
 						this.figureCheck();
 					}
+					localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 				}
 				break;
 			case Consts.DOT_STATE__HOVERED:
-				this.hoverDots.splice(this.hoverDots.indexOf(id), 1);
+				this.dotHovers.splice(this.dotHovers.indexOf(id), 1);
 				this.dots[id].unhover();
+				localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 				break;
 			default:
 				return false;
 		}
 	};
 
-	this.orderRows = [].initialize(Consts.ROWS);
-	this.orderColumns = [].initialize(Consts.COLUMNS);
+	var localStorageOrderRows = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [];
+	if (localStorageOrderRows.length === 0) {
+		this.orderRows = [].initialize(Consts.ROWS);
+		localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
+	} else {
+		this.orderRows = localStorageOrderRows;
+	}
+
+	var localStorageOrderColumns = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderColumns')) || [];
+	if (localStorageOrderColumns.length === 0) {
+		this.orderColumns = [].initialize(Consts.COLUMNS);
+		localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+	} else {
+		this.orderColumns = localStorageOrderColumns;
+	}
+
 	this.etalonRows = [];
 	this.etalonColumns = [];
 
@@ -29582,18 +29909,28 @@ function Game(rows, cols) {
 				return element.id % Consts.COLUMNS === line && element.state === Consts.DOT_STATE__PLACED;
 			});
 			if (row.length === Consts.ROWS) {
-				console.log('Filled row: ', line);
 				filledRows.push(line);
 			}
 			if (column.length === Consts.COLUMNS) {
 				filledColumns.push(line);
-				console.log('Filled column: ', line);
 			}
 		};
 
 		for (var line = 0; line < Consts.DIMENSION; line++) {
 			_loop2(line);
 		}
+
+		//		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
+		//		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
+		//		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
+		//		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
+		//		console.log(toRight);
+		//
+		//		toTop.sort((a, b) => b - a);
+		//		toRight.sort((a, b) => b - a);
+		//		toBottom.sort((a, b) => a - b);
+		//		toLeft.sort((a, b) => a - b);
+
 		filledRows.sort(function (x, y) {
 			if (x < Consts.ROWS / 2) {
 				return y - x;
@@ -29614,7 +29951,7 @@ function Game(rows, cols) {
 			scoreMultiplier++;
 		} else {
 			for (var row = 0; row < filledRows.length; row++) {
-				this.lineMove(filledRows[row], 'y');
+				this.lineMove(filledRows[row], 'y', row + 1);
 				scoreMultiplier++;
 			}
 		}
@@ -29623,11 +29960,12 @@ function Game(rows, cols) {
 			scoreMultiplier++;
 		} else {
 			for (var column = 0; column < filledColumns.length; column++) {
-				this.lineMove(filledColumns[column], 'x');
+				this.lineMove(filledColumns[column], 'x', column + 1);
 				scoreMultiplier++;
 			}
 		}
 
+		this.statInc({ rowsMoved: filledRows.length, columnsMoved: filledColumns.length });
 		scoreMultiplier = 1;
 	}; /*jshint +W074 */
 
@@ -29636,8 +29974,10 @@ function Game(rows, cols) {
   * @param {number} id - Id of stateed line
   */
 	/*jshint -W071, -W074 */
-	this.lineMove = function lineMove(line, direction) {
-		console.log('lineMove', line, direction);
+	this.lineMove = function lineMove(line, direction, delay) {
+		console.log('lineMove', line, direction, delay);
+		//audioLineMove.play();
+
 		this.scoreInc(Consts.SCORE__LINE);
 
 		var orderRows = this.orderRows;
@@ -29662,7 +30002,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-colindex', 0);
-						dot.unplace(true);
+						dot.unplace(delay);
 					}
 					for (var column = lineHash - 1; column >= 0; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
@@ -29677,6 +30017,7 @@ function Game(rows, cols) {
 					}
 					orderColumns.splice(lineHash, 1);
 					orderColumns.unshift(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
 				} else {
 					for (var row = 0; row < Consts.ROWS; row++) {
 						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
@@ -29686,7 +30027,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
-						dot.unplace(true);
+						dot.unplace(delay);
 					}
 					for (var column = Consts.COLUMNS - 1; column > lineHash; column--) {
 						for (var row = 0; row < Consts.ROWS; row++) {
@@ -29701,6 +30042,7 @@ function Game(rows, cols) {
 					}
 					orderColumns.splice(lineHash, 1);
 					orderColumns.push(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
 				}
 				break;
 			case 'y':
@@ -29716,7 +30058,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-rowindex', 0);
-						dot.unplace(true);
+						dot.unplace(delay);
 					}
 					for (var row = lineHash - 1; row >= 0; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
@@ -29731,6 +30073,7 @@ function Game(rows, cols) {
 					}
 					orderRows.splice(lineHash, 1);
 					orderRows.unshift(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(orderRows));
 				} else {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
 						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
@@ -29740,7 +30083,7 @@ function Game(rows, cols) {
 							curve: Consts.DOT_CURVE__POSITION
 						});
 						dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
-						dot.unplace(true);
+						dot.unplace(delay);
 					}
 					for (var row = Consts.ROWS - 1; row > lineHash; row--) {
 						for (var column = 0; column < Consts.COLUMNS; column++) {
@@ -29755,11 +30098,13 @@ function Game(rows, cols) {
 					}
 					orderRows.splice(lineHash, 1);
 					orderRows.push(line);
+					localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(orderRows));
 				}
 				break;
 			default:
 				return false;
 		}
+		return true;
 	}; /*jshint +W071, +W074 */
 
 	/**
@@ -29768,7 +30113,6 @@ function Game(rows, cols) {
   */
 	/*jshint -W071, -W074 */
 	this.lineRotate = function lineRotate(line, direction) {
-		console.log('lineRotate', line, direction);
 		this.scoreInc(Consts.SCORE__LINE);
 
 		var orderRows = this.orderRows;
@@ -29795,7 +30139,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				} else {
 					for (var row = 0; row < Consts.ROWS; row++) {
@@ -29808,7 +30152,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				}
 				break;
@@ -29827,7 +30171,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				} else {
 					for (var column = 0; column < Consts.COLUMNS; column++) {
@@ -29840,7 +30184,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(true);
+						dot.unplace(scoreMultiplier);
 					}
 				}
 				break;
@@ -29854,6 +30198,8 @@ function Game(rows, cols) {
   */
 	this.isGameEnded = function isGameEnded() {
 		var figures = this.figures;
+		var orderRows = this.orderRows;
+		var orderColumns = this.orderColumns;
 		var dots = this.dots;
 		var figuresCollection = [];
 		for (var figureCounter = 0, fL = figures.length; figureCounter < fL; figureCounter++) {
@@ -29864,28 +30210,57 @@ function Game(rows, cols) {
 			}
 			figuresCollection.push(figureContainer);
 		}
-		for (var figureCounter = 0, fL = figuresCollection.length; figureCounter < fL; figureCounter++) {
-			var curent = figuresCollection[figureCounter];
-			for (var dotCounter = 0, dL = dots.length; dotCounter < dL; dotCounter++) {
-				var counter = 0;
-				var tx = Number.parseInt(dotCounter / Consts.ROWS);
-				var ty = parseInt(dotCounter % Consts.COLUMNS);
-				for (var figureCell = 0, cL = curent.length; figureCell < cL; figureCell++) {
-					var cx = curent[figureCell].y;
-					var cy = curent[figureCell].x;
-					if (cx + tx < Consts.COLUMNS && cy + ty < Consts.ROWS) {
-						if (dots[(cx + tx) * Consts.DIMENSION + cy + ty].state !== Consts.DOT_STATE__PLACED) {
-							counter++;
-						}
+
+		var _loop3 = function (y, yL) {
+			var _loop4 = function (x, xL) {
+				var canPlaceFigure = figuresCollection.some(function (element, index) {
+					var figure = element;
+					var column = orderColumns[x];
+					var row = orderRows[y];
+					var xs = figure.map(function (element) {
+						return element.x;
+					});
+					var ys = figure.map(function (element) {
+						return element.y;
+					});
+					var dx = xs.max() - xs.min() + 1;
+					var dy = ys.max() - ys.min() + 1;
+					if (row + dy > Consts.ROWS || column + dx > Consts.COLUMNS) {
+						return false;
+					} else {
+						return figure.every(function (element, index) {
+							var id = orderRows[row + element.y] * Consts.ROWS + orderColumns[column + element.x];
+							if (dots[id].state !== Consts.DOT_STATE__PLACED) {
+								return true;
+							} else {
+								return false;
+							}
+						});
 					}
+				});
+				if (canPlaceFigure === true) {
+					return {
+						v: {
+							v: true
+						}
+					};
 				}
-				if (counter === 4) {
-					return false;
-				}
+			};
+
+			for (var x = 0, xL = Consts.COLUMNS; x < xL; x++) {
+				var _ret6 = _loop4(x, xL);
+
+				if (typeof _ret6 === 'object') return _ret6.v;
 			}
+		};
+
+		for (var y = 0, yL = Consts.ROWS; y < yL; y++) {
+			var _ret5 = _loop3(y, yL);
+
+			if (typeof _ret5 === 'object') return _ret5.v;
 		}
-		alert('Game over');
-		return true;
+		this.modal.show();
+		return false;
 	};
 
 	var hoverId;
@@ -29901,8 +30276,51 @@ function Game(rows, cols) {
 		}
 	};
 
+	this.gameStart = function gameStart() {
+		var dots = this.dots;
+
+		var etalonRows = this.etalonRows;
+		var etalonColumns = this.etalonColumns;
+
+		this.dotHovers.forEach(function (element) {
+			return dots[element].unhover();
+		});
+		this.dotHovers = [];
+		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+		hoverId = undefined;
+
+		var _localStorageDots = [];
+		for (var column = 0; column < Consts.COLUMNS; column++) {
+			for (var row = 0; row < Consts.ROWS; row++) {
+				var dot = dots[row * Consts.ROWS + column];
+				var position = dot.position;
+				position.set(etalonColumns[column], etalonRows[row], 0, {
+					duration: Consts.DOT_DURATION__POSITION * 4,
+					curve: Consts.DOT_CURVE__POSITION
+				});
+				dot.unplace();
+				dot.domElement.setAttribute('aria-colindex', column);
+				dot.domElement.setAttribute('aria-rowindex', row);
+				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
+			}
+		}
+		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+
+		this.orderRows = [].initialize(Consts.ROWS);
+		this.orderColumns = [].initialize(Consts.COLUMNS);
+		localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
+		localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+
+		this.scoreReset();
+
+		for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
+			this.figureUpdate(figureCounter);
+		}
+	};
+
 	// Centering
-	this.setMountPoint(0.5, 0.5, 0).setAlign(0.5, 0.5, 0).setOrigin(0.5, 0.5, 0).setPosition(0, 0, 0);
+	this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.COLUMNS * Consts.DOT_SIDE, Consts.ROWS * Consts.DOT_SIDE);
+
 	this.layout = new Layout(this);
 
 	console.log(this);
@@ -29938,57 +30356,60 @@ function Layout(node) {
 	this.id = this.node.addComponent(this);
 	this.current = 0;
 	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
-	this.duration = [0.5 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 0.5 * Consts.DURATION];
+	this.duration = [2 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 2 * Consts.DURATION];
 
 	var width = document.body.clientWidth;
 	var height = document.body.clientHeight;
 	for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
 		var figure = this.node.figures[figureCounter];
-		var _position = figure.position;
+		var position = figure.position;
 		if (width > height) {
-			_position.set(-Consts.ROWS * Consts.DOT_SIDE, (figureCounter - 1) * Consts.ROWS * Consts.DOT_SIDE / 2);
+			position.set(-Consts.ROWS * Consts.DOT_SIDE, (figureCounter - 1) * Consts.ROWS * Consts.DOT_SIDE / 2);
 		} else {
-			_position.set(-figureCounter * Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE);
+			position.set(-figureCounter * Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE);
 		}
 	}
 
-	var score = this.node.score;
-	var position = score.position;
+	var nav = this.node.nav;
+	var navPosition = nav.position;
 	if (width > height) {
-		position.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
+		navPosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
 	} else {
-		position.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
+		navPosition.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
 	}
 
 	this.next();
 }
 
 Layout.prototype.next = function next() {
+	var orderColumns = this.node.orderColumns;
+	var orderRows = this.node.orderRows;
+
 	if (this.current++ === Consts.ROWS) {
 		this.current = 0;
 	}
 	var duration = this.duration[this.current];
 	var curve = this.curve[this.current];
 	var row = 0;
-	var col = 0;
-	var dimension = Consts.DOT_SIDE;
-	var bounds = [-(dimension * Consts.ROWS / 2 - dimension / 2), -(dimension * Consts.COLUMNS / 2 - dimension / 2)];
+	var column = 0;
+	var bounds = [Consts.DOT_SIDE * (1 - Consts.ROWS) / 2, Consts.DOT_SIDE * (1 - Consts.COLUMNS) / 2];
+
 	for (var i = 0; i < this.node.dots.length; i++) {
-		var x = bounds[0] + dimension * col++;
-		var y = bounds[1] + dimension * row;
+		var x = bounds[0] + Consts.DOT_SIDE * column++;
+		var y = bounds[1] + Consts.DOT_SIDE * row;
 		if (i < Consts.COLUMNS) {
 			this.node.etalonColumns.push(x);
 		}
 		if (i % Consts.ROWS === 0) {
 			this.node.etalonRows.push(y);
 		}
-		var z = 0;
-		this.node.dots[i].position.set(x, y, z, {
+		var id = orderRows[row] * Consts.COLUMNS + orderColumns[column - 1];
+		this.node.dots[id].position.set(x, y, 0, {
 			duration: i * Consts.ROWS + duration,
 			curve: curve
 		});
-		if (col >= Consts.COLUMNS) {
-			col = 0;
+		if (column >= Consts.COLUMNS) {
+			column = 0;
 			row++;
 		}
 	}
@@ -29996,7 +30417,7 @@ Layout.prototype.next = function next() {
 
 module.exports = Game;
 
-},{"./Consts.js":143,"./Dot.js":144,"./Figure.js":145,"./Score.js":147,"./getRandomInt.js":148,"famous":46}],147:[function(require,module,exports){
+},{"./Consts.js":144,"./Dot.js":145,"./Figure.js":146,"./Modal.js":148,"./Nav.js":149,"./getRandomInt.js":151,"famous":46}],148:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
@@ -30006,44 +30427,172 @@ var Node = famous.core.Node;
 var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
+function Modal() {
+	Node.call(this);
+
+	this.setPosition(0, 0, 0);
+
+	this.domElement = new DOMElement(this, {
+		tagName: 'center',
+		classes: ['Modal', 'interactive'],
+		properties: {
+			color: '#fff',
+			fontSize: '24px',
+			padding: '1rem',
+			backgroundColor: 'rgba(0,0,0,.6)'
+		},
+		content: 'Modal'
+	});
+
+	this.hide = function hide() {
+		this.position.setY(-Consts.HEIGHT, {
+			duration: Consts.MODAL_DURATION,
+			curve: Consts.MODAL_CURVE
+		});
+	};
+
+	this.show = function show() {
+		this.domElement.setContent('<h1>Game Over!<br>Click to start new game</h1>');
+		this.position.setY(0, {
+			duration: Consts.MODAL_DURATION,
+			curve: Consts.MODAL_CURVE
+		});
+	};
+
+	this.position = new Position(this);
+	this.position.setY(-Consts.HEIGHT);
+
+	this.addUIEvent('click');
+}
+
+Modal.prototype = Object.create(Node.prototype);
+Modal.prototype.constructor = Modal;
+
+Modal.prototype.onReceive = function onReceive(type, ev) {
+	switch (type) {
+		case 'click':
+			this.hide();
+			this._parent.gameStart();
+			break;
+		default:
+			return false;
+	}
+}; /*jshint +W074 */
+
+module.exports = Modal;
+
+},{"./Consts.js":144,"famous":46}],149:[function(require,module,exports){
+'use strict';
+
+var famous = require('famous');
+var Consts = require('./Consts.js');
+
+var Node = famous.core.Node;
+var Position = famous.components.Position;
+var DOMElement = famous.domRenderables.DOMElement;
+
+var width = Consts.WIDTH;
+var heigth = Consts.HEIGHT;
+
+function Button() {
+	Node.call(this);
+
+	var alignX = 0,
+	    alignY = 0;
+	if (width > heigth) {
+		alignX = 0;
+		alignY = 0.5;
+	} else {
+		alignX = 0.5;
+		alignY = 0;
+	}
+
+	this.setMountPoint(0, 0).setAlign(alignX, alignY).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
+
+	this.domElement = new DOMElement(this, {
+		tagName: 'h2',
+		properties: {
+			display: 'inline',
+			color: '#fff',
+			fontSize: '32px',
+			padding: '1rem'
+		},
+		content: 'New Game',
+		classes: ['Button', 'interactive']
+	});
+
+	this.addUIEvent('click');
+	this.position = new Position(this);
+}
+
+Button.prototype = Object.create(Node.prototype);
+Button.prototype.constructor = Button;
+
+Button.prototype.onReceive = function onReceive(type, ev) {
+	switch (type) {
+		case 'click':
+			this._parent.gameStart();
+			//this.emit('id', this.domElement.id).emit('state', this.domElement.state);
+			break;
+		default:
+			return false;
+	}
+};
+
 function Score() {
 	Node.call(this);
 
-	// Center dot.
-	this.setMountPoint(0, 0, 0).setAlign(0.5, 0.5, 0).setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION, Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE);
+	this.setMountPoint(0, 0).setAlign(0, 0).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
 
-	this.score = 0;
+	this.score = {};
+	var localStorageScore = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__score'));
+	if (localStorageScore) {
+		this.score = localStorageScore;
+	} else {
+		this.score = {
+			best: 0,
+			current: 0
+		};
+		localStorage.setItem(Consts.DIMENSION + '__score', JSON.stringify(this.score));
+	}
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
 		classes: ['Scores'],
 		properties: {
 			color: '#fff',
-			fontSize: '32px'
+			fontSize: '32px',
+			padding: '1rem'
 		},
-		content: 'Score: <var class="Score">' + this.score + '</var>'
+		content: '\n\t\t\t<p class="Score">Score:\n\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t' + this.score.current + '\n\t\t\t\t</var>\n\t\t\t</p>\n\t\t\t<p class="Score">Best:\n\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t' + this.score.best + '\n\t\t\t\t</var>\n\t\t\t</p>'
 	});
 
 	this.domElement.setAttribute('role', 'log');
 	this.domElement.setAttribute('aria-live', 'polite');
 
 	this.scoreSetContent = function scoreSetContent(value) {
-		this.domElement.setContent('Score: <var class="Score">' + value + '</var>');
+		if (value >= this.score.best) {
+			this.domElement.setContent('\n\t\t\t\t<p class="Score">Score:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>\n\t\t\t\t<p class="Score">Best:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>');
+			this.score.best = value;
+		} else {
+			this.domElement.setContent('\n\t\t\t\t<p class="Score">Score:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>\n\t\t\t\t<p class="Score">Best:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + this.score.best + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>');
+		};
+		localStorage.setItem(Consts.DIMENSION + '__score', JSON.stringify(this.score));
 	};
 
 	this.scoreInc = function scoreInc(inc) {
-		this.score += inc;
-		this.scoreSetContent(this.score);
+		this.score.current += inc;
+		this.scoreSetContent(this.score.current);
 	};
 
 	this.scoreReset = function scoreReset() {
-		this.score = 0;
-		this.scoreSetContent(this.score);
+		this.score.current = 0;
+		this.scoreSetContent(this.score.current);
 	};
 
 	this.scoreSurcharge = function scoreSurcharge() {
-		this.score = Number.parseInt(this.score * Consts.SCORE__SURCHARGE);
-		this.scoreSetContent(this.score);
+		this.score.current = Number.parseInt(this.score.current * Consts.SCORE__SURCHARGE);
+		this.scoreSetContent(this.score.current);
 	};
 
 	this.position = new Position(this);
@@ -30052,9 +30601,255 @@ function Score() {
 Score.prototype = Object.create(Node.prototype);
 Score.prototype.constructor = Score;
 
-module.exports = Score;
+function Nav() {
+	Node.call(this);
 
-},{"./Consts.js":143,"famous":46}],148:[function(require,module,exports){
+	var x = 0,
+	    y = 0;
+	if (width > heigth) {
+		x = 2;
+		y = 1;
+	} else {
+		x = 1;
+		y = 2;
+	}
+
+	this.setMountPoint(0, 0).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / x, Consts.DOT_SIDE * Consts.DIMENSION / y);
+
+	this.domElement = new DOMElement(this, {
+		tagName: 'nav',
+		classes: ['Nav']
+	});
+
+	var score = new Score();
+	this.addChild(score);
+	this.score = score;
+
+	var button = new Button();
+	this.addChild(button);
+	this.button = button;
+
+	this.gameStart = function gameStart() {
+		this._parent.gameStart();
+	};
+	this.scoreInc = function scoreInc(value) {
+		this.score.scoreInc(value);
+	};
+	this.scoreReset = function scoreReset() {
+		this.score.scoreReset();
+	};
+	this.scoreSurcharge = function scoreSurcharge() {
+		this.score.scoreSurcharge();
+	};
+
+	this.position = new Position(this);
+}
+
+Nav.prototype = Object.create(Node.prototype);
+Nav.prototype.constructor = Nav;
+
+module.exports.Nav = Nav;
+module.exports.Button = Button;
+module.exports.Score = Score;
+
+},{"./Consts.js":144,"famous":46}],150:[function(require,module,exports){
+'use strict';
+
+module.exports.ObjectKeys = function () {
+	'use strict';
+	var hasOwnProperty = Object.prototype.hasOwnProperty,
+	    hasDontEnumBug = !({
+		toString: null
+	}).propertyIsEnumerable('toString'),
+	    dontEnums = ['toString', 'toLocaleString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'constructor'],
+	    dontEnumsLength = dontEnums.length;
+	return function (obj) {
+		if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+			throw new TypeError('Object.keys called on non-object');
+		}
+		var result = [],
+		    prop,
+		    i;
+		for (prop in obj) {
+			if (hasOwnProperty.call(obj, prop)) {
+				result.push(prop);
+			}
+		}
+		if (hasDontEnumBug) {
+			for (i = 0; i < dontEnumsLength; i++) {
+				if (hasOwnProperty.call(obj, dontEnums[i])) {
+					result.push(dontEnums[i]);
+				}
+			}
+		}
+		return result;
+	};
+};
+
+module.exports.ArrayEvery = function (callbackfn, thisArg) {
+	'use strict';
+	var T, k;
+	if (this == null) {
+		throw new TypeError('this is null or not defined');
+	}
+	var O = Object(this);
+	var len = O.length >>> 0;
+	if (typeof callbackfn !== 'function') {
+		throw new TypeError();
+	}
+	if (arguments.length > 1) {
+		T = thisArg;
+	}
+	k = 0;
+	while (k < len) {
+		var kValue;
+		if (k in O) {
+			kValue = O[k];
+			var testResult = callbackfn.call(T, kValue, k, O);
+			if (!testResult) {
+				return false;
+			}
+		}
+		k++;
+	}
+	return true;
+};
+
+module.exports.ArraySome = function (fun /*, thisArg*/) {
+	'use strict';
+	if (this == null) {
+		throw new TypeError('Array.prototype.some called on null or undefined');
+	}
+	if (typeof fun !== 'function') {
+		throw new TypeError();
+	}
+	var t = Object(this);
+	var len = t.length >>> 0;
+	var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+	for (var i = 0; i < len; i++) {
+		if (i in t && fun.call(thisArg, t[i], i, t)) {
+			return true;
+		}
+	}
+	return false;
+};
+
+module.exports.ArrayFilter = function (fun /*, thisArg*/) {
+	'use strict';
+	if (this === void 0 || this === null) {
+		throw new TypeError();
+	}
+	var t = Object(this);
+	var len = t.length >>> 0;
+	if (typeof fun !== 'function') {
+		throw new TypeError();
+	}
+	var res = [];
+	var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+	for (var i = 0; i < len; i++) {
+		if (i in t) {
+			var val = t[i];
+			if (fun.call(thisArg, val, i, t)) {
+				res.push(val);
+			}
+		}
+	}
+	return res;
+};
+
+module.exports.ArrayFind = function (predicate) {
+	if (this === null) {
+		throw new TypeError('Array.prototype.find called on null or undefined');
+	}
+	if (typeof predicate !== 'function') {
+		throw new TypeError('predicate must be a function');
+	}
+	var list = Object(this);
+	var length = list.length >>> 0;
+	var thisArg = arguments[1];
+	var value;
+	for (var i = 0; i < length; i++) {
+		value = list[i];
+		if (predicate.call(thisArg, value, i, list)) {
+			return value;
+		}
+	}
+	return undefined;
+};
+
+module.exports.ArrayFindIndex = function (predicate) {
+	if (this === null) {
+		throw new TypeError('Array.prototype.findIndex called on null or undefined');
+	}
+	if (typeof predicate !== 'function') {
+		throw new TypeError('predicate must be a function');
+	}
+	var list = Object(this);
+	var length = list.length >>> 0;
+	var thisArg = arguments[1];
+	var value;
+	for (var i = 0; i < length; i++) {
+		value = list[i];
+		if (predicate.call(thisArg, value, i, list)) {
+			return i;
+		}
+	}
+	return -1;
+};
+
+module.exports.ArrayForEach = function (callback, thisArg) {
+	var T, k;
+	if (this == null) {
+		throw new TypeError(' this is null or not defined');
+	}
+	var O = Object(this);
+	var len = O.length >>> 0;
+	if (typeof callback !== "function") {
+		throw new TypeError(callback + ' is not a function');
+	}
+	if (arguments.length > 1) {
+		T = thisArg;
+	}
+	k = 0;
+	while (k < len) {
+		var kValue;
+		if (k in O) {
+			kValue = O[k];
+			callback.call(T, kValue, k, O);
+		}
+		k++;
+	}
+};
+
+module.exports.ArrayIncludes = function (searchElement /*, fromIndex*/) {
+	'use strict';
+	var O = Object(this);
+	var len = parseInt(O.length) || 0;
+	if (len === 0) {
+		return false;
+	}
+	var n = parseInt(arguments[1]) || 0;
+	var k;
+	if (n >= 0) {
+		k = n;
+	} else {
+		k = len + n;
+		if (k < 0) {
+			k = 0;
+		}
+	}
+	var currentElement;
+	while (k < len) {
+		currentElement = O[k];
+		if (searchElement === currentElement || searchElement !== searchElement && currentElement !== currentElement) {
+			return true;
+		}
+		k++;
+	}
+	return false;
+};
+
+},{}],151:[function(require,module,exports){
 'use strict';
 
 var getRandomInt = function getRandomInt(min, max) {
@@ -30063,268 +30858,66 @@ var getRandomInt = function getRandomInt(min, max) {
 
 module.exports = getRandomInt;
 
-},{}],149:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 'use strict';
 
 var famous = require('famous');
+//var CoreJS = require('core-js');
 var Consts = require('./Consts.js');
 var Game = require('./Game.js');
 
 var FamousEngine = famous.core.FamousEngine;
 
 /*jshint -W121 */
-/**
- * Initialize fixed-sized array with incremented values
- * @param {number} length - Length of array
- */
 if (!Array.prototype.initialize) {
-	Array.prototype.initialize = function (length) {
-		var arr = [];
-		for (var i = 0; i < length; i++) {
-			arr.push(i);
-		}
-		return arr;
-	};
+	Array.prototype.initialize = require('./Array.js').initialize;
 }
+if (!Array.prototype.max) {
+	Array.prototype.max = require('./Array.js').max;
+}
+if (!Array.prototype.min) {
+	Array.prototype.min = require('./Array.js').min;
+}
+//Polyfills
 if (!Array.prototype.every) {
-	Array.prototype.every = function (callbackfn, thisArg) {
-		'use strict';
-		var T, k;
-
-		if (this == null) {
-			throw new TypeError('this is null or not defined');
-		}
-
-		// 1. Let O be the result of calling ToObject passing the this
-		//    value as the argument.
-		var O = Object(this);
-
-		// 2. Let lenValue be the result of calling the Get internal method
-		//    of O with the argument "length".
-		// 3. Let len be ToUint32(lenValue).
-		var len = O.length >>> 0;
-
-		// 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
-		if (typeof callbackfn !== 'function') {
-			throw new TypeError();
-		}
-
-		// 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-		if (arguments.length > 1) {
-			T = thisArg;
-		}
-
-		// 6. Let k be 0.
-		k = 0;
-
-		// 7. Repeat, while k < len
-		while (k < len) {
-
-			var kValue;
-
-			// a. Let Pk be ToString(k).
-			//   This is implicit for LHS operands of the in operator
-			// b. Let kPresent be the result of calling the HasProperty internal
-			//    method of O with argument Pk.
-			//   This step can be combined with c
-			// c. If kPresent is true, then
-			if (k in O) {
-
-				// i. Let kValue be the result of calling the Get internal method
-				//    of O with argument Pk.
-				kValue = O[k];
-
-				// ii. Let testResult be the result of calling the Call internal method
-				//     of callbackfn with T as the this value and argument list
-				//     containing kValue, k, and O.
-				var testResult = callbackfn.call(T, kValue, k, O);
-
-				// iii. If ToBoolean(testResult) is false, return false.
-				if (!testResult) {
-					return false;
-				}
-			}
-			k++;
-		}
-		return true;
-	};
+	Array.prototype.every = require('./Polyfills.js').ArrayEvery;
+}
+if (!Array.prototype.some) {
+	Array.prototype.some = require('./Polyfills.js').ArraySome;
 }
 if (!Array.prototype.filter) {
-	Array.prototype.filter = function (fun /*, thisArg*/) {
-		'use strict';
-
-		if (this === void 0 || this === null) {
-			throw new TypeError();
-		}
-
-		var t = Object(this);
-		var len = t.length >>> 0;
-		if (typeof fun !== 'function') {
-			throw new TypeError();
-		}
-
-		var res = [];
-		var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
-		for (var i = 0; i < len; i++) {
-			if (i in t) {
-				var val = t[i];
-
-				// NOTE: Technically this should Object.defineProperty at
-				//       the next index, as push can be affected by
-				//       properties on Object.prototype and Array.prototype.
-				//       But that method's new, and collisions should be
-				//       rare, so use the more-compatible alternative.
-				if (fun.call(thisArg, val, i, t)) {
-					res.push(val);
-				}
-			}
-		}
-
-		return res;
-	};
+	Array.prototype.filter = require('./Polyfills.js').ArrayFilter;
 }
 if (!Array.prototype.find) {
-	Array.prototype.find = function (predicate) {
-		if (this === null) {
-			throw new TypeError('Array.prototype.find called on null or undefined');
-		}
-		if (typeof predicate !== 'function') {
-			throw new TypeError('predicate must be a function');
-		}
-		var list = Object(this);
-		var length = list.length >>> 0;
-		var thisArg = arguments[1];
-		var value;
-
-		for (var i = 0; i < length; i++) {
-			value = list[i];
-			if (predicate.call(thisArg, value, i, list)) {
-				return value;
-			}
-		}
-		return undefined;
-	};
+	Array.prototype.find = require('./Polyfills.js').ArrayFind;
 }
 if (!Array.prototype.findIndex) {
-	Array.prototype.findIndex = function (predicate) {
-		if (this === null) {
-			throw new TypeError('Array.prototype.findIndex called on null or undefined');
-		}
-		if (typeof predicate !== 'function') {
-			throw new TypeError('predicate must be a function');
-		}
-		var list = Object(this);
-		var length = list.length >>> 0;
-		var thisArg = arguments[1];
-		var value;
-
-		for (var i = 0; i < length; i++) {
-			value = list[i];
-			if (predicate.call(thisArg, value, i, list)) {
-				return i;
-			}
-		}
-		return -1;
-	};
+	Array.prototype.findIndex = require('./Polyfills.js').ArrayFindIndex;
 }
-// Production steps of ECMA-262, Edition 5, 15.4.4.18
-// Reference: http://es5.github.io/#x15.4.4.18
 if (!Array.prototype.forEach) {
-
-	Array.prototype.forEach = function (callback, thisArg) {
-
-		var T, k;
-
-		if (this == null) {
-			throw new TypeError(' this is null or not defined');
-		}
-
-		// 1. Let O be the result of calling ToObject passing the |this| value as the argument.
-		var O = Object(this);
-
-		// 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
-		// 3. Let len be ToUint32(lenValue).
-		var len = O.length >>> 0;
-
-		// 4. If IsCallable(callback) is false, throw a TypeError exception.
-		// See: http://es5.github.com/#x9.11
-		if (typeof callback !== "function") {
-			throw new TypeError(callback + ' is not a function');
-		}
-
-		// 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-		if (arguments.length > 1) {
-			T = thisArg;
-		}
-
-		// 6. Let k be 0
-		k = 0;
-
-		// 7. Repeat, while k < len
-		while (k < len) {
-
-			var kValue;
-
-			// a. Let Pk be ToString(k).
-			//   This is implicit for LHS operands of the in operator
-			// b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
-			//   This step can be combined with c
-			// c. If kPresent is true, then
-			if (k in O) {
-
-				// i. Let kValue be the result of calling the Get internal method of O with argument Pk.
-				kValue = O[k];
-
-				// ii. Call the Call internal method of callback with T as the this value and
-				// argument list containing kValue, k, and O.
-				callback.call(T, kValue, k, O);
-			}
-			// d. Increase k by 1.
-			k++;
-		}
-		// 8. return undefined
-	};
+	Array.prototype.forEach = require('./Polyfills.js').ArrayForEach;
 }
 if (!Array.prototype.includes) {
-	Array.prototype.includes = function (searchElement /*, fromIndex*/) {
-		'use strict';
-		var O = Object(this);
-		var len = parseInt(O.length) || 0;
-		if (len === 0) {
-			return false;
-		}
-		var n = parseInt(arguments[1]) || 0;
-		var k;
-		if (n >= 0) {
-			k = n;
-		} else {
-			k = len + n;
-			if (k < 0) {
-				k = 0;
-			}
-		}
-		var currentElement;
-		while (k < len) {
-			currentElement = O[k];
-			if (searchElement === currentElement || searchElement !== searchElement && currentElement !== currentElement) {
-				return true;
-			}
-			k++;
-		}
-		return false;
-	};
+	Array.prototype.includes = require('./Polyfills.js').ArrayIncludes;
 }
-Array.prototype.max = function () {
-	return Math.max.apply(null, this);
-};
-Array.prototype.min = function () {
-	return Math.min.apply(null, this);
-};
-/*jshint -W121 */
+if (!Object.keys) {
+	Object.keys = require('./Polyfills.js').ObjectKeys;
+}
+/*jshint +W121 */
 
 FamousEngine.init();
 var scene = FamousEngine.createScene();
 var game = new Game(Consts.ROWS, Consts.COLUMNS);
+
+if (!localStorage.getItem('reset')) {
+	localStorage.clear();
+	localStorage.setItem('reset', true);
+}
+//localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify([2,0]));
+//localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
+//localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
+//localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify([ 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
 scene.addChild(game);
 
-},{"./Consts.js":143,"./Game.js":146,"famous":46}]},{},[149]);
+},{"./Array.js":142,"./Consts.js":144,"./Game.js":147,"./Polyfills.js":150,"famous":46}]},{},[152]);
