@@ -413,7 +413,11 @@ const Consts = {
 			});
 
 			if (qs.s) {
-				this.DIMENSION = parseInt(qs.s);
+				let dimension = parseInt(qs.s, 10);
+				if (dimension % 2 !== 0) {
+					dimension++;
+				}
+				this.DIMENSION = dimension;
 			}
 		}
 
