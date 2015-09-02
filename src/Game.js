@@ -2,6 +2,7 @@
 
 import Consts from './Consts';
 import {core, domRenderables} from 'famous';
+import Tone from 'tone';
 import Figure from './Figure';
 import Dot from './Dot';
 import Nav from './Nav';
@@ -10,6 +11,7 @@ import Layout from './Layout';
 import getRandomInt from './getRandomInt';
 
 const DOMElement = domRenderables.DOMElement;
+const FamousEngine = core.FamousEngine;
 
 
 //var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
@@ -424,7 +426,12 @@ export default class Game extends core.Node {
 	/*jshint -W071, -W074 */
 	lineMove (line, direction, delay) {
 		console.log('lineMove', line, direction, delay);
-		//audioLineMove.play();
+
+		let synth = new Tone.SimpleSynth().toMaster();
+		let clock = FamousEngine.getClock();
+		clock.setTimeout(function() {
+			synth.triggerAttackRelease('C4', '8n');
+		}, Consts.DURATION * delay);
 
 		this.scoreInc(Consts.SCORE__LINE);
 
