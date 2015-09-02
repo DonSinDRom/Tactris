@@ -1,33 +1,39 @@
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
+import Consts from './Consts';
+import {core, components, domRenderables} from 'famous';
 
-var Node = famous.core.Node;
-var Position = famous.components.Position;
-var DOMElement = famous.domRenderables.DOMElement;
+const Position = components.Position;
+const DOMElement = domRenderables.DOMElement;
 
-function Modal() {
-	Node.call(this);
+export default class Modal extends core.Node {
+	constructor () {
+		super();
 
-	this
-		.setPosition(0, 0, 0);
+		this
+			.setPosition(0, 0, 0);
 
-	this.domElement = new DOMElement(this, {
-		tagName: 'center',
-		classes: ['Modal', 'interactive'],
-		properties: {
-			color: '#fff',
-			fontSize: '24px',
-			padding: '1rem',
-			backgroundColor: 'rgba(0,0,0,.6)'
-		},
-		content: 'Modal'
-	});
+		this.domElement = new DOMElement(this, {
+			tagName: 'center',
+			classes: ['Modal', 'interactive'],
+			properties: {
+				color: '#fff',
+				fontSize: '24px',
+				padding: '1rem',
+				backgroundColor: 'rgba(0,0,0,.6)'
+			},
+			content: 'Modal'
+		});
 
-	this.isVisible = false;
+		this.isVisible = false;
 
-	this.hide = function hide() {
+		this.position = new Position(this);
+		this.position.setY(-Consts.HEIGHT);
+
+		this.addUIEvent('click');
+	}
+
+	hide() {
 		if (!this.isVisible) {
 			return;
 		}
@@ -38,9 +44,9 @@ function Modal() {
 		});
 
 		this.isVisible = false;
-	};
+	}
 
-	this.show = function show() {
+	show () {
 		if (this.isVisible) {
 			return;
 		}
@@ -52,26 +58,16 @@ function Modal() {
 		});
 
 		this.isVisible = true;
-	};
-
-	this.position = new Position(this);
-	this.position.setY(-Consts.HEIGHT);
-
-	this.addUIEvent('click');
-}
-
-Modal.prototype = Object.create(Node.prototype);
-Modal.prototype.constructor = Modal;
-
-Modal.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-	case 'click':
-			this.hide();
-			this._parent.gameStart();
-			break;
-	default:
-			return false;
 	}
-};/*jshint +W074 */
 
-module.exports = Modal;
+	onReceive(type, ev) {
+		switch (type) {
+			case 'click':
+				this.hide();
+				this._parent.gameStart();
+				break;
+			default:
+				return false;
+		}
+	}
+}

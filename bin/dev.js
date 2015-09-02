@@ -60,7 +60,7 @@ var server = http.createServer(function(req, res){
 
 server.listen(
     1618,
-    () => {
+    function () {
         console.log(
             chalk.grey('serving ') +
             chalk.blue(path.resolve('./public/')) +
