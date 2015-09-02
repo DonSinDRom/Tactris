@@ -607,12 +607,9 @@ function Game(rows, cols) {
 		default:
 				return false;
 		}
-	}
+	};
 
-	/**
-	 * Check if player can't place new figure (Game over state)
-	 */
-	this.isGameEnded = function isGameEnded() {
+	this.isMovePossible = function isMovePossible () {
 		let figures = this.figures;
 		let orderRows = this.orderRows;
 		let orderColumns = this.orderColumns;
@@ -654,8 +651,20 @@ function Game(rows, cols) {
 				}
 			}
 		}
-		this.modal.show();
+
 		return false;
+	};
+
+	/**
+	 * Check if player can't place new figure (Game over state)
+	 */
+	this.isGameEnded = function isGameEnded() {
+		if (this.isMovePossible()) {
+			return true;
+		} else {
+			this.modal.show();
+			return false;
+		}
 	};
 
 	var hoverId;
@@ -709,6 +718,8 @@ function Game(rows, cols) {
 		for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
 			this.figureUpdate(figureCounter);
 		}
+
+		this.modal.hide();
 	};
 
 	// Centering

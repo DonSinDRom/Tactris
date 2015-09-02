@@ -25,19 +25,33 @@ function Modal() {
 		content: 'Modal'
 	});
 
+	this.isVisible = false;
+
 	this.hide = function hide() {
+		if (!this.isVisible) {
+			return;
+		}
+
 		this.position.setY(-Consts.HEIGHT, {
 			duration: Consts.MODAL_DURATION,
 			curve: Consts.MODAL_CURVE
 		});
+
+		this.isVisible = false;
 	};
 
 	this.show = function show() {
+		if (this.isVisible) {
+			return;
+		}
+
 		this.domElement.setContent(`<h1>Game Over!<br>Click to start new game</h1>`);
 		this.position.setY(0, {
 			duration: Consts.MODAL_DURATION,
 			curve: Consts.MODAL_CURVE
 		});
+
+		this.isVisible = true;
 	};
 
 	this.position = new Position(this);

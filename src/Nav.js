@@ -8,13 +8,13 @@ var Position = famous.components.Position;
 var DOMElement = famous.domRenderables.DOMElement;
 
 let width = Consts.WIDTH;
-let heigth = Consts.HEIGHT;
+let height = Consts.HEIGHT;
 
 function Button() {
 	Node.call(this);
 
 	let alignX = 0, alignY = 0;
-	if (width > heigth) {
+	if (width > height) {
 		alignX = 0;
 		alignY = 0.5;
 	} else {
@@ -26,7 +26,7 @@ function Button() {
 		.setMountPoint(0, 0)
 		.setAlign(alignX, alignY)
 		.setSizeMode('absolute', 'absolute')
-		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
+		.setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 4);
 
 	this.domElement = new DOMElement(this, {
 		tagName: 'h2',
@@ -50,8 +50,9 @@ Button.prototype.constructor = Button;
 Button.prototype.onReceive = function onReceive(type, ev) {
 	switch (type) {
 	case 'click':
-			this._parent.gameStart();
-			//this.emit('id', this.domElement.id).emit('state', this.domElement.state);
+			if (!this._parent._parent.isMovePossible() || confirm('Are you sure?')) {
+				this._parent.gameStart();
+			}
 			break;
 	default:
 			return false;
@@ -158,7 +159,7 @@ function Nav() {
 	Node.call(this);
 
 	let x = 0, y = 0;
-	if (width > heigth) {
+	if (width > height) {
 		x = 2;
 		y = 1;
 	} else {
@@ -187,6 +188,9 @@ function Nav() {
 
 	this.gameStart = function gameStart() {
 		this._parent.gameStart();
+	};
+	this.isGameEnded = function isGameEnded () {
+		this._parent.isGameEnded();
 	};
 	this.scoreInc = function scoreInc(value) {
 		this.score.scoreInc(value);
