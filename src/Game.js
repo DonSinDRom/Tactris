@@ -385,21 +385,6 @@ export default class Game extends core.Node {
 		toBottom.sort((a, b) => a - b);
 		toLeft.sort((a, b) => a - b);
 
-		filledRows.sort(function (x, y) {
-			if (x < (Consts.ROWS / 2)) {
-				return y - x;
-			} else {
-				return x - y;
-			}
-		});
-		filledColumns.sort(function (x, y) {
-			if (x < (Consts.COLUMNS / 2)) {
-				return y - x;
-			} else {
-				return x - y;
-			}
-		});
-
 		if (filledRows.length === 1 && (filledRows[0] === orderRows[0] || filledRows[0] === orderRows[Consts.ROWS - 1])) {
 			this.lineRotate(filledRows[0], 'y');
 			this.scoreMultiplier++;
