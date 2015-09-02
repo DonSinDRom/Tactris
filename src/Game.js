@@ -375,16 +375,15 @@ export default class Game extends core.Node {
 			}
 		}
 
-//		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
-//		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
-//		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
-//		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
-//		console.log(toRight);
-//
-//		toTop.sort((a, b) => b - a);
-//		toRight.sort((a, b) => b - a);
-//		toBottom.sort((a, b) => a - b);
-//		toLeft.sort((a, b) => a - b);
+		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
+		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
+		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
+		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
+
+		toTop.sort((a, b) => b - a);
+		toRight.sort((a, b) => b - a);
+		toBottom.sort((a, b) => a - b);
+		toLeft.sort((a, b) => a - b);
 
 		filledRows.sort(function (x, y) {
 			if (x < (Consts.ROWS / 2)) {
@@ -405,8 +404,12 @@ export default class Game extends core.Node {
 			this.lineRotate(filledRows[0], 'y');
 			this.scoreMultiplier++;
 		} else {
-			for (let row = 0; row < filledRows.length; row++) {
-				this.lineMove(filledRows[row], 'y', row + 1);
+			for (let row = 0; row < toTop.length; row++) {
+				this.lineMove(toTop[row], 'y', row + 1);
+				this.scoreMultiplier++;
+			}
+			for (let row = 0; row < toBottom.length; row++) {
+				this.lineMove(toBottom[row], 'y', row + 1);
 				this.scoreMultiplier++;
 			}
 		}
@@ -414,8 +417,12 @@ export default class Game extends core.Node {
 			this.lineRotate(filledColumns[0], 'x');
 			this.scoreMultiplier++;
 		} else {
-			for (let column = 0; column < filledColumns.length; column++) {
-				this.lineMove(filledColumns[column], 'x', column + 1);
+			for (let column = 0; column < toLeft.length; column++) {
+				this.lineMove(toLeft[column], 'x', column + 1);
+				this.scoreMultiplier++;
+			}
+			for (let column = 0; column < toRight.length; column++) {
+				this.lineMove(toRight[column], 'x', column + 1);
 				this.scoreMultiplier++;
 			}
 		}
