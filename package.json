@@ -1,7 +1,7 @@
 {
-	"name": "engine-seed",
+	"name": "Tactris",
 	"version": "1.0.0",
-	"description": "seed project for a browserified version of the Famous Engine",
+	"description": "Tactris: Tetris based browser game",
 	"browser": "src/index.js",
 	"scripts": {
 		"build": "browserify src/index.js -g uglifyify | uglifyjs --screw-ie8 -m -c dead_code,sequences,conditionals,booleans,unused,if_return,join_vars,drop_debugger > public/bundle.js",
@@ -15,7 +15,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Famous/engine-seed.git"
+		"url": "git@github.com:DonSinDRom/Tactris.git"
 	},
 	"browserify": {
 		"transform": [
@@ -33,7 +33,7 @@
 		"uglifyify": "^3.0.1",
 		"watchify": "^3.1.0"
 	},
-	"author": "Famous",
+	"author": "DonSinDRom",
 	"license": "MIT",
 	"dependencies": {
 		"babelify": "^6.0.1",
