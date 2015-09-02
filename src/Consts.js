@@ -1,10 +1,11 @@
+'use strict';
 /*
 * Curves:
 */
 //linear easeIn easeOut easeInOut easeOutBounce spring inQuad outQuad inOutQuad inCubic outCubic inOutCubic inQuart outQuart inOutQuart inQuint outQuint inOutQuint inSine outSine inOutSine inExpo outExpo inOutExpo inCirc outCirc inOutCirc inElastic outElastic inOutElastic inBack outBack inOutBack inBounce outBounce inOutBounce
 
 
-const Consts = {
+export default {
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
@@ -405,6 +406,21 @@ const Consts = {
 	MODAL_DURATION: 1200,
 
 	init: function() {
+		if (location.search) {
+			let qs = {};
+			location.search.replace(/^\?/, '').split('&').map((param) => {
+				let [name, value] = param.split('=');
+				qs[name] = value;
+			});
+
+			if (qs.s) {
+				let dimension = parseInt(qs.s, 10);
+				if (dimension % 2 !== 0) {
+					dimension++;
+				}
+				this.DIMENSION = dimension;
+			}
+		}
 		var w = document.body.clientWidth;
 		var h = document.body.clientHeight;
 		this.WIDTH = w;
@@ -415,7 +431,7 @@ const Consts = {
 		}
 		this.CELL_SIZE = this.DOT_SIZE * this.CELL_RATIO;
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
-		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN,
+		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN;
 		this.ROWS = this.DIMENSION;
 		this.COLUMNS = this.DIMENSION;
 
@@ -424,5 +440,3 @@ const Consts = {
 	}
 
 }.init();
-
-module.exports = Consts;

@@ -43,3 +43,7 @@ h6 {
 .interactive {
     cursor: pointer;
 }
+
+.Button:hover > div {
+    color: #7ac74f;
+}

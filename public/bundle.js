@@ -28738,7 +28738,7 @@ module.exports = radixSort;
 
 
 var shaders = {
-    vertex: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates transpose inverse matrix from transform\n * \n * @method random\n * @private\n *\n *\n */\n\n\nmat3 getNormalMatrix_3_0(in mat4 t) {\n   mat3 matNorm;\n   mat4 a = t;\n\n   float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3],\n   a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3],\n   a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3],\n   a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3],\n   b00 = a00 * a11 - a01 * a10,\n   b01 = a00 * a12 - a02 * a10,\n   b02 = a00 * a13 - a03 * a10,\n   b03 = a01 * a12 - a02 * a11,\n   b04 = a01 * a13 - a03 * a11,\n   b05 = a02 * a13 - a03 * a12,\n   b06 = a20 * a31 - a21 * a30,\n   b07 = a20 * a32 - a22 * a30,\n   b08 = a20 * a33 - a23 * a30,\n   b09 = a21 * a32 - a22 * a31,\n   b10 = a21 * a33 - a23 * a31,\n   b11 = a22 * a33 - a23 * a32,\n\n   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n   det = 1.0 / det;\n\n   matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n   matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n   matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n\n   matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n   matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n   matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n\n   matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n   matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n   matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n\n   return matNorm;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates a matrix that creates the identity when multiplied by m\n * \n * @method inverse\n * @private\n *\n *\n */\n\n\nfloat inverse_1_1(float m) {\n    return 1.0 / m;\n}\n\nmat2 inverse_1_1(mat2 m) {\n    return mat2(m[1][1],-m[0][1],\n               -m[1][0], m[0][0]) / (m[0][0]*m[1][1] - m[0][1]*m[1][0]);\n}\n\nmat3 inverse_1_1(mat3 m) {\n    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n\n    float b01 =  a22 * a11 - a12 * a21;\n    float b11 = -a22 * a10 + a12 * a20;\n    float b21 =  a21 * a10 - a11 * a20;\n\n    float det = a00 * b01 + a01 * b11 + a02 * b21;\n\n    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),\n                b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),\n                b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\n\nmat4 inverse_1_1(mat4 m) {\n    float\n        a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n        a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n        a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n        a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n\n        b00 = a00 * a11 - a01 * a10,\n        b01 = a00 * a12 - a02 * a10,\n        b02 = a00 * a13 - a03 * a10,\n        b03 = a01 * a12 - a02 * a11,\n        b04 = a01 * a13 - a03 * a11,\n        b05 = a02 * a13 - a03 * a12,\n        b06 = a20 * a31 - a21 * a30,\n        b07 = a20 * a32 - a22 * a30,\n        b08 = a20 * a33 - a23 * a30,\n        b09 = a21 * a32 - a22 * a31,\n        b10 = a21 * a33 - a23 * a31,\n        b11 = a22 * a33 - a23 * a32,\n\n        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Reflects a matrix over its main diagonal.\n * \n * @method transpose\n * @private\n *\n *\n */\n\n\nfloat transpose_2_2(float m) {\n    return m;\n}\n\nmat2 transpose_2_2(mat2 m) {\n    return mat2(m[0][0], m[1][0],\n                m[0][1], m[1][1]);\n}\n\nmat3 transpose_2_2(mat3 m) {\n    return mat3(m[0][0], m[1][0], m[2][0],\n                m[0][1], m[1][1], m[2][1],\n                m[0][2], m[1][2], m[2][2]);\n}\n\nmat4 transpose_2_2(mat4 m) {\n    return mat4(m[0][0], m[1][0], m[2][0], m[3][0],\n                m[0][1], m[1][1], m[2][1], m[3][1],\n                m[0][2], m[1][2], m[2][2], m[3][2],\n                m[0][3], m[1][3], m[2][3], m[3][3]);\n}\n\n\n\n\n/**\n * Converts vertex from modelspace to screenspace using transform\n * information from context.\n *\n * @method applyTransform\n * @private\n *\n *\n */\n\nvec4 applyTransform(vec4 pos) {\n    //TODO: move this multiplication to application code. \n\n    /**\n     * Currently multiplied in the vertex shader to avoid consuming the complexity of holding an additional\n     * transform as state on the mesh object in WebGLRenderer. Multiplies the object's transformation from object space\n     * to world space with its transformation from world space to eye space.\n     */\n    mat4 MVMatrix = u_view * u_transform;\n\n    //TODO: move the origin, sizeScale and y axis inversion to application code in order to amortize redundant per-vertex calculations.\n\n    /**\n     * The transform uniform should be changed to the result of the transformation chain:\n     *\n     * view * modelTransform * invertYAxis * sizeScale * origin\n     *\n     * which could be simplified to:\n     *\n     * view * modelTransform * convertToDOMSpace\n     *\n     * where convertToDOMSpace represents the transform matrix:\n     *\n     *                           size.x 0       0       size.x \n     *                           0      -size.y 0       size.y\n     *                           0      0       1       0\n     *                           0      0       0       1\n     *\n     */\n\n    /**\n     * Assuming a unit volume, moves the object space origin [0, 0, 0] to the \"top left\" [1, -1, 0], the DOM space origin.\n     * Later in the transformation chain, the projection transform negates the rigidbody translation.\n     * Equivalent to (but much faster than) multiplying a translation matrix \"origin\"\n     *\n     *                           1 0 0 1 \n     *                           0 1 0 -1\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.x += 1.0;\n    pos.y -= 1.0;\n\n    /**\n     * Assuming a unit volume, scales an object to the amount of pixels in the size uniform vector's specified dimensions.\n     * Later in the transformation chain, the projection transform transforms the point into clip space by scaling\n     * by the inverse of the canvas' resolution.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"sizeScale\"\n     *\n     *                           size.x 0      0      0 \n     *                           0      size.y 0      0\n     *                           0      0      size.z 0\n     *                           0      0      0      1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.xyz *= u_size * 0.5;\n\n    /**\n     * Inverts the object space's y axis in order to match DOM space conventions. \n     * Later in the transformation chain, the projection transform reinverts the y axis to convert to clip space.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"invertYAxis\"\n     *\n     *                           1 0 0 0 \n     *                           0 -1 0 0\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.y *= -1.0;\n\n    /**\n     * Exporting the vertex's position as a varying, in DOM space, to be used for lighting calculations. This has to be in DOM space\n     * since light position and direction is derived from the scene graph, calculated in DOM space.\n     */\n\n    v_position = (MVMatrix * pos).xyz;\n\n    /**\n    * Exporting the eye vector (a vector from the center of the screen) as a varying, to be used for lighting calculations.\n    * In clip space deriving the eye vector is a matter of simply taking the inverse of the position, as the position is a vector\n    * from the center of the screen. However, since our points are represented in DOM space,\n    * the position is a vector from the top left corner of the screen, so some additional math is needed (specifically, subtracting\n    * the position from the center of the screen, i.e. half the resolution of the canvas).\n    */\n\n    v_eyeVector = (u_resolution * 0.5) - v_position;\n\n    /**\n     * Transforming the position (currently represented in dom space) into view space (with our dom space view transform)\n     * and then projecting the point into raster both by applying a perspective transformation and converting to clip space\n     * (the perspective matrix is a combination of both transformations, therefore it's probably more apt to refer to it as a\n     * projection transform).\n     */\n\n    pos = u_perspective * MVMatrix * pos;\n\n    return pos;\n}\n\n/**\n * Placeholder for positionOffset chunks to be templated in.\n * Used for mesh deformation.\n *\n * @method calculateOffset\n * @private\n *\n *\n */\n#vert_definitions\nvec3 calculateOffset(vec3 ID) {\n    #vert_applications\n    return vec3(0.0);\n}\n\n/**\n * Writes the position of the vertex onto the screen.\n * Passes texture coordinate and normal attributes as varyings\n * and passes the position attribute through position pipeline.\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    v_textureCoordinate = a_texCoord;\n    vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n    invertedNormals.y *= -1.0;\n    v_normal = transpose_2_2(mat3(inverse_1_1(u_transform))) * invertedNormals;\n    vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n    gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}\n",
+    vertex: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates transpose inverse matrix from transform\n * \n * @method random\n * @private\n *\n *\n */\n\n\nmat3 getNormalMatrix_1_0(in mat4 t) {\n   mat3 matNorm;\n   mat4 a = t;\n\n   float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3],\n   a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3],\n   a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3],\n   a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3],\n   b00 = a00 * a11 - a01 * a10,\n   b01 = a00 * a12 - a02 * a10,\n   b02 = a00 * a13 - a03 * a10,\n   b03 = a01 * a12 - a02 * a11,\n   b04 = a01 * a13 - a03 * a11,\n   b05 = a02 * a13 - a03 * a12,\n   b06 = a20 * a31 - a21 * a30,\n   b07 = a20 * a32 - a22 * a30,\n   b08 = a20 * a33 - a23 * a30,\n   b09 = a21 * a32 - a22 * a31,\n   b10 = a21 * a33 - a23 * a31,\n   b11 = a22 * a33 - a23 * a32,\n\n   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n   det = 1.0 / det;\n\n   matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n   matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n   matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n\n   matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n   matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n   matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n\n   matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n   matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n   matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n\n   return matNorm;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates a matrix that creates the identity when multiplied by m\n * \n * @method inverse\n * @private\n *\n *\n */\n\n\nfloat inverse_2_1(float m) {\n    return 1.0 / m;\n}\n\nmat2 inverse_2_1(mat2 m) {\n    return mat2(m[1][1],-m[0][1],\n               -m[1][0], m[0][0]) / (m[0][0]*m[1][1] - m[0][1]*m[1][0]);\n}\n\nmat3 inverse_2_1(mat3 m) {\n    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n\n    float b01 =  a22 * a11 - a12 * a21;\n    float b11 = -a22 * a10 + a12 * a20;\n    float b21 =  a21 * a10 - a11 * a20;\n\n    float det = a00 * b01 + a01 * b11 + a02 * b21;\n\n    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),\n                b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),\n                b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\n\nmat4 inverse_2_1(mat4 m) {\n    float\n        a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n        a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n        a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n        a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n\n        b00 = a00 * a11 - a01 * a10,\n        b01 = a00 * a12 - a02 * a10,\n        b02 = a00 * a13 - a03 * a10,\n        b03 = a01 * a12 - a02 * a11,\n        b04 = a01 * a13 - a03 * a11,\n        b05 = a02 * a13 - a03 * a12,\n        b06 = a20 * a31 - a21 * a30,\n        b07 = a20 * a32 - a22 * a30,\n        b08 = a20 * a33 - a23 * a30,\n        b09 = a21 * a32 - a22 * a31,\n        b10 = a21 * a33 - a23 * a31,\n        b11 = a22 * a33 - a23 * a32,\n\n        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Reflects a matrix over its main diagonal.\n * \n * @method transpose\n * @private\n *\n *\n */\n\n\nfloat transpose_3_2(float m) {\n    return m;\n}\n\nmat2 transpose_3_2(mat2 m) {\n    return mat2(m[0][0], m[1][0],\n                m[0][1], m[1][1]);\n}\n\nmat3 transpose_3_2(mat3 m) {\n    return mat3(m[0][0], m[1][0], m[2][0],\n                m[0][1], m[1][1], m[2][1],\n                m[0][2], m[1][2], m[2][2]);\n}\n\nmat4 transpose_3_2(mat4 m) {\n    return mat4(m[0][0], m[1][0], m[2][0], m[3][0],\n                m[0][1], m[1][1], m[2][1], m[3][1],\n                m[0][2], m[1][2], m[2][2], m[3][2],\n                m[0][3], m[1][3], m[2][3], m[3][3]);\n}\n\n\n\n\n/**\n * Converts vertex from modelspace to screenspace using transform\n * information from context.\n *\n * @method applyTransform\n * @private\n *\n *\n */\n\nvec4 applyTransform(vec4 pos) {\n    //TODO: move this multiplication to application code. \n\n    /**\n     * Currently multiplied in the vertex shader to avoid consuming the complexity of holding an additional\n     * transform as state on the mesh object in WebGLRenderer. Multiplies the object's transformation from object space\n     * to world space with its transformation from world space to eye space.\n     */\n    mat4 MVMatrix = u_view * u_transform;\n\n    //TODO: move the origin, sizeScale and y axis inversion to application code in order to amortize redundant per-vertex calculations.\n\n    /**\n     * The transform uniform should be changed to the result of the transformation chain:\n     *\n     * view * modelTransform * invertYAxis * sizeScale * origin\n     *\n     * which could be simplified to:\n     *\n     * view * modelTransform * convertToDOMSpace\n     *\n     * where convertToDOMSpace represents the transform matrix:\n     *\n     *                           size.x 0       0       size.x \n     *                           0      -size.y 0       size.y\n     *                           0      0       1       0\n     *                           0      0       0       1\n     *\n     */\n\n    /**\n     * Assuming a unit volume, moves the object space origin [0, 0, 0] to the \"top left\" [1, -1, 0], the DOM space origin.\n     * Later in the transformation chain, the projection transform negates the rigidbody translation.\n     * Equivalent to (but much faster than) multiplying a translation matrix \"origin\"\n     *\n     *                           1 0 0 1 \n     *                           0 1 0 -1\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.x += 1.0;\n    pos.y -= 1.0;\n\n    /**\n     * Assuming a unit volume, scales an object to the amount of pixels in the size uniform vector's specified dimensions.\n     * Later in the transformation chain, the projection transform transforms the point into clip space by scaling\n     * by the inverse of the canvas' resolution.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"sizeScale\"\n     *\n     *                           size.x 0      0      0 \n     *                           0      size.y 0      0\n     *                           0      0      size.z 0\n     *                           0      0      0      1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.xyz *= u_size * 0.5;\n\n    /**\n     * Inverts the object space's y axis in order to match DOM space conventions. \n     * Later in the transformation chain, the projection transform reinverts the y axis to convert to clip space.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"invertYAxis\"\n     *\n     *                           1 0 0 0 \n     *                           0 -1 0 0\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.y *= -1.0;\n\n    /**\n     * Exporting the vertex's position as a varying, in DOM space, to be used for lighting calculations. This has to be in DOM space\n     * since light position and direction is derived from the scene graph, calculated in DOM space.\n     */\n\n    v_position = (MVMatrix * pos).xyz;\n\n    /**\n    * Exporting the eye vector (a vector from the center of the screen) as a varying, to be used for lighting calculations.\n    * In clip space deriving the eye vector is a matter of simply taking the inverse of the position, as the position is a vector\n    * from the center of the screen. However, since our points are represented in DOM space,\n    * the position is a vector from the top left corner of the screen, so some additional math is needed (specifically, subtracting\n    * the position from the center of the screen, i.e. half the resolution of the canvas).\n    */\n\n    v_eyeVector = (u_resolution * 0.5) - v_position;\n\n    /**\n     * Transforming the position (currently represented in dom space) into view space (with our dom space view transform)\n     * and then projecting the point into raster both by applying a perspective transformation and converting to clip space\n     * (the perspective matrix is a combination of both transformations, therefore it's probably more apt to refer to it as a\n     * projection transform).\n     */\n\n    pos = u_perspective * MVMatrix * pos;\n\n    return pos;\n}\n\n/**\n * Placeholder for positionOffset chunks to be templated in.\n * Used for mesh deformation.\n *\n * @method calculateOffset\n * @private\n *\n *\n */\n#vert_definitions\nvec3 calculateOffset(vec3 ID) {\n    #vert_applications\n    return vec3(0.0);\n}\n\n/**\n * Writes the position of the vertex onto the screen.\n * Passes texture coordinate and normal attributes as varyings\n * and passes the position attribute through position pipeline.\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    v_textureCoordinate = a_texCoord;\n    vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n    invertedNormals.y *= -1.0;\n    v_normal = transpose_3_2(mat3(inverse_2_1(u_transform))) * invertedNormals;\n    vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n    gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}\n",
     fragment: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Placeholder for fragmentShader  chunks to be templated in.\n * Used for normal mapping, gloss mapping and colors.\n * \n * @method applyMaterial\n * @private\n *\n *\n */\n\n#float_definitions\nfloat applyMaterial_1_0(float ID) {\n    #float_applications\n    return 1.;\n}\n\n#vec3_definitions\nvec3 applyMaterial_1_0(vec3 ID) {\n    #vec3_applications\n    return vec3(0);\n}\n\n#vec4_definitions\nvec4 applyMaterial_1_0(vec4 ID) {\n    #vec4_applications\n\n    return vec4(0);\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates the intensity of light on a surface.\n *\n * @method applyLight\n * @private\n *\n */\nvec4 applyLight_2_1(in vec4 baseColor, in vec3 normal, in vec4 glossiness, int numLights, vec3 ambientColor, vec3 eyeVector, mat4 lightPosition, mat4 lightColor, vec3 v_position) {\n    vec3 diffuse = vec3(0.0);\n    bool hasGlossiness = glossiness.a > 0.0;\n    bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n\n    for(int i = 0; i < 4; i++) {\n        if (i >= numLights) break;\n        vec3 lightDirection = normalize(lightPosition[i].xyz - v_position);\n        float lambertian = max(dot(lightDirection, normal), 0.0);\n\n        if (lambertian > 0.0) {\n            diffuse += lightColor[i].rgb * baseColor.rgb * lambertian;\n            if (hasGlossiness) {\n                vec3 halfVector = normalize(lightDirection + eyeVector);\n                float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n                vec3 specularColor = hasSpecularColor ? glossiness.rgb : lightColor[i].rgb;\n                diffuse += specularColor * specularWeight * lambertian;\n            }\n        }\n\n    }\n\n    return vec4(ambientColor + diffuse, baseColor.a);\n}\n\n\n\n\n\n/**\n * Writes the color of the pixel onto the screen\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : applyMaterial_1_0(u_baseColor);\n\n    /**\n     * Apply lights only if flat shading is false\n     * and at least one light is added to the scene\n     */\n    bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n\n    vec3 normal = normalize(v_normal);\n    vec4 glossiness = u_glossiness.x < 0.0 ? applyMaterial_1_0(u_glossiness) : u_glossiness;\n\n    vec4 color = lightsEnabled ?\n    applyLight_2_1(material, normalize(v_normal), glossiness,\n               int(u_numLights),\n               u_ambientLight * u_baseColor.rgb,\n               normalize(v_eyeVector),\n               u_lightPosition,\n               u_lightColor,   \n               v_position)\n    : material;\n\n    gl_FragColor = color;\n    gl_FragColor.a *= u_opacity;   \n}\n"
 };
 
@@ -28931,55 +28931,79 @@ module.exports.includes = function (searchElement /*, fromIndex*/) {
 },{}],143:[function(require,module,exports){
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
 
-var Node = famous.core.Node;
-var Position = famous.components.Position;
-var DOMElement = famous.domRenderables.DOMElement;
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-function Cell(id, x, y) {
-	Node.call(this);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	// Center dot.
-	this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.CELL_SIZE, Consts.CELL_SIZE);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	this.domElement = new DOMElement(this, {
-		properties: {
-			background: Consts.DOT_COLOR__UNTOUCHED
-		}
-	});
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	this.domElement.setAttribute('role', 'gridcell');
-	this.domElement.setAttribute('aria-readonly', true);
-	this.domElement.setAttribute('aria-live', 'polite');
-	this.domElement.setAttribute('aria-rowindex', y);
-	this.domElement.setAttribute('aria-colindex', x);
+var _Consts = require('./Consts');
 
-	this.id = id;
-	this.x = x;
-	this.y = y;
+var _Consts2 = _interopRequireDefault(_Consts);
 
-	this.state = Consts.DOT_STATE__UNTOUCHED;
-	this.position = new Position(this);
-	this.position.setX(x * Consts.CELL_SIDE, {});
-	this.position.setY(y * Consts.CELL_SIDE, {});
-}
+var _famous = require('famous');
 
-Cell.prototype = Object.create(Node.prototype);
-Cell.prototype.constructor = Cell;
+var Position = _famous.components.Position;
+var DOMElement = _famous.domRenderables.DOMElement;
 
-module.exports = Cell;
+var Cell = (function (_core$Node) {
+	_inherits(Cell, _core$Node);
 
-},{"./Consts.js":144,"famous":46}],144:[function(require,module,exports){
+	function Cell(id, x, y) {
+		_classCallCheck(this, Cell);
+
+		_get(Object.getPrototypeOf(Cell.prototype), 'constructor', this).call(this);
+
+		this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].CELL_SIZE, _Consts2['default'].CELL_SIZE);
+
+		this.domElement = new DOMElement(this, {
+			properties: {
+				background: _Consts2['default'].DOT_COLOR__UNTOUCHED
+			}
+		});
+
+		this.domElement.setAttribute('role', 'gridcell');
+		this.domElement.setAttribute('aria-readonly', true);
+		this.domElement.setAttribute('aria-live', 'polite');
+		this.domElement.setAttribute('aria-rowindex', y);
+		this.domElement.setAttribute('aria-colindex', x);
+
+		this.id = id;
+		this.x = x;
+		this.y = y;
+
+		this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
+		this.position = new Position(this);
+		this.position.setX(x * _Consts2['default'].CELL_SIDE, {});
+		this.position.setY(y * _Consts2['default'].CELL_SIDE, {});
+	}
+
+	return Cell;
+})(_famous.core.Node);
+
+exports['default'] = Cell;
+module.exports = exports['default'];
+
+},{"./Consts":144,"famous":46}],144:[function(require,module,exports){
+'use strict';
 /*
 * Curves:
 */
 //linear easeIn easeOut easeInOut easeOutBounce spring inQuad outQuad inOutQuad inCubic outCubic inOutCubic inQuart outQuart inOutQuart inQuint outQuint inOutQuint inSine outSine inOutSine inExpo outExpo inOutExpo inCirc outCirc inOutCirc inElastic outElastic inOutElastic inBack outBack inOutBack inBounce outBounce inOutBounce
 
-'use strict';
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
 
-var Consts = ({
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+
+exports['default'] = ({
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
@@ -29321,6 +29345,27 @@ var Consts = ({
 	MODAL_DURATION: 1200,
 
 	init: function init() {
+		var _this = this;
+
+		if (location.search) {
+			(function () {
+				var qs = {};
+				location.search.replace(/^\?/, '').split('&').map(function (param) {
+					var _param$split = param.split('=');
+
+					var _param$split2 = _slicedToArray(_param$split, 2);
+
+					var name = _param$split2[0];
+					var value = _param$split2[1];
+
+					qs[name] = value;
+				});
+
+				if (qs.s) {
+					_this.DIMENSION = parseInt(qs.s);
+				};
+			})();
+		}
 		var w = document.body.clientWidth;
 		var h = document.body.clientHeight;
 		this.WIDTH = w;
@@ -29331,7 +29376,8 @@ var Consts = ({
 		}
 		this.CELL_SIZE = this.DOT_SIZE * this.CELL_RATIO;
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
-		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN, this.ROWS = this.DIMENSION;
+		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN;
+		this.ROWS = this.DIMENSION;
 		this.COLUMNS = this.DIMENSION;
 
 		this.SCORE__LINE = this.DIMENSION;
@@ -29339,1320 +29385,1561 @@ var Consts = ({
 	}
 
 }).init();
-
-module.exports = Consts;
+module.exports = exports['default'];
 
 },{}],145:[function(require,module,exports){
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
 
-var FamousEngine = famous.core.FamousEngine;
-var Node = famous.core.Node;
-var Position = famous.components.Position;
-var Rotation = famous.components.Rotation;
-var DOMElement = famous.domRenderables.DOMElement;
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-function Dot(id) {
-	Node.call(this);
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-	// Center dot.
-	this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIZE, Consts.DOT_SIZE);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	this.domElement = new DOMElement(this, {
-		properties: {
-			background: Consts.DOT_COLOR__UNTOUCHED
-		},
-		classes: ['Dot']
-	});
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	this.domElement.setAttribute('role', 'gridcell');
-	this.domElement.setAttribute('aria-selected', false);
-	this.domElement.setAttribute('aria-live', 'polite');
-	this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / Consts.ROWS));
-	this.domElement.setAttribute('aria-colindex', id % Consts.COLUMNS);
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	this.id = id;
+var _Consts = require('./Consts');
 
-	var localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
-	if (localStorageDots.length > 0) {
-		var _state = localStorageDots[id];
-		this.state = _state;
-		switch (_state) {
-			case Consts.DOT_STATE__PLACED:
-				this.state = Consts.DOT_STATE__PLACED;
-				this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
+var _Consts2 = _interopRequireDefault(_Consts);
+
+var _famous = require('famous');
+
+var FamousEngine = _famous.core.FamousEngine;
+var Position = _famous.components.Position;
+var Rotation = _famous.components.Rotation;
+var DOMElement = _famous.domRenderables.DOMElement;
+
+var Dot = (function (_core$Node) {
+	_inherits(Dot, _core$Node);
+
+	function Dot(id) {
+		_classCallCheck(this, Dot);
+
+		_get(Object.getPrototypeOf(Dot.prototype), 'constructor', this).call(this);
+
+		// Center dot.
+		this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].DOT_SIZE, _Consts2['default'].DOT_SIZE);
+
+		this.domElement = new DOMElement(this, {
+			properties: {
+				background: _Consts2['default'].DOT_COLOR__UNTOUCHED
+			},
+			classes: ['Dot']
+		});
+
+		this.domElement.setAttribute('role', 'gridcell');
+		this.domElement.setAttribute('aria-selected', false);
+		this.domElement.setAttribute('aria-live', 'polite');
+		this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / _Consts2['default'].ROWS));
+		this.domElement.setAttribute('aria-colindex', id % _Consts2['default'].COLUMNS);
+
+		this.id = id;
+
+		var localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots')) || [];
+		if (localStorageDots.length > 0) {
+			var _state = localStorageDots[id];
+			this.state = _state;
+			switch (_state) {
+				case _Consts2['default'].DOT_STATE__PLACED:
+					this.state = _Consts2['default'].DOT_STATE__PLACED;
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
+					this.domElement.setAttribute('aria-readonly', true);
+					this.domElement.setAttribute('aria-selected', true);
+					break;
+				case _Consts2['default'].DOT_STATE__HOVERED:
+					this.state = _Consts2['default'].DOT_STATE__HOVERED;
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__HOVERED);
+					this.domElement.setAttribute('aria-readonly', false);
+					this.domElement.setAttribute('aria-selected', true);
+					break;
+				case _Consts2['default'].DOT_STATE__UNTOUCHED:
+				default:
+					this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+					this.domElement.setAttribute('aria-readonly', false);
+					this.domElement.setAttribute('aria-selected', false);
+					break;
+			}
+		} else {
+			this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
+		}
+
+		this.position = new Position(this);
+		this.rotation = new Rotation(this);
+		this.rotation.set(0, 0, 0, 0);
+
+		this.addUIEvent('mousedown');
+		this.addUIEvent('mousemove');
+		this.addUIEvent('click');
+		this.addUIEvent('mouseup');
+	}
+
+	_createClass(Dot, [{
+		key: 'hover',
+		value: function hover() {
+			if (this.state === _Consts2['default'].DOT_STATE__UNTOUCHED) {
+				this.state = _Consts2['default'].DOT_STATE__HOVERED;
+				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__HOVERED);
+				this.domElement.setAttribute('aria-selected', true);
+				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
+				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__HOVERED;
+				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+			}
+		}
+	}, {
+		key: 'unhover',
+		value: function unhover() {
+			if (this.state === _Consts2['default'].DOT_STATE__HOVERED) {
+				this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
+				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+				this.domElement.setAttribute('aria-selected', false);
+				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
+				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__UNTOUCHED;
+				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+			}
+		}
+	}, {
+		key: 'place',
+		value: function place() {
+			if (this.state === _Consts2['default'].DOT_STATE__HOVERED) {
+				this.state = _Consts2['default'].DOT_STATE__PLACED;
+				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
 				this.domElement.setAttribute('aria-readonly', true);
-				this.domElement.setAttribute('aria-selected', true);
-				break;
-			case Consts.DOT_STATE__HOVERED:
-				this.state = Consts.DOT_STATE__HOVERED;
-				this.domElement.setProperty('background', Consts.DOT_COLOR__HOVERED);
-				this.domElement.setAttribute('aria-readonly', false);
-				this.domElement.setAttribute('aria-selected', true);
-				break;
-			case Consts.DOT_STATE__UNTOUCHED:
-			default:
-				this.state = Consts.DOT_STATE__UNTOUCHED;
-				this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
+				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
+				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__PLACED;
+				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+			}
+		}
+	}, {
+		key: 'unplace',
+		value: function unplace(delayArg) {
+			var delay = delayArg || false;
+			var self = this;
+			if (this.state === _Consts2['default'].DOT_STATE__PLACED) {
+				if (delay) {
+					var clock = FamousEngine.getClock();
+					clock.setTimeout(function () {
+						self.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+					}, _Consts2['default'].DURATION * delayArg);
+				} else {
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+				}
+				this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
 				this.domElement.setAttribute('aria-readonly', false);
 				this.domElement.setAttribute('aria-selected', false);
-				break;
-		}
-	} else {
-		this.state = Consts.DOT_STATE__UNTOUCHED;
-	}
-
-	this.hover = function hover() {
-		if (this.state === Consts.DOT_STATE__UNTOUCHED) {
-			this.state = Consts.DOT_STATE__HOVERED;
-			this.domElement.setProperty('background', Consts.DOT_COLOR__HOVERED);
-			this.domElement.setAttribute('aria-selected', true);
-			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
-			_localStorageDots[id] = Consts.DOT_STATE__HOVERED;
-			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
-		}
-	};
-
-	this.unhover = function unhover() {
-		if (this.state === Consts.DOT_STATE__HOVERED) {
-			this.state = Consts.DOT_STATE__UNTOUCHED;
-			this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
-			this.domElement.setAttribute('aria-selected', false);
-			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
-			_localStorageDots[id] = Consts.DOT_STATE__UNTOUCHED;
-			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
-		}
-	};
-
-	this.place = function place() {
-		if (this.state === Consts.DOT_STATE__HOVERED) {
-			this.state = Consts.DOT_STATE__PLACED;
-			this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
-			this.domElement.setAttribute('aria-readonly', true);
-			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
-			_localStorageDots[id] = Consts.DOT_STATE__PLACED;
-			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
-		}
-	};
-
-	this.unplace = function unplace(delayArg) {
-		var delay = delayArg || false;
-		var self = this;
-		if (this.state === Consts.DOT_STATE__PLACED) {
-			if (delay) {
-				var clock = FamousEngine.getClock();
-				clock.setTimeout(function () {
-					self.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
-				}, Consts.DURATION * delayArg);
-			} else {
-				this.domElement.setProperty('background', Consts.DOT_COLOR__UNTOUCHED);
+				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
+				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__UNTOUCHED;
+				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 			}
-			this.state = Consts.DOT_STATE__UNTOUCHED;
-			this.domElement.setAttribute('aria-readonly', false);
-			this.domElement.setAttribute('aria-selected', false);
-			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
-			_localStorageDots[id] = Consts.DOT_STATE__UNTOUCHED;
-			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 		}
-	};
-
-	this.select = function select() {
-		if (this.state !== Consts.DOT_STATE__PLACED) {
-			this.state = Consts.DOT_STATE__PLACED;
-			this.domElement.setProperty('background', Consts.DOT_COLOR__PLACED);
-			this.domElement.setAttribute('aria-readonly', true);
-			var _localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots'));
-			_localStorageDots[id] = Consts.DOT_STATE__PLACED;
-			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
-		}
-	};
-
-	this.position = new Position(this);
-	this.rotation = new Rotation(this);
-	this.rotation.set(0, 0, 0, 0);
-
-	this.addUIEvent('mousedown');
-	this.addUIEvent('mousemove');
-	this.addUIEvent('click');
-	this.addUIEvent('mouseup');
-}
-
-Dot.prototype = Object.create(Node.prototype);
-Dot.prototype.constructor = Dot;
-
-/*jshint -W074 */
-Dot.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-		case 'mousedown':
-			this._parent.mousingDown(this.id);
-			break;
-		case 'mousemove':
-			if (this._parent.mousing === true) {
-				this._parent.dotState(this.id);
-				this.emit('id', this.domElement.id).emit('state', this.domElement.state);
+	}, {
+		key: 'select',
+		value: function select() {
+			if (this.state !== _Consts2['default'].DOT_STATE__PLACED) {
+				this.state = _Consts2['default'].DOT_STATE__PLACED;
+				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
+				this.domElement.setAttribute('aria-readonly', true);
+				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
+				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__PLACED;
+				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 			}
-			break;
-		case 'click':
-			this._parent.dotState(this.id);
-			this.emit('id', this.domElement.id).emit('state', this.domElement.state);
-			break;
-		case 'mouseup':
-			this._parent.mousingUp(this.id);
-			break;
-		default:
-			return false;
-	}
-}; /*jshint +W074 */
+		}
+	}, {
+		key: 'onReceive',
+		value: function onReceive(type, ev) {
+			switch (type) {
+				case 'mousedown':
+					this._parent.mousingDown(this.id);
+					break;
+				case 'mousemove':
+					if (this._parent.mousing === true) {
+						this._parent.dotState(this.id);
+						this.emit('id', this.domElement.id).emit('state', this.domElement.state);
+					}
+					break;
+				case 'click':
+					this._parent.dotState(this.id);
+					this.emit('id', this.domElement.id).emit('state', this.domElement.state);
+					break;
+				case 'mouseup':
+					this._parent.mousingUp(this.id);
+					break;
+				default:
+					return false;
+			}
+		}
+	}]);
 
-module.exports = Dot;
+	return Dot;
+})(_famous.core.Node);
 
-},{"./Consts.js":144,"famous":46}],146:[function(require,module,exports){
+exports['default'] = Dot;
+module.exports = exports['default'];
+
+},{"./Consts":144,"famous":46}],146:[function(require,module,exports){
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
-var Cell = require('./Cell.js');
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
 
-var Node = famous.core.Node;
-var Position = famous.components.Position;
-var DOMElement = famous.domRenderables.DOMElement;
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-function Figure(id, randomId) {
-	Node.call(this);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	// Center dot.
-	this.setMountPoint(0, 0).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	this.domElement = new DOMElement(this, {
-		tagName: 'h1',
-		classes: ['Figure', 'interactive']
-	});
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	this.domElement.setAttribute('role', 'grid');
-	this.domElement.setAttribute('aria-live', 'polite');
+var _Consts = require('./Consts');
 
-	this.id = id;
-	this.randomId = randomId;
+var _Consts2 = _interopRequireDefault(_Consts);
 
-	this.cells = [];
-	for (var cellCounter = 0; cellCounter < 4; cellCounter++) {
-		var cell = new Cell(cellCounter, Consts.FIGURES[randomId][cellCounter].x, Consts.FIGURES[randomId][cellCounter].y);
-		this.addChild(cell);
-		this.cells.push(cell);
+var _famous = require('famous');
+
+var _Cell = require('./Cell');
+
+var _Cell2 = _interopRequireDefault(_Cell);
+
+var Position = _famous.components.Position;
+var DOMElement = _famous.domRenderables.DOMElement;
+
+var Figure = (function (_core$Node) {
+	_inherits(Figure, _core$Node);
+
+	function Figure(id, randomId) {
+		_classCallCheck(this, Figure);
+
+		_get(Object.getPrototypeOf(Figure.prototype), 'constructor', this).call(this);
+
+		// Center dot.
+		this.setMountPoint(0, 0).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / 2, _Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / 2);
+
+		this.domElement = new DOMElement(this, {
+			tagName: 'h1',
+			classes: ['Figure', 'interactive']
+		});
+
+		this.domElement.setAttribute('role', 'grid');
+		this.domElement.setAttribute('aria-live', 'polite');
+
+		this.id = id;
+		this.randomId = randomId;
+
+		this.cells = [];
+		for (var cellCounter = 0; cellCounter < 4; cellCounter++) {
+			var cell = new _Cell2['default'](cellCounter, _Consts2['default'].FIGURES[randomId][cellCounter].x, _Consts2['default'].FIGURES[randomId][cellCounter].y);
+			this.addChild(cell);
+			this.cells.push(cell);
+		}
+
+		this.position = new Position(this);
 	}
 
-	this.position = new Position(this);
-}
+	return Figure;
+})(_famous.core.Node);
 
-Figure.prototype = Object.create(Node.prototype);
-Figure.prototype.constructor = Figure;
+exports['default'] = Figure;
+module.exports = exports['default'];
 
-module.exports = Figure;
-
-},{"./Cell.js":143,"./Consts.js":144,"famous":46}],147:[function(require,module,exports){
+},{"./Cell":143,"./Consts":144,"famous":46}],147:[function(require,module,exports){
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
-var Figure = require('./Figure.js');
-var Dot = require('./Dot.js');
-var Nav = require('./Nav.js').Nav;
-var Modal = require('./Modal.js');
-var getRandomInt = require('./getRandomInt.js');
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
 
-/*jshint -W079 */
-var Node = famous.core.Node; /*jshint +W079 */
-var Curves = famous.transitions.Curves;
-var DOMElement = famous.domRenderables.DOMElement;
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _Consts = require('./Consts');
+
+var _Consts2 = _interopRequireDefault(_Consts);
+
+var _famous = require('famous');
+
+var _Figure = require('./Figure');
+
+var _Figure2 = _interopRequireDefault(_Figure);
+
+var _Dot = require('./Dot');
+
+var _Dot2 = _interopRequireDefault(_Dot);
+
+var _Nav = require('./Nav');
+
+var _Nav2 = _interopRequireDefault(_Nav);
+
+var _Modal = require('./Modal');
+
+var _Modal2 = _interopRequireDefault(_Modal);
+
+var _Layout = require('./Layout');
+
+var _Layout2 = _interopRequireDefault(_Layout);
+
+var _getRandomInt = require('./getRandomInt');
+
+var _getRandomInt2 = _interopRequireDefault(_getRandomInt);
+
+var DOMElement = _famous.domRenderables.DOMElement;
 
 //var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
 //var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
 
-function Game(rows, cols) {
-	Node.call(this);
-	this.domElement = new DOMElement(this, {
-		tagName: 'main',
-		classes: ['Game']
-	});
+var Game = (function (_core$Node) {
+	_inherits(Game, _core$Node);
 
-	this.domElement.setAttribute('role', 'grid');
-	this.domElement.setAttribute('aria-multiselectable', true);
-	this.domElement.setAttribute('aria-colcount', Consts.COLUMNS);
-	this.domElement.setAttribute('aria-rowcount', Consts.ROWS);
+	function Game(rows, cols) {
+		_classCallCheck(this, Game);
 
-	var scoreMultiplier = 1;
-	var count = 0;
-	this.dots = [];
-	var _localStorageDots = [];
-	var localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
-	for (var row = 0; row < rows; row++) {
-		for (var col = 0; col < cols; col++) {
-			var dot = new Dot(count++);
-			this.addChild(dot);
-			this.dots.push(dot);
-			if (localStorageDots.length === 0) {
-				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
+		_get(Object.getPrototypeOf(Game.prototype), 'constructor', this).call(this);
+
+		this._setupDomElement();
+
+		this.scoreMultiplier = 1;
+		var count = 0;
+		this.dots = [];
+		var _localStorageDots = [];
+		var localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots')) || [];
+		for (var row = 0; row < rows; row++) {
+			for (var col = 0; col < cols; col++) {
+				var dot = new _Dot2['default'](count++);
+				this.addChild(dot);
+				this.dots.push(dot);
+				if (localStorageDots.length === 0) {
+					_localStorageDots.push(_Consts2['default'].DOT_STATE__UNTOUCHED);
+				}
 			}
 		}
-	}
-	if (localStorageDots.length === 0) {
-		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
-	}
-
-	this.figures = [];
-
-	this.figureIndexGenerate = function figureIndexGenerate() {
-		var figures = this.figures || [];
-		var rand = getRandomInt(0, Consts.FIGURES.length);
-		if (figures.length < 1) {
-			return rand;
-		} else {
-			var _ret = (function () {
-				var figuresIndexes = [];
-				figures.forEach(function (element) {
-					figuresIndexes.push(element.randomId);
-				});
-				var isFigureUnique = function isFigureUnique(array, rand) {
-					return array.every(function (element) {
-						return element !== rand;
-					});
-				};
-				while (!isFigureUnique(figuresIndexes, rand)) {
-					rand = getRandomInt(0, Consts.FIGURES.length);
-				}
-				return {
-					v: rand
-				};
-			})();
-
-			if (typeof _ret === 'object') return _ret.v;
+		if (localStorageDots.length === 0) {
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 		}
-	};
 
-	this.figureUpdate = function figureUpdate(index) {
-		var figures = this.figures;
-		var uniqueFigureId = this.figureIndexGenerate();
-		var figure = Consts.FIGURES[uniqueFigureId];
-		for (var cellCounter = 0; cellCounter < 4; cellCounter++) {
-			var cell = figures[index].cells[cellCounter];
-			var position = cell.position;
-			position.set(figure[cellCounter].x * Consts.CELL_SIDE, figure[cellCounter].y * Consts.CELL_SIDE, 0, {
-				duration: Consts.DURATION,
-				curve: Consts.CURVE
-			});
-			cell.x = figure[cellCounter].x;
-			cell.y = figure[cellCounter].y;
-			cell.domElement.setAttribute('aria-colindex', figure[cellCounter].x);
-			cell.domElement.setAttribute('aria-rowindex', figure[cellCounter].y);
-		}
-		figures[index].randomId = uniqueFigureId;
-		var _localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
-		_localStorageFigures[index] = uniqueFigureId;
-		if (_localStorageFigures.length !== 0) {
-			localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
-		}
-	};
+		this.figures = [];
 
-	var _localStorageFigures = [];
-	var localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
-	for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
+		var _localStorageFigures = [];
+		var localStorageFigures = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__figures')) || [];
+		for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
+			if (localStorageFigures.length === 0) {
+				var randomId = this.figureIndexGenerate();
+				var figure = new _Figure2['default'](figureCounter, randomId);
+				this.addChild(figure);
+				this.figures.push(figure);
+				_localStorageFigures.push(randomId);
+			} else {
+				var figure = new _Figure2['default'](figureCounter, localStorageFigures[figureCounter]);
+				this.addChild(figure);
+				this.figures.push(figure);
+			}
+		}
 		if (localStorageFigures.length === 0) {
-			var randomId = this.figureIndexGenerate();
-			var figure = new Figure(figureCounter, randomId);
-			this.addChild(figure);
-			this.figures.push(figure);
-			_localStorageFigures.push(randomId);
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
+		}
+
+		this.stat = {};
+		var localStorageStat = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__stat'));
+		if (localStorageStat) {
+			this.stat = localStorageStat;
 		} else {
-			var figure = new Figure(figureCounter, localStorageFigures[figureCounter]);
-			this.addChild(figure);
-			this.figures.push(figure);
+			this.stat = {
+				rowsMoved: 0,
+				columnsMoved: 0,
+				figuresPlaced: 0
+			};
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__stat', JSON.stringify(this.stat));
 		}
-	}
-	if (localStorageFigures.length === 0) {
-		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
-	}
 
-	var stat = {};
-	var localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat'));
-	if (localStorageStat) {
-		stat = localStorageStat;
-	} else {
-		stat = {
-			rowsMoved: 0,
-			columnsMoved: 0,
-			figuresPlaced: 0
-		};
-		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
-	}
+		this.nav = new _Nav2['default']();
+		this.addChild(this.nav);
 
-	this.statInc = function statInc(statArg) {
-		var localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
-		var keys = Object.keys(statArg);
-		keys.forEach(function (key) {
-			stat[key] += statArg[key];
-			if (stat[key] !== localStorageStat[key]) {
-				localStorageStat[key] = stat[key];
-			}
-		});
-		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
-	};
+		this.modal = new _Modal2['default']();
+		this.addChild(this.modal);
 
-	this.statSet = function statSet(statArg) {
-		var localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
-		var keys = Object.keys(statArg);
-		keys.forEach(function (key) {
-			stat[key] = statArg[key];
-			if (stat[key] !== localStorageStat[key]) {
-				localStorageStat[key] = stat[key];
-			}
-		});
-		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
-	};
-
-	var nav = new Nav();
-	this.addChild(nav);
-	this.nav = nav;
-
-	var modal = new Modal();
-	this.addChild(modal);
-	this.modal = modal;
-
-	this.scoreInc = function scoreInc(value) {
-		this.nav.scoreInc(value * scoreMultiplier);
-	};
-	this.scoreReset = function scoreReset() {
-		this.nav.scoreReset();
-	};
-	this.scoreSurcharge = function scoreSurcharge() {
-		this.nav.scoreSurcharge();
-	};
-
-	this.figureSet = function figureSet(figure) {
-		//audioFigureSet.play();
-
-		var dots = this.dots;
-		var hovers = this.dotHovers;
-
-		for (var hover = 0; hover < 4; hover++) {
-			dots[hovers[hover]].place();
-		}
-		this.dotHovers = [];
-		this.scoreInc(Consts.SCORE__FIGURE);
-		this.linesCheck();
-		this.figureUpdate(figure);
-		this.statInc({ figuresPlaced: 1 });
-		setTimeout(this.isGameEnded(), 10);
-	};
-
-	this.figureCheck = function figureCheck() {
-		var _this = this;
-
-		var hovers = this.dotHovers;
-
-		if (hovers.length === 4) {
-			var figure;
-
-			(function () {
-				var figures = _this.figures;
-				var rows = _this.orderRows;
-				var columns = _this.orderColumns;
-
-				var _rows = hovers.map(function (element) {
-					return Number.parseInt(element / Consts.DIMENSION);
-				});
-				var _columns = hovers.map(function (element) {
-					return element % Consts.DIMENSION;
-				});
-
-				var virtualRow = [];
-				var virtualColumn = [];
-
-				var _loop = function (i) {
-					virtualRow.push(columns.findIndex(function (element) {
-						return element === _columns[i];
-					}));
-					virtualColumn.push(rows.findIndex(function (element) {
-						return element === _rows[i];
-					}));
-				};
-
-				for (var i = 0; i < 4; i++) {
-					_loop(i);
-				}
-				var zeroPoint = virtualRow.min() * Consts.DIMENSION + virtualColumn.min();
-
-				var data = [];
-				for (var i = 0; i < 4; i++) {
-					data[i] = {
-						x: Math.abs(virtualRow[i] - Number.parseInt(zeroPoint / Consts.DIMENSION)),
-						y: Math.abs(virtualColumn[i] % Consts.DIMENSION - zeroPoint % Consts.DIMENSION)
-					};
-				}
-				data.sort(function (a, b) {
-					var n = a.x - b.x;
-					if (n !== 0) {
-						return n;
-					}
-					return a.y - b.y;
-				});
-
-				for (figure = 0; figure < Consts.FIGURESCOUNT; figure++) {
-					var f = figures[figure].cells;
-					if (f.every(function (element, index) {
-						return element.x === data[index].x && element.y === data[index].y;
-					})) {
-						_this.figureSet(figure);
-						figure = Consts.FIGURESCOUNT;
-					}
-				}
-			})();
-		}
-	};
-
-	this.mousing = 0;
-
-	/**
-  * Allow hovering dots by mousemoving
-  * @param {number} id - Id of dot
-  */
-	this.mousingDown = function (id) {
-		this.mousing = this.dots[id].state ? -1 : +1;
-	};
-	this.mousingUp = function (id) {
 		this.mousing = 0;
-	};
 
-	var localStorageDotHovers = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dotHovers')) || [];
-	if (localStorageDotHovers.length === 0) {
-		this.dotHovers = [];
-		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
-	} else {
-		this.dotHovers = localStorageDotHovers;
-	}
-
-	this.dotSelect = function dotSelect(id) {
-		if (this.dots[id].state !== Consts.DOT_STATE__PLACED) {
-			this.dots[id].select();
-			this.linesCheck();
-		}
-	};
-
-	/**
-  * Check dot for hoverability
-  * @param {number} id - Id of dot
-  */
-	this.dotHover = function (id) {
-		switch (this.dots[id].state) {
-			case Consts.DOT_STATE__UNTOUCHED:
-				if (this.dotHovers.indexOf(id) < 0) {
-					if (this.dotHovers.length < 4) {
-						this.dotHovers.push(id);
-					} else {
-						this.dots[this.dotHovers[0]].unhover();
-						this.dotHovers.shift();
-						this.dotHovers.push(id);
-					}
-					this.dots[id].hover();
-					if (this.dotHovers.length === 4) {
-						this.figureCheck();
-					}
-					localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
-				}
-				break;
-			case Consts.DOT_STATE__HOVERED:
-				this.dotHovers.splice(this.dotHovers.indexOf(id), 1);
-				this.dots[id].unhover();
-				localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
-				break;
-			default:
-				return false;
-		}
-	};
-
-	var localStorageOrderRows = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [];
-	if (localStorageOrderRows.length === 0) {
-		this.orderRows = [].initialize(Consts.ROWS);
-		localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
-	} else {
-		this.orderRows = localStorageOrderRows;
-	}
-
-	var localStorageOrderColumns = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderColumns')) || [];
-	if (localStorageOrderColumns.length === 0) {
-		this.orderColumns = [].initialize(Consts.COLUMNS);
-		localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
-	} else {
-		this.orderColumns = localStorageOrderColumns;
-	}
-
-	this.etalonRows = [];
-	this.etalonColumns = [];
-
-	/**
-  * Check lines if dots are filled
-  */
-	/*jshint -W074 */
-	this.linesCheck = function linesCheck() {
-		var dots = this.dots;
-		var filledRows = [];
-		var filledColumns = [];
-		var orderRows = this.orderRows;
-		var orderColumns = this.orderColumns;
-
-		var _loop2 = function (line) {
-			var row = dots.filter(function (element) {
-				return Number.parseInt(element.id / Consts.ROWS) === line && element.state === Consts.DOT_STATE__PLACED;
-			});
-			var column = dots.filter(function (element) {
-				return element.id % Consts.COLUMNS === line && element.state === Consts.DOT_STATE__PLACED;
-			});
-			if (row.length === Consts.ROWS) {
-				filledRows.push(line);
-			}
-			if (column.length === Consts.COLUMNS) {
-				filledColumns.push(line);
-			}
-		};
-
-		for (var line = 0; line < Consts.DIMENSION; line++) {
-			_loop2(line);
-		}
-
-		//		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
-		//		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
-		//		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
-		//		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
-		//		console.log(toRight);
-		//
-		//		toTop.sort((a, b) => b - a);
-		//		toRight.sort((a, b) => b - a);
-		//		toBottom.sort((a, b) => a - b);
-		//		toLeft.sort((a, b) => a - b);
-
-		filledRows.sort(function (x, y) {
-			if (x < Consts.ROWS / 2) {
-				return y - x;
-			} else {
-				return x - y;
-			}
-		});
-		filledColumns.sort(function (x, y) {
-			if (x < Consts.COLUMNS / 2) {
-				return y - x;
-			} else {
-				return x - y;
-			}
-		});
-
-		if (filledRows.length === 1 && (filledRows[0] === orderRows[0] || filledRows[0] === orderRows[Consts.ROWS - 1])) {
-			this.lineRotate(filledRows[0], 'y');
-			scoreMultiplier++;
+		var localStorageDotHovers = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dotHovers')) || [];
+		if (localStorageDotHovers.length === 0) {
+			this.dotHovers = [];
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 		} else {
-			for (var row = 0; row < filledRows.length; row++) {
-				this.lineMove(filledRows[row], 'y', row + 1);
-				scoreMultiplier++;
-			}
+			this.dotHovers = localStorageDotHovers;
 		}
-		if (filledColumns.length === 1 && (filledColumns[0] === orderColumns[0] || filledColumns[0] === orderColumns[Consts.COLUMNS - 1])) {
-			this.lineRotate(filledColumns[0], 'x');
-			scoreMultiplier++;
+
+		var localStorageOrderRows = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__orderRows')) || [];
+		if (localStorageOrderRows.length === 0) {
+			this.orderRows = [].initialize(_Consts2['default'].ROWS);
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
 		} else {
-			for (var column = 0; column < filledColumns.length; column++) {
-				this.lineMove(filledColumns[column], 'x', column + 1);
-				scoreMultiplier++;
-			}
+			this.orderRows = localStorageOrderRows;
 		}
 
-		this.statInc({ rowsMoved: filledRows.length, columnsMoved: filledColumns.length });
-		scoreMultiplier = 1;
-	}; /*jshint +W074 */
-
-	/**
-  * Move stateed line
-  * @param {number} id - Id of stateed line
-  */
-	/*jshint -W071, -W074 */
-	this.lineMove = function lineMove(line, direction, delay) {
-		console.log('lineMove', line, direction, delay);
-		//audioLineMove.play();
-
-		this.scoreInc(Consts.SCORE__LINE);
-
-		var orderRows = this.orderRows;
-		var orderColumns = this.orderColumns;
-		var etalonRows = this.etalonRows;
-		var etalonColumns = this.etalonColumns;
-		var order = [];
-		var etalon = [];
-		var lineHash = 0;
-
-		switch (direction) {
-			case 'x':
-				order = orderColumns;
-				etalon = etalonColumns;
-				lineHash = order.indexOf(line);
-				if (line < Consts.COLUMNS / 2) {
-					for (var row = 0; row < Consts.ROWS; row++) {
-						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var position = dot.position;
-						position.setX(etalon[0], {
-							duration: Consts.DOT_DURATION__POSITION,
-							curve: Consts.DOT_CURVE__POSITION
-						});
-						dot.domElement.setAttribute('aria-colindex', 0);
-						dot.unplace(delay);
-					}
-					for (var column = lineHash - 1; column >= 0; column--) {
-						for (var row = 0; row < Consts.ROWS; row++) {
-							var dot = this.dots[row * Consts.ROWS + order[column]];
-							var position = dot.position;
-							position.setX(etalon[column + 1], {
-								duration: Consts.DOT_DURATION__POSITION,
-								curve: Consts.DOT_CURVE__POSITION
-							});
-							dot.domElement.setAttribute('aria-colindex', column + 1);
-						}
-					}
-					orderColumns.splice(lineHash, 1);
-					orderColumns.unshift(line);
-					localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
-				} else {
-					for (var row = 0; row < Consts.ROWS; row++) {
-						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var position = dot.position;
-						position.setX(etalon[Consts.COLUMNS - 1], {
-							duration: Consts.DOT_DURATION__POSITION,
-							curve: Consts.DOT_CURVE__POSITION
-						});
-						dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
-						dot.unplace(delay);
-					}
-					for (var column = Consts.COLUMNS - 1; column > lineHash; column--) {
-						for (var row = 0; row < Consts.ROWS; row++) {
-							var dot = this.dots[row * Consts.ROWS + order[column]];
-							var position = dot.position;
-							position.setX(etalon[column - 1], {
-								duration: Consts.DOT_DURATION__POSITION,
-								curve: Consts.DOT_CURVE__POSITION
-							});
-							dot.domElement.setAttribute('aria-colindex', column - 1);
-						}
-					}
-					orderColumns.splice(lineHash, 1);
-					orderColumns.push(line);
-					localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
-				}
-				break;
-			case 'y':
-				order = orderRows;
-				etalon = etalonRows;
-				lineHash = order.indexOf(line);
-				if (line < Consts.ROWS / 2) {
-					for (var column = 0; column < Consts.COLUMNS; column++) {
-						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var position = dot.position;
-						position.setY(etalon[0], {
-							duration: Consts.DOT_DURATION__POSITION,
-							curve: Consts.DOT_CURVE__POSITION
-						});
-						dot.domElement.setAttribute('aria-rowindex', 0);
-						dot.unplace(delay);
-					}
-					for (var row = lineHash - 1; row >= 0; row--) {
-						for (var column = 0; column < Consts.COLUMNS; column++) {
-							var dot = this.dots[order[row] * Consts.COLUMNS + column];
-							var position = dot.position;
-							position.setY(etalon[row + 1], {
-								duration: Consts.DOT_DURATION__POSITION,
-								curve: Consts.DOT_CURVE__POSITION
-							});
-							dot.domElement.setAttribute('aria-rowindex', row + 1);
-						}
-					}
-					orderRows.splice(lineHash, 1);
-					orderRows.unshift(line);
-					localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(orderRows));
-				} else {
-					for (var column = 0; column < Consts.COLUMNS; column++) {
-						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var position = dot.position;
-						position.setY(etalon[Consts.ROWS - 1], {
-							duration: Consts.DOT_DURATION__POSITION,
-							curve: Consts.DOT_CURVE__POSITION
-						});
-						dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
-						dot.unplace(delay);
-					}
-					for (var row = Consts.ROWS - 1; row > lineHash; row--) {
-						for (var column = 0; column < Consts.COLUMNS; column++) {
-							var dot = this.dots[order[row] * Consts.COLUMNS + column];
-							var position = dot.position;
-							position.setY(etalon[row - 1], {
-								duration: Consts.DOT_DURATION__POSITION,
-								curve: Consts.DOT_CURVE__POSITION
-							});
-							dot.domElement.setAttribute('aria-rowindex', row - 1);
-						}
-					}
-					orderRows.splice(lineHash, 1);
-					orderRows.push(line);
-					localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(orderRows));
-				}
-				break;
-			default:
-				return false;
-		}
-		return true;
-	}; /*jshint +W071, +W074 */
-
-	/**
-  * Rotate stateed line
-  * @param {number} id - Id of stateed line
-  */
-	/*jshint -W071, -W074 */
-	this.lineRotate = function lineRotate(line, direction) {
-		this.scoreInc(Consts.SCORE__LINE);
-
-		var orderRows = this.orderRows;
-		var orderColumns = this.orderColumns;
-		var etalonRows = this.etalonRows;
-		var etalonColumns = this.etalonColumns;
-		var order = [];
-		var etalon = [];
-		var lineHash = 0;
-
-		switch (direction) {
-			case 'x':
-				order = orderColumns;
-				etalon = etalonColumns;
-				lineHash = order.indexOf(line);
-				if (line === 0) {
-					for (var row = 0; row < Consts.ROWS; row++) {
-						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var rotation = dot.rotation;
-						var x = rotation.getX();
-						var y = rotation.getY();
-						var inc = 2 * Math.PI;
-						rotation.set(x + inc, y + inc, 0, {
-							duration: Consts.DOT_DURATION__ROTATION,
-							curve: Consts.DOT_CURVE__ROTATION
-						});
-						dot.unplace(scoreMultiplier);
-					}
-				} else {
-					for (var row = 0; row < Consts.ROWS; row++) {
-						var dot = this.dots[row * Consts.ROWS + order[lineHash]];
-						var rotation = dot.rotation;
-						var x = rotation.getX();
-						var y = rotation.getY();
-						var inc = 2 * Math.PI;
-						rotation.set(x + inc, y + inc, 0, {
-							duration: Consts.DOT_DURATION__ROTATION,
-							curve: Consts.DOT_CURVE__ROTATION
-						});
-						dot.unplace(scoreMultiplier);
-					}
-				}
-				break;
-			case 'y':
-				order = orderRows;
-				etalon = etalonRows;
-				lineHash = order.indexOf(line);
-				if (line < Consts.ROWS / 2) {
-					for (var column = 0; column < Consts.COLUMNS; column++) {
-						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var rotation = dot.rotation;
-						var x = rotation.getX();
-						var y = rotation.getY();
-						var inc = 2 * Math.PI;
-						rotation.set(x + inc, y + inc, 0, {
-							duration: Consts.DOT_DURATION__ROTATION,
-							curve: Consts.DOT_CURVE__ROTATION
-						});
-						dot.unplace(scoreMultiplier);
-					}
-				} else {
-					for (var column = 0; column < Consts.COLUMNS; column++) {
-						var dot = this.dots[order[lineHash] * Consts.COLUMNS + column];
-						var rotation = dot.rotation;
-						var x = rotation.getX();
-						var y = rotation.getY();
-						var inc = 2 * Math.PI;
-						rotation.set(x + inc, y + inc, 0, {
-							duration: Consts.DOT_DURATION__ROTATION,
-							curve: Consts.DOT_CURVE__ROTATION
-						});
-						dot.unplace(scoreMultiplier);
-					}
-				}
-				break;
-			default:
-				return false;
-		}
-	};
-
-	/**
-  * Check if player can't place new figure (Game over state)
-  */
-	this.isGameEnded = function isGameEnded() {
-		var figures = this.figures;
-		var orderRows = this.orderRows;
-		var orderColumns = this.orderColumns;
-		var dots = this.dots;
-		var figuresCollection = [];
-		for (var figureCounter = 0, fL = figures.length; figureCounter < fL; figureCounter++) {
-			var figureOrigin = figures[figureCounter];
-			var figureContainer = [];
-			for (var cell = 0; cell < 4; cell++) {
-				figureContainer.push({ x: figureOrigin.cells[cell].x, y: figureOrigin.cells[cell].y });
-			}
-			figuresCollection.push(figureContainer);
+		var localStorageOrderColumns = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__orderColumns')) || [];
+		if (localStorageOrderColumns.length === 0) {
+			this.orderColumns = [].initialize(_Consts2['default'].COLUMNS);
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+		} else {
+			this.orderColumns = localStorageOrderColumns;
 		}
 
-		var _loop3 = function (y, yL) {
-			var _loop4 = function (x, xL) {
-				var canPlaceFigure = figuresCollection.some(function (element, index) {
-					var figure = element;
-					var column = orderColumns[x];
-					var row = orderRows[y];
-					var xs = figure.map(function (element) {
-						return element.x;
+		this.etalonRows = [];
+		this.etalonColumns = [];
+
+		this.hoverId = undefined;
+
+		this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].COLUMNS * _Consts2['default'].DOT_SIDE, _Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE);
+
+		this.layout = new _Layout2['default'](this);
+
+		console.log(this);
+
+		this._addUIEvents();
+	}
+
+	_createClass(Game, [{
+		key: '_addUIEvents',
+		value: function _addUIEvents() {
+			this.addUIEvent('mousedown');
+			this.addUIEvent('mouseleave');
+			this.addUIEvent('mouseup');
+		}
+	}, {
+		key: '_setupDomElement',
+		value: function _setupDomElement() {
+			this.domElement = new DOMElement(this, {
+				tagName: 'main',
+				classes: ['Game']
+			});
+
+			this.domElement.setAttribute('role', 'grid');
+			this.domElement.setAttribute('aria-multiselectable', true);
+			this.domElement.setAttribute('aria-colcount', _Consts2['default'].COLUMNS);
+			this.domElement.setAttribute('aria-rowcount', _Consts2['default'].ROWS);
+		}
+	}, {
+		key: 'figureIndexGenerate',
+		value: function figureIndexGenerate() {
+			var figures = this.figures || [];
+			var rand = (0, _getRandomInt2['default'])(0, _Consts2['default'].FIGURES.length);
+			if (figures.length < 1) {
+				return rand;
+			} else {
+				var _ret = (function () {
+					var figuresIndexes = [];
+					figures.forEach(function (element) {
+						figuresIndexes.push(element.randomId);
 					});
-					var ys = figure.map(function (element) {
-						return element.y;
-					});
-					var dx = xs.max() - xs.min() + 1;
-					var dy = ys.max() - ys.min() + 1;
-					if (row + dy > Consts.ROWS || column + dx > Consts.COLUMNS) {
-						return false;
-					} else {
-						return figure.every(function (element, index) {
-							var id = orderRows[row + element.y] * Consts.ROWS + orderColumns[column + element.x];
-							if (dots[id].state !== Consts.DOT_STATE__PLACED) {
-								return true;
-							} else {
-								return false;
-							}
+					var isFigureUnique = function isFigureUnique(array, rand) {
+						return array.every(function (element) {
+							return element !== rand;
 						});
-					}
-				});
-				if (canPlaceFigure === true) {
-					return {
-						v: {
-							v: true
-						}
 					};
+					while (!isFigureUnique(figuresIndexes, rand)) {
+						rand = (0, _getRandomInt2['default'])(0, _Consts2['default'].FIGURES.length);
+					}
+					return {
+						v: rand
+					};
+				})();
+
+				if (typeof _ret === 'object') return _ret.v;
+			}
+		}
+	}, {
+		key: 'figureUpdate',
+		value: function figureUpdate(index) {
+			var figures = this.figures;
+			var uniqueFigureId = this.figureIndexGenerate();
+			var figure = _Consts2['default'].FIGURES[uniqueFigureId];
+			for (var cellCounter = 0; cellCounter < 4; cellCounter++) {
+				var cell = figures[index].cells[cellCounter];
+				var position = cell.position;
+				position.set(figure[cellCounter].x * _Consts2['default'].CELL_SIDE, figure[cellCounter].y * _Consts2['default'].CELL_SIDE, 0, {
+					duration: _Consts2['default'].DURATION,
+					curve: _Consts2['default'].CURVE
+				});
+				cell.x = figure[cellCounter].x;
+				cell.y = figure[cellCounter].y;
+				cell.domElement.setAttribute('aria-colindex', figure[cellCounter].x);
+				cell.domElement.setAttribute('aria-rowindex', figure[cellCounter].y);
+			}
+			figures[index].randomId = uniqueFigureId;
+			var _localStorageFigures = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__figures')) || [];
+			_localStorageFigures[index] = uniqueFigureId;
+			if (_localStorageFigures.length !== 0) {
+				localStorage.setItem(_Consts2['default'].DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
+			}
+		}
+	}, {
+		key: 'statInc',
+		value: function statInc(statArg) {
+			var stat = this.stat;
+			var localStorageStat = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__stat')) || stat;
+			var keys = Object.keys(statArg);
+			keys.forEach(function (key) {
+				stat[key] += statArg[key];
+				if (stat[key] !== localStorageStat[key]) {
+					localStorageStat[key] = stat[key];
+				}
+			});
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__stat', JSON.stringify(stat));
+		}
+	}, {
+		key: 'statSet',
+		value: function statSet(statArg) {
+			var stat = this.stat;
+			var localStorageStat = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__stat')) || stat;
+			var keys = Object.keys(statArg);
+			keys.forEach(function (key) {
+				stat[key] = statArg[key];
+				if (stat[key] !== localStorageStat[key]) {
+					localStorageStat[key] = stat[key];
+				}
+			});
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__stat', JSON.stringify(stat));
+		}
+	}, {
+		key: 'scoreInc',
+		value: function scoreInc(value) {
+			this.nav.scoreInc(value * this.scoreMultiplier);
+		}
+	}, {
+		key: 'scoreReset',
+		value: function scoreReset() {
+			this.nav.scoreReset();
+		}
+	}, {
+		key: 'scoreSurcharge',
+		value: function scoreSurcharge() {
+			this.nav.scoreSurcharge();
+		}
+	}, {
+		key: 'figureSet',
+		value: function figureSet(figure) {
+			//audioFigureSet.play();
+
+			var dots = this.dots;
+			var hovers = this.dotHovers;
+
+			for (var hover = 0; hover < 4; hover++) {
+				dots[hovers[hover]].place();
+			}
+			this.dotHovers = [];
+			this.scoreInc(_Consts2['default'].SCORE__FIGURE);
+			this.linesCheck();
+			this.figureUpdate(figure);
+			this.statInc({ figuresPlaced: 1 });
+			setTimeout(this.isGameEnded(), 10);
+		}
+
+		/*jshint -W074 */
+	}, {
+		key: 'figureCheck',
+		value: function figureCheck() {
+			var _this = this;
+
+			var hovers = this.dotHovers;
+
+			if (hovers.length === 4) {
+				var figure;
+
+				(function () {
+					var figures = _this.figures;
+					var rows = _this.orderRows;
+					var columns = _this.orderColumns;
+
+					var _rows = hovers.map(function (element) {
+						return Number.parseInt(element / _Consts2['default'].DIMENSION);
+					});
+					var _columns = hovers.map(function (element) {
+						return element % _Consts2['default'].DIMENSION;
+					});
+
+					var virtualRow = [];
+					var virtualColumn = [];
+
+					var _loop = function (i) {
+						virtualRow.push(columns.findIndex(function (element) {
+							return element === _columns[i];
+						}));
+						virtualColumn.push(rows.findIndex(function (element) {
+							return element === _rows[i];
+						}));
+					};
+
+					for (var i = 0; i < 4; i++) {
+						_loop(i);
+					}
+					var zeroPoint = virtualRow.min() * _Consts2['default'].DIMENSION + virtualColumn.min();
+
+					var data = [];
+					for (var i = 0; i < 4; i++) {
+						data[i] = {
+							x: Math.abs(virtualRow[i] - Number.parseInt(zeroPoint / _Consts2['default'].DIMENSION)),
+							y: Math.abs(virtualColumn[i] % _Consts2['default'].DIMENSION - zeroPoint % _Consts2['default'].DIMENSION)
+						};
+					}
+					data.sort(function (a, b) {
+						var n = a.x - b.x;
+						if (n !== 0) {
+							return n;
+						}
+						return a.y - b.y;
+					});
+
+					for (figure = 0; figure < _Consts2['default'].FIGURESCOUNT; figure++) {
+						var f = figures[figure].cells;
+						if (f.every(function (element, index) {
+							return element.x === data[index].x && element.y === data[index].y;
+						})) {
+							_this.figureSet(figure);
+							figure = _Consts2['default'].FIGURESCOUNT;
+						}
+					}
+				})();
+			}
+		}
+
+		/*jshint +W074 */
+
+		/**
+   * Allow hovering dots by mousemoving
+   * @param {number} id - Id of dot
+   */
+	}, {
+		key: 'mousingDown',
+		value: function mousingDown(id) {
+			this.mousing = this.dots[id].state ? -1 : +1;
+		}
+	}, {
+		key: 'mousingUp',
+		value: function mousingUp(id) {
+			this.mousing = 0;
+		}
+	}, {
+		key: 'dotSelect',
+		value: function dotSelect(id) {
+			if (this.dots[id].state !== _Consts2['default'].DOT_STATE__PLACED) {
+				this.dots[id].select();
+				this.linesCheck();
+			}
+		}
+
+		/**
+   * Check dot for hoverability
+   * @param {number} id - Id of dot
+   */
+	}, {
+		key: 'dotHover',
+		value: function dotHover(id) {
+			switch (this.dots[id].state) {
+				case _Consts2['default'].DOT_STATE__UNTOUCHED:
+					if (this.dotHovers.indexOf(id) < 0) {
+						if (this.dotHovers.length < 4) {
+							this.dotHovers.push(id);
+						} else {
+							this.dots[this.dotHovers[0]].unhover();
+							this.dotHovers.shift();
+							this.dotHovers.push(id);
+						}
+						this.dots[id].hover();
+						if (this.dotHovers.length === 4) {
+							this.figureCheck();
+						}
+						localStorage.setItem(_Consts2['default'].DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+					}
+					break;
+				case _Consts2['default'].DOT_STATE__HOVERED:
+					this.dotHovers.splice(this.dotHovers.indexOf(id), 1);
+					this.dots[id].unhover();
+					localStorage.setItem(_Consts2['default'].DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+					break;
+				default:
+					return false;
+			}
+		}
+
+		/**
+   * Check lines if dots are filled
+   */
+		/*jshint -W074 */
+	}, {
+		key: 'linesCheck',
+		value: function linesCheck() {
+			var dots = this.dots;
+			var filledRows = [];
+			var filledColumns = [];
+			var orderRows = this.orderRows;
+			var orderColumns = this.orderColumns;
+
+			var _loop2 = function (line) {
+				var row = dots.filter(function (element) {
+					return Number.parseInt(element.id / _Consts2['default'].ROWS) === line && element.state === _Consts2['default'].DOT_STATE__PLACED;
+				});
+				var column = dots.filter(function (element) {
+					return element.id % _Consts2['default'].COLUMNS === line && element.state === _Consts2['default'].DOT_STATE__PLACED;
+				});
+				if (row.length === _Consts2['default'].ROWS) {
+					filledRows.push(line);
+				}
+				if (column.length === _Consts2['default'].COLUMNS) {
+					filledColumns.push(line);
 				}
 			};
 
-			for (var x = 0, xL = Consts.COLUMNS; x < xL; x++) {
-				var _ret6 = _loop4(x, xL);
-
-				if (typeof _ret6 === 'object') return _ret6.v;
+			for (var line = 0; line < _Consts2['default'].DIMENSION; line++) {
+				_loop2(line);
 			}
-		};
 
-		for (var y = 0, yL = Consts.ROWS; y < yL; y++) {
-			var _ret5 = _loop3(y, yL);
+			//		let toTop = filledRows.filter((element) => element >= Consts.ROWS / 2);
+			//		let toRight = filledColumns.filter((element) => element < Consts.COLUMNS / 2);
+			//		let toBottom = filledRows.filter((element) => element < Consts.ROWS / 2);
+			//		let toLeft = filledColumns.filter((element) => element >= Consts.COLUMNS / 2);
+			//		console.log(toRight);
+			//
+			//		toTop.sort((a, b) => b - a);
+			//		toRight.sort((a, b) => b - a);
+			//		toBottom.sort((a, b) => a - b);
+			//		toLeft.sort((a, b) => a - b);
 
-			if (typeof _ret5 === 'object') return _ret5.v;
+			filledRows.sort(function (x, y) {
+				if (x < _Consts2['default'].ROWS / 2) {
+					return y - x;
+				} else {
+					return x - y;
+				}
+			});
+			filledColumns.sort(function (x, y) {
+				if (x < _Consts2['default'].COLUMNS / 2) {
+					return y - x;
+				} else {
+					return x - y;
+				}
+			});
+
+			if (filledRows.length === 1 && (filledRows[0] === orderRows[0] || filledRows[0] === orderRows[_Consts2['default'].ROWS - 1])) {
+				this.lineRotate(filledRows[0], 'y');
+				this.scoreMultiplier++;
+			} else {
+				for (var row = 0; row < filledRows.length; row++) {
+					this.lineMove(filledRows[row], 'y', row + 1);
+					this.scoreMultiplier++;
+				}
+			}
+			if (filledColumns.length === 1 && (filledColumns[0] === orderColumns[0] || filledColumns[0] === orderColumns[_Consts2['default'].COLUMNS - 1])) {
+				this.lineRotate(filledColumns[0], 'x');
+				this.scoreMultiplier++;
+			} else {
+				for (var column = 0; column < filledColumns.length; column++) {
+					this.lineMove(filledColumns[column], 'x', column + 1);
+					this.scoreMultiplier++;
+				}
+			}
+
+			this.statInc({ rowsMoved: filledRows.length, columnsMoved: filledColumns.length });
+			this.scoreMultiplier = 1;
 		}
-		this.modal.show();
-		return false;
-	};
 
-	var hoverId;
+		/*jshint +W074 */
 
-	/**
-  * Fill dot
-  * @param {number} id - Id of dot
-  */
-	this.dotState = function (id) {
-		if (id !== undefined && id !== hoverId) {
-			this.dotHover(id);
-			hoverId = id;
+		/**
+   * Move stateed line
+   * @param {number} id - Id of stateed line
+   */
+		/*jshint -W071, -W074 */
+	}, {
+		key: 'lineMove',
+		value: function lineMove(line, direction, delay) {
+			console.log('lineMove', line, direction, delay);
+			//audioLineMove.play();
+
+			this.scoreInc(_Consts2['default'].SCORE__LINE);
+
+			var orderRows = this.orderRows;
+			var orderColumns = this.orderColumns;
+			var etalonRows = this.etalonRows;
+			var etalonColumns = this.etalonColumns;
+			var order = [];
+			var etalon = [];
+			var lineHash = 0;
+
+			switch (direction) {
+				case 'x':
+					order = orderColumns;
+					etalon = etalonColumns;
+					lineHash = order.indexOf(line);
+					if (line < _Consts2['default'].COLUMNS / 2) {
+						for (var row = 0; row < _Consts2['default'].ROWS; row++) {
+							var dot = this.dots[row * _Consts2['default'].ROWS + order[lineHash]];
+							var position = dot.position;
+							position.setX(etalon[0], {
+								duration: _Consts2['default'].DOT_DURATION__POSITION,
+								curve: _Consts2['default'].DOT_CURVE__POSITION
+							});
+							dot.domElement.setAttribute('aria-colindex', 0);
+							dot.unplace(delay);
+						}
+						for (var column = lineHash - 1; column >= 0; column--) {
+							for (var row = 0; row < _Consts2['default'].ROWS; row++) {
+								var dot = this.dots[row * _Consts2['default'].ROWS + order[column]];
+								var position = dot.position;
+								position.setX(etalon[column + 1], {
+									duration: _Consts2['default'].DOT_DURATION__POSITION,
+									curve: _Consts2['default'].DOT_CURVE__POSITION
+								});
+								dot.domElement.setAttribute('aria-colindex', column + 1);
+							}
+						}
+						orderColumns.splice(lineHash, 1);
+						orderColumns.unshift(line);
+						localStorage.setItem(_Consts2['default'].DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
+					} else {
+						for (var row = 0; row < _Consts2['default'].ROWS; row++) {
+							var dot = this.dots[row * _Consts2['default'].ROWS + order[lineHash]];
+							var position = dot.position;
+							position.setX(etalon[_Consts2['default'].COLUMNS - 1], {
+								duration: _Consts2['default'].DOT_DURATION__POSITION,
+								curve: _Consts2['default'].DOT_CURVE__POSITION
+							});
+							dot.domElement.setAttribute('aria-colindex', _Consts2['default'].ROWS - 1);
+							dot.unplace(delay);
+						}
+						for (var column = _Consts2['default'].COLUMNS - 1; column > lineHash; column--) {
+							for (var row = 0; row < _Consts2['default'].ROWS; row++) {
+								var dot = this.dots[row * _Consts2['default'].ROWS + order[column]];
+								var position = dot.position;
+								position.setX(etalon[column - 1], {
+									duration: _Consts2['default'].DOT_DURATION__POSITION,
+									curve: _Consts2['default'].DOT_CURVE__POSITION
+								});
+								dot.domElement.setAttribute('aria-colindex', column - 1);
+							}
+						}
+						orderColumns.splice(lineHash, 1);
+						orderColumns.push(line);
+						localStorage.setItem(_Consts2['default'].DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
+					}
+					break;
+				case 'y':
+					order = orderRows;
+					etalon = etalonRows;
+					lineHash = order.indexOf(line);
+					if (line < _Consts2['default'].ROWS / 2) {
+						for (var column = 0; column < _Consts2['default'].COLUMNS; column++) {
+							var dot = this.dots[order[lineHash] * _Consts2['default'].COLUMNS + column];
+							var position = dot.position;
+							position.setY(etalon[0], {
+								duration: _Consts2['default'].DOT_DURATION__POSITION,
+								curve: _Consts2['default'].DOT_CURVE__POSITION
+							});
+							dot.domElement.setAttribute('aria-rowindex', 0);
+							dot.unplace(delay);
+						}
+						for (var row = lineHash - 1; row >= 0; row--) {
+							for (var column = 0; column < _Consts2['default'].COLUMNS; column++) {
+								var dot = this.dots[order[row] * _Consts2['default'].COLUMNS + column];
+								var position = dot.position;
+								position.setY(etalon[row + 1], {
+									duration: _Consts2['default'].DOT_DURATION__POSITION,
+									curve: _Consts2['default'].DOT_CURVE__POSITION
+								});
+								dot.domElement.setAttribute('aria-rowindex', row + 1);
+							}
+						}
+						orderRows.splice(lineHash, 1);
+						orderRows.unshift(line);
+						localStorage.setItem(_Consts2['default'].DIMENSION + '__orderRows', JSON.stringify(orderRows));
+					} else {
+						for (var column = 0; column < _Consts2['default'].COLUMNS; column++) {
+							var dot = this.dots[order[lineHash] * _Consts2['default'].COLUMNS + column];
+							var position = dot.position;
+							position.setY(etalon[_Consts2['default'].ROWS - 1], {
+								duration: _Consts2['default'].DOT_DURATION__POSITION,
+								curve: _Consts2['default'].DOT_CURVE__POSITION
+							});
+							dot.domElement.setAttribute('aria-rowindex', _Consts2['default'].COLUMNS - 1);
+							dot.unplace(delay);
+						}
+						for (var row = _Consts2['default'].ROWS - 1; row > lineHash; row--) {
+							for (var column = 0; column < _Consts2['default'].COLUMNS; column++) {
+								var dot = this.dots[order[row] * _Consts2['default'].COLUMNS + column];
+								var position = dot.position;
+								position.setY(etalon[row - 1], {
+									duration: _Consts2['default'].DOT_DURATION__POSITION,
+									curve: _Consts2['default'].DOT_CURVE__POSITION
+								});
+								dot.domElement.setAttribute('aria-rowindex', row - 1);
+							}
+						}
+						orderRows.splice(lineHash, 1);
+						orderRows.push(line);
+						localStorage.setItem(_Consts2['default'].DIMENSION + '__orderRows', JSON.stringify(orderRows));
+					}
+					break;
+				default:
+					return false;
+			}
+			return true;
 		}
-	};
 
-	this.gameStart = function gameStart() {
-		var dots = this.dots;
+		/*jshint +W071, +W074 */
 
-		var etalonRows = this.etalonRows;
-		var etalonColumns = this.etalonColumns;
+		/**
+   * Rotate stateed line
+   * @param {number} id - Id of stateed line
+   */
+		/*jshint -W071, -W074 */
+	}, {
+		key: 'lineRotate',
+		value: function lineRotate(line, direction) {
+			this.scoreInc(_Consts2['default'].SCORE__LINE);
 
-		this.dotHovers.forEach(function (element) {
-			return dots[element].unhover();
-		});
-		this.dotHovers = [];
-		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
-		hoverId = undefined;
+			var orderRows = this.orderRows;
+			var orderColumns = this.orderColumns;
+			var etalonRows = this.etalonRows;
+			var etalonColumns = this.etalonColumns;
+			var order = [];
+			var etalon = [];
+			var lineHash = 0;
 
-		var _localStorageDots = [];
-		for (var column = 0; column < Consts.COLUMNS; column++) {
-			for (var row = 0; row < Consts.ROWS; row++) {
-				var dot = dots[row * Consts.ROWS + column];
-				var position = dot.position;
-				position.set(etalonColumns[column], etalonRows[row], 0, {
-					duration: Consts.DOT_DURATION__POSITION * 4,
-					curve: Consts.DOT_CURVE__POSITION
-				});
-				dot.unplace();
-				dot.domElement.setAttribute('aria-colindex', column);
-				dot.domElement.setAttribute('aria-rowindex', row);
-				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
+			switch (direction) {
+				case 'x':
+					order = orderColumns;
+					etalon = etalonColumns;
+					lineHash = order.indexOf(line);
+					if (line === 0) {
+						for (var row = 0; row < _Consts2['default'].ROWS; row++) {
+							var dot = this.dots[row * _Consts2['default'].ROWS + order[lineHash]];
+							var rotation = dot.rotation;
+							var x = rotation.getX();
+							var y = rotation.getY();
+							var inc = 2 * Math.PI;
+							rotation.set(x + inc, y + inc, 0, {
+								duration: _Consts2['default'].DOT_DURATION__ROTATION,
+								curve: _Consts2['default'].DOT_CURVE__ROTATION
+							});
+							dot.unplace(this.scoreMultiplier);
+						}
+					} else {
+						for (var row = 0; row < _Consts2['default'].ROWS; row++) {
+							var dot = this.dots[row * _Consts2['default'].ROWS + order[lineHash]];
+							var rotation = dot.rotation;
+							var x = rotation.getX();
+							var y = rotation.getY();
+							var inc = 2 * Math.PI;
+							rotation.set(x + inc, y + inc, 0, {
+								duration: _Consts2['default'].DOT_DURATION__ROTATION,
+								curve: _Consts2['default'].DOT_CURVE__ROTATION
+							});
+							dot.unplace(this.scoreMultiplier);
+						}
+					}
+					break;
+				case 'y':
+					order = orderRows;
+					etalon = etalonRows;
+					lineHash = order.indexOf(line);
+					if (line < _Consts2['default'].ROWS / 2) {
+						for (var column = 0; column < _Consts2['default'].COLUMNS; column++) {
+							var dot = this.dots[order[lineHash] * _Consts2['default'].COLUMNS + column];
+							var rotation = dot.rotation;
+							var x = rotation.getX();
+							var y = rotation.getY();
+							var inc = 2 * Math.PI;
+							rotation.set(x + inc, y + inc, 0, {
+								duration: _Consts2['default'].DOT_DURATION__ROTATION,
+								curve: _Consts2['default'].DOT_CURVE__ROTATION
+							});
+							dot.unplace(this.scoreMultiplier);
+						}
+					} else {
+						for (var column = 0; column < _Consts2['default'].COLUMNS; column++) {
+							var dot = this.dots[order[lineHash] * _Consts2['default'].COLUMNS + column];
+							var rotation = dot.rotation;
+							var x = rotation.getX();
+							var y = rotation.getY();
+							var inc = 2 * Math.PI;
+							rotation.set(x + inc, y + inc, 0, {
+								duration: _Consts2['default'].DOT_DURATION__ROTATION,
+								curve: _Consts2['default'].DOT_CURVE__ROTATION
+							});
+							dot.unplace(this.scoreMultiplier);
+						}
+					}
+					break;
+				default:
+					return false;
 			}
 		}
-		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
 
-		this.orderRows = [].initialize(Consts.ROWS);
-		this.orderColumns = [].initialize(Consts.COLUMNS);
-		localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
-		localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+		/*jshint +W071, +W074 */
 
-		this.scoreReset();
+		/*jshint -W074, -W083 */
+	}, {
+		key: 'isMovePossible',
+		value: function isMovePossible() {
+			var figures = this.figures;
+			var orderRows = this.orderRows;
+			var orderColumns = this.orderColumns;
+			var dots = this.dots;
+			var figuresCollection = [];
+			for (var figureCounter = 0, fL = figures.length; figureCounter < fL; figureCounter++) {
+				var figureOrigin = figures[figureCounter];
+				var figureContainer = [];
+				for (var cell = 0; cell < 4; cell++) {
+					figureContainer.push({ x: figureOrigin.cells[cell].x, y: figureOrigin.cells[cell].y });
+				}
+				figuresCollection.push(figureContainer);
+			}
 
-		for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
-			this.figureUpdate(figureCounter);
-		}
-	};
+			var _loop3 = function (y, yL) {
+				var _loop4 = function (x, xL) {
+					var canPlaceFigure = figuresCollection.some(function (element, index) {
+						var figure = element;
+						var column = orderColumns[x];
+						var row = orderRows[y];
+						var xs = figure.map(function (element) {
+							return element.x;
+						});
+						var ys = figure.map(function (element) {
+							return element.y;
+						});
+						var dx = xs.max() - xs.min() + 1;
+						var dy = ys.max() - ys.min() + 1;
+						if (row + dy > _Consts2['default'].ROWS || column + dx > _Consts2['default'].COLUMNS) {
+							return false;
+						} else {
+							return figure.every(function (element, index) {
+								var id = orderRows[row + element.y] * _Consts2['default'].ROWS + orderColumns[column + element.x];
+								if (dots[id].state !== _Consts2['default'].DOT_STATE__PLACED) {
+									return true;
+								} else {
+									return false;
+								}
+							});
+						}
+					});
+					if (canPlaceFigure === true) {
+						return {
+							v: {
+								v: true
+							}
+						};
+					}
+				};
 
-	// Centering
-	this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.COLUMNS * Consts.DOT_SIDE, Consts.ROWS * Consts.DOT_SIDE);
+				for (var x = 0, xL = _Consts2['default'].COLUMNS; x < xL; x++) {
+					var _ret6 = _loop4(x, xL);
 
-	this.layout = new Layout(this);
+					if (typeof _ret6 === 'object') return _ret6.v;
+				}
+			};
 
-	console.log(this);
-	this.addUIEvent('mousedown');
-	this.addUIEvent('mouseleave');
-	this.addUIEvent('mouseup');
-}
+			for (var y = 0, yL = _Consts2['default'].ROWS; y < yL; y++) {
+				var _ret5 = _loop3(y, yL);
 
-Game.prototype = Object.create(Node.prototype);
-Game.prototype.constructor = Node;
+				if (typeof _ret5 === 'object') return _ret5.v;
+			}
 
-Game.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-		case 'mousedown':
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = true;
-			break;
-		case 'mouseleave':
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = false;
-			break;
-		case 'mouseup':
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = false;
-			break;
-		default:
 			return false;
-	}
-};
-
-function Layout(node) {
-	this.node = node;
-	this.id = this.node.addComponent(this);
-	this.current = 0;
-	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
-	this.duration = [2 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 2 * Consts.DURATION];
-
-	var width = document.body.clientWidth;
-	var height = document.body.clientHeight;
-	for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
-		var figure = this.node.figures[figureCounter];
-		var position = figure.position;
-		if (width > height) {
-			position.set(-Consts.ROWS * Consts.DOT_SIDE, (figureCounter - 1) * Consts.ROWS * Consts.DOT_SIDE / 2);
-		} else {
-			position.set(-figureCounter * Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE);
 		}
-	}
 
-	var nav = this.node.nav;
-	var navPosition = nav.position;
-	if (width > height) {
-		navPosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
-	} else {
-		navPosition.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
-	}
+		/*jshint +W074, +W083 */
 
-	this.next();
-}
-
-Layout.prototype.next = function next() {
-	var orderColumns = this.node.orderColumns;
-	var orderRows = this.node.orderRows;
-
-	if (this.current++ === Consts.ROWS) {
-		this.current = 0;
-	}
-	var duration = this.duration[this.current];
-	var curve = this.curve[this.current];
-	var row = 0;
-	var column = 0;
-	var bounds = [Consts.DOT_SIDE * (1 - Consts.ROWS) / 2, Consts.DOT_SIDE * (1 - Consts.COLUMNS) / 2];
-
-	for (var i = 0; i < this.node.dots.length; i++) {
-		var x = bounds[0] + Consts.DOT_SIDE * column++;
-		var y = bounds[1] + Consts.DOT_SIDE * row;
-		if (i < Consts.COLUMNS) {
-			this.node.etalonColumns.push(x);
+		/**
+   * Check if player can't place new figure (Game over state)
+   */
+	}, {
+		key: 'isGameEnded',
+		value: function isGameEnded() {
+			if (this.isMovePossible()) {
+				return true;
+			} else {
+				this.modal.show();
+				return false;
+			}
 		}
-		if (i % Consts.ROWS === 0) {
-			this.node.etalonRows.push(y);
-		}
-		var id = orderRows[row] * Consts.COLUMNS + orderColumns[column - 1];
-		this.node.dots[id].position.set(x, y, 0, {
-			duration: i * Consts.ROWS + duration,
-			curve: curve
-		});
-		if (column >= Consts.COLUMNS) {
-			column = 0;
-			row++;
-		}
-	}
-};
 
-module.exports = Game;
+		/**
+   * Fill dot
+   * @param {number} id - Id of dot
+   */
+	}, {
+		key: 'dotState',
+		value: function dotState(id) {
+			if (id !== undefined && id !== this.hoverId) {
+				this.dotHover(id);
+				this.hoverId = id;
+			}
+		}
+	}, {
+		key: 'gameStart',
+		value: function gameStart() {
+			var dots = this.dots;
 
-},{"./Consts.js":144,"./Dot.js":145,"./Figure.js":146,"./Modal.js":148,"./Nav.js":149,"./getRandomInt.js":151,"famous":46}],148:[function(require,module,exports){
+			var etalonRows = this.etalonRows;
+			var etalonColumns = this.etalonColumns;
+
+			this.dotHovers.forEach(function (element) {
+				return dots[element].unhover();
+			});
+			this.dotHovers = [];
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+			this.hoverId = undefined;
+
+			var _localStorageDots = [];
+			for (var column = 0; column < _Consts2['default'].COLUMNS; column++) {
+				for (var row = 0; row < _Consts2['default'].ROWS; row++) {
+					var dot = dots[row * _Consts2['default'].ROWS + column];
+					var position = dot.position;
+					position.set(etalonColumns[column], etalonRows[row], 0, {
+						duration: _Consts2['default'].DOT_DURATION__POSITION * 4,
+						curve: _Consts2['default'].DOT_CURVE__POSITION
+					});
+					dot.unplace();
+					dot.domElement.setAttribute('aria-colindex', column);
+					dot.domElement.setAttribute('aria-rowindex', row);
+					_localStorageDots.push(_Consts2['default'].DOT_STATE__UNTOUCHED);
+				}
+			}
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+
+			this.orderRows = [].initialize(_Consts2['default'].ROWS);
+			this.orderColumns = [].initialize(_Consts2['default'].COLUMNS);
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
+			localStorage.setItem(_Consts2['default'].DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+
+			this.scoreReset();
+
+			for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
+				this.figureUpdate(figureCounter);
+			}
+
+			this.modal.hide();
+		}
+	}, {
+		key: 'onReceive',
+		value: function onReceive(type, ev) {
+			switch (type) {
+				case 'mousedown':
+					this.emit('x', ev.x).emit('y', ev.y);
+					this.mousing = true;
+					break;
+				case 'mouseleave':
+					this.emit('x', ev.x).emit('y', ev.y);
+					this.mousing = false;
+					break;
+				case 'mouseup':
+					this.emit('x', ev.x).emit('y', ev.y);
+					this.mousing = false;
+					break;
+				default:
+					return false;
+			}
+		}
+	}]);
+
+	return Game;
+})(_famous.core.Node);
+
+exports['default'] = Game;
+module.exports = exports['default'];
+
+},{"./Consts":144,"./Dot":145,"./Figure":146,"./Layout":148,"./Modal":149,"./Nav":150,"./getRandomInt":154,"famous":46}],148:[function(require,module,exports){
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
 
-var Node = famous.core.Node;
-var Position = famous.components.Position;
-var DOMElement = famous.domRenderables.DOMElement;
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-function Modal() {
-	Node.call(this);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	this.setPosition(0, 0, 0);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	this.domElement = new DOMElement(this, {
-		tagName: 'center',
-		classes: ['Modal', 'interactive'],
-		properties: {
-			color: '#fff',
-			fontSize: '24px',
-			padding: '1rem',
-			backgroundColor: 'rgba(0,0,0,.6)'
-		},
-		content: 'Modal'
-	});
+var _Consts = require('./Consts');
 
-	this.hide = function hide() {
-		this.position.setY(-Consts.HEIGHT, {
-			duration: Consts.MODAL_DURATION,
-			curve: Consts.MODAL_CURVE
-		});
-	};
+var _Consts2 = _interopRequireDefault(_Consts);
 
-	this.show = function show() {
-		this.domElement.setContent('<h1>Game Over!<br>Click to start new game</h1>');
-		this.position.setY(0, {
-			duration: Consts.MODAL_DURATION,
-			curve: Consts.MODAL_CURVE
-		});
-	};
+var _famous = require('famous');
 
-	this.position = new Position(this);
-	this.position.setY(-Consts.HEIGHT);
+var Curves = _famous.transitions.Curves;
 
-	this.addUIEvent('click');
-}
+var Layout = (function () {
+    function Layout(node) {
+        _classCallCheck(this, Layout);
 
-Modal.prototype = Object.create(Node.prototype);
-Modal.prototype.constructor = Modal;
+        this.node = node;
+        this.id = this.node.addComponent(this);
+        this.current = 0;
+        this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
+        this.duration = [2 * _Consts2['default'].DURATION, 3 * _Consts2['default'].DURATION, 3 * _Consts2['default'].DURATION, _Consts2['default'].DURATION, 2 * _Consts2['default'].DURATION];
 
-Modal.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-		case 'click':
-			this.hide();
-			this._parent.gameStart();
-			break;
-		default:
-			return false;
-	}
-}; /*jshint +W074 */
+        var width = document.body.clientWidth;
+        var height = document.body.clientHeight;
+        for (var figureCounter = 0; figureCounter < 2; figureCounter++) {
+            var figure = this.node.figures[figureCounter];
+            var position = figure.position;
+            if (width > height) {
+                position.set(-_Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE, (figureCounter - 1) * _Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE / 2);
+            } else {
+                position.set(-figureCounter * _Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE / 2, -_Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE);
+            }
+        }
 
-module.exports = Modal;
+        var nav = this.node.nav;
+        var navPosition = nav.position;
+        if (width > height) {
+            navPosition.set(_Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE / 2, -_Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE / 2);
+        } else {
+            navPosition.set(-_Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE / 2, _Consts2['default'].ROWS * _Consts2['default'].DOT_SIDE / 2);
+        }
 
-},{"./Consts.js":144,"famous":46}],149:[function(require,module,exports){
+        this.next();
+    }
+
+    _createClass(Layout, [{
+        key: 'next',
+        value: function next() {
+            var orderColumns = this.node.orderColumns;
+            var orderRows = this.node.orderRows;
+
+            if (this.current++ === _Consts2['default'].ROWS) {
+                this.current = 0;
+            }
+            var duration = this.duration[this.current];
+            var curve = this.curve[this.current];
+            var row = 0;
+            var column = 0;
+            var bounds = [_Consts2['default'].DOT_SIDE * (1 - _Consts2['default'].ROWS) / 2, _Consts2['default'].DOT_SIDE * (1 - _Consts2['default'].COLUMNS) / 2];
+
+            for (var i = 0; i < this.node.dots.length; i++) {
+                var x = bounds[0] + _Consts2['default'].DOT_SIDE * column++;
+                var y = bounds[1] + _Consts2['default'].DOT_SIDE * row;
+                if (i < _Consts2['default'].COLUMNS) {
+                    this.node.etalonColumns.push(x);
+                }
+                if (i % _Consts2['default'].ROWS === 0) {
+                    this.node.etalonRows.push(y);
+                }
+                var id = orderRows[row] * _Consts2['default'].COLUMNS + orderColumns[column - 1];
+                this.node.dots[id].position.set(x, y, 0, {
+                    duration: i * _Consts2['default'].ROWS + duration,
+                    curve: curve
+                });
+                if (column >= _Consts2['default'].COLUMNS) {
+                    column = 0;
+                    row++;
+                }
+            }
+        }
+    }]);
+
+    return Layout;
+})();
+
+exports['default'] = Layout;
+module.exports = exports['default'];
+
+},{"./Consts":144,"famous":46}],149:[function(require,module,exports){
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
 
-var Node = famous.core.Node;
-var Position = famous.components.Position;
-var DOMElement = famous.domRenderables.DOMElement;
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var width = Consts.WIDTH;
-var heigth = Consts.HEIGHT;
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-function Button() {
-	Node.call(this);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var alignX = 0,
-	    alignY = 0;
-	if (width > heigth) {
-		alignX = 0;
-		alignY = 0.5;
-	} else {
-		alignX = 0.5;
-		alignY = 0;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _Consts = require('./Consts');
+
+var _Consts2 = _interopRequireDefault(_Consts);
+
+var _famous = require('famous');
+
+var Position = _famous.components.Position;
+var DOMElement = _famous.domRenderables.DOMElement;
+
+var Modal = (function (_core$Node) {
+	_inherits(Modal, _core$Node);
+
+	function Modal() {
+		_classCallCheck(this, Modal);
+
+		_get(Object.getPrototypeOf(Modal.prototype), 'constructor', this).call(this);
+
+		this.setPosition(0, 0, 0);
+
+		this.domElement = new DOMElement(this, {
+			tagName: 'center',
+			classes: ['Modal', 'interactive'],
+			properties: {
+				color: '#fff',
+				fontSize: '24px',
+				padding: '1rem',
+				backgroundColor: 'rgba(0,0,0,.6)'
+			},
+			content: 'Modal'
+		});
+
+		this.isVisible = false;
+
+		this.position = new Position(this);
+		this.position.setY(-_Consts2['default'].HEIGHT);
+
+		this.addUIEvent('click');
 	}
 
-	this.setMountPoint(0, 0).setAlign(alignX, alignY).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
+	_createClass(Modal, [{
+		key: 'hide',
+		value: function hide() {
+			if (!this.isVisible) {
+				return;
+			}
 
-	this.domElement = new DOMElement(this, {
-		tagName: 'h2',
-		properties: {
-			display: 'inline',
-			color: '#fff',
-			fontSize: '32px',
-			padding: '1rem'
-		},
-		content: 'New Game',
-		classes: ['Button', 'interactive']
-	});
+			this.position.setY(-_Consts2['default'].HEIGHT, {
+				duration: _Consts2['default'].MODAL_DURATION,
+				curve: _Consts2['default'].MODAL_CURVE
+			});
 
-	this.addUIEvent('click');
-	this.position = new Position(this);
-}
+			this.isVisible = false;
+		}
+	}, {
+		key: 'show',
+		value: function show() {
+			if (this.isVisible) {
+				return;
+			}
 
-Button.prototype = Object.create(Node.prototype);
-Button.prototype.constructor = Button;
+			this.domElement.setContent('<h1>Game Over!<br>Click to start new game</h1>');
+			this.position.setY(0, {
+				duration: _Consts2['default'].MODAL_DURATION,
+				curve: _Consts2['default'].MODAL_CURVE
+			});
 
-Button.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-		case 'click':
-			this._parent.gameStart();
-			//this.emit('id', this.domElement.id).emit('state', this.domElement.state);
-			break;
-		default:
-			return false;
-	}
-};
+			this.isVisible = true;
+		}
+	}, {
+		key: 'onReceive',
+		value: function onReceive(type, ev) {
+			switch (type) {
+				case 'click':
+					this.hide();
+					this._parent.gameStart();
+					break;
+				default:
+					return false;
+			}
+		}
+	}]);
 
-function Score() {
-	Node.call(this);
+	return Modal;
+})(_famous.core.Node);
 
-	this.setMountPoint(0, 0).setAlign(0, 0).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / 2, Consts.DOT_SIDE * Consts.DIMENSION / 2);
+exports['default'] = Modal;
+module.exports = exports['default'];
 
-	this.score = {};
-	var localStorageScore = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__score'));
-	if (localStorageScore) {
-		this.score = localStorageScore;
-	} else {
-		this.score = {
-			best: 0,
-			current: 0
-		};
-		localStorage.setItem(Consts.DIMENSION + '__score', JSON.stringify(this.score));
-	}
+},{"./Consts":144,"famous":46}],150:[function(require,module,exports){
+'use strict';
 
-	this.domElement = new DOMElement(this, {
-		tagName: 'h2',
-		classes: ['Scores'],
-		properties: {
-			color: '#fff',
-			fontSize: '32px',
-			padding: '1rem'
-		},
-		content: '\n\t\t\t<p class="Score">Score:\n\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t' + this.score.current + '\n\t\t\t\t</var>\n\t\t\t</p>\n\t\t\t<p class="Score">Best:\n\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t' + this.score.best + '\n\t\t\t\t</var>\n\t\t\t</p>'
-	});
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
 
-	this.domElement.setAttribute('role', 'log');
-	this.domElement.setAttribute('aria-live', 'polite');
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	this.scoreSetContent = function scoreSetContent(value) {
-		if (value >= this.score.best) {
-			this.domElement.setContent('\n\t\t\t\t<p class="Score">Score:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>\n\t\t\t\t<p class="Score">Best:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>');
-			this.score.best = value;
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _Consts = require('./Consts');
+
+var _Consts2 = _interopRequireDefault(_Consts);
+
+var _famous = require('famous');
+
+var _NewGameButton = require('./NewGameButton');
+
+var _NewGameButton2 = _interopRequireDefault(_NewGameButton);
+
+var _ScoreDisplay = require('./ScoreDisplay');
+
+var _ScoreDisplay2 = _interopRequireDefault(_ScoreDisplay);
+
+var Nav = (function (_core$Node) {
+	_inherits(Nav, _core$Node);
+
+	function Nav() {
+		_classCallCheck(this, Nav);
+
+		_get(Object.getPrototypeOf(Nav.prototype), 'constructor', this).call(this);
+
+		var x = 0,
+		    y = 0;
+		if (_Consts2['default'].WIDTH > _Consts2['default'].HEIGHT) {
+			x = 2;
+			y = 1;
 		} else {
-			this.domElement.setContent('\n\t\t\t\t<p class="Score">Score:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>\n\t\t\t\t<p class="Score">Best:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + this.score.best + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>');
-		};
-		localStorage.setItem(Consts.DIMENSION + '__score', JSON.stringify(this.score));
-	};
+			x = 1;
+			y = 2;
+		}
 
-	this.scoreInc = function scoreInc(inc) {
-		this.score.current += inc;
-		this.scoreSetContent(this.score.current);
-	};
+		this.setMountPoint(0, 0).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / x, _Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / y);
 
-	this.scoreReset = function scoreReset() {
-		this.score.current = 0;
-		this.scoreSetContent(this.score.current);
-	};
+		this.domElement = new _famous.domRenderables.DOMElement(this, {
+			tagName: 'nav',
+			classes: ['Nav']
+		});
 
-	this.scoreSurcharge = function scoreSurcharge() {
-		this.score.current = Number.parseInt(this.score.current * Consts.SCORE__SURCHARGE);
-		this.scoreSetContent(this.score.current);
-	};
+		this.score = new _ScoreDisplay2['default']();
+		this.addChild(this.score);
 
-	this.position = new Position(this);
-}
+		this.button = new _NewGameButton2['default']();
+		this.addChild(this.button);
 
-Score.prototype = Object.create(Node.prototype);
-Score.prototype.constructor = Score;
-
-function Nav() {
-	Node.call(this);
-
-	var x = 0,
-	    y = 0;
-	if (width > heigth) {
-		x = 2;
-		y = 1;
-	} else {
-		x = 1;
-		y = 2;
+		this.position = new _famous.components.Position(this);
 	}
 
-	this.setMountPoint(0, 0).setAlign(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(Consts.DOT_SIDE * Consts.DIMENSION / x, Consts.DOT_SIDE * Consts.DIMENSION / y);
+	_createClass(Nav, [{
+		key: 'gameStart',
+		value: function gameStart() {
+			this._parent.gameStart();
+		}
+	}, {
+		key: 'isGameEnded',
+		value: function isGameEnded() {
+			this._parent.isGameEnded();
+		}
+	}, {
+		key: 'scoreInc',
+		value: function scoreInc(value) {
+			this.score.scoreInc(value);
+		}
+	}, {
+		key: 'scoreReset',
+		value: function scoreReset() {
+			this.score.scoreReset();
+		}
+	}, {
+		key: 'scoreSurcharge',
+		value: function scoreSurcharge() {
+			this.score.scoreSurcharge();
+		}
+	}]);
 
-	this.domElement = new DOMElement(this, {
-		tagName: 'nav',
-		classes: ['Nav']
-	});
+	return Nav;
+})(_famous.core.Node);
 
-	var score = new Score();
-	this.addChild(score);
-	this.score = score;
+exports['default'] = Nav;
+module.exports = exports['default'];
 
-	var button = new Button();
-	this.addChild(button);
-	this.button = button;
+},{"./Consts":144,"./NewGameButton":151,"./ScoreDisplay":153,"famous":46}],151:[function(require,module,exports){
+'use strict';
 
-	this.gameStart = function gameStart() {
-		this._parent.gameStart();
-	};
-	this.scoreInc = function scoreInc(value) {
-		this.score.scoreInc(value);
-	};
-	this.scoreReset = function scoreReset() {
-		this.score.scoreReset();
-	};
-	this.scoreSurcharge = function scoreSurcharge() {
-		this.score.scoreSurcharge();
-	};
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
 
-	this.position = new Position(this);
-}
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-Nav.prototype = Object.create(Node.prototype);
-Nav.prototype.constructor = Nav;
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-module.exports.Nav = Nav;
-module.exports.Button = Button;
-module.exports.Score = Score;
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-},{"./Consts.js":144,"famous":46}],150:[function(require,module,exports){
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _Consts = require('./Consts');
+
+var _Consts2 = _interopRequireDefault(_Consts);
+
+var _famous = require('famous');
+
+var NewGameButton = (function (_core$Node) {
+    _inherits(NewGameButton, _core$Node);
+
+    function NewGameButton() {
+        _classCallCheck(this, NewGameButton);
+
+        _get(Object.getPrototypeOf(NewGameButton.prototype), 'constructor', this).call(this);
+
+        var alignX = 0;
+        var alignY = 0;
+
+        if (_Consts2['default'].WIDTH > _Consts2['default'].HEIGHT) {
+            alignX = 0;
+            alignY = 0.5;
+        } else {
+            alignX = 0.5;
+            alignY = 0;
+        }
+
+        this.setMountPoint(0, 0).setAlign(alignX, alignY).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / 2, _Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / 4);
+
+        this.domElement = new _famous.domRenderables.DOMElement(this, {
+            tagName: 'h2',
+            properties: {
+                display: 'inline',
+                color: '#fff',
+                fontSize: '32px',
+                padding: '1rem'
+            },
+            content: 'New Game',
+            classes: ['NewGameButton', 'interactive']
+        });
+
+        this.addUIEvent('click');
+        this.position = new _famous.components.Position(this);
+    }
+
+    _createClass(NewGameButton, [{
+        key: 'onReceive',
+        value: function onReceive(type, ev) {
+            switch (type) {
+                case 'click':
+                    if (!this._parent._parent.isMovePossible() || confirm('Are you sure?')) {
+                        this._parent.gameStart();
+                    }
+                    break;
+                default:
+                    return false;
+            }
+        }
+    }]);
+
+    return NewGameButton;
+})(_famous.core.Node);
+
+exports['default'] = NewGameButton;
+module.exports = exports['default'];
+
+},{"./Consts":144,"famous":46}],152:[function(require,module,exports){
 'use strict';
 
 module.exports.ObjectKeys = function () {
@@ -30849,24 +31136,137 @@ module.exports.ArrayIncludes = function (searchElement /*, fromIndex*/) {
 	return false;
 };
 
-},{}],151:[function(require,module,exports){
+},{}],153:[function(require,module,exports){
 'use strict';
 
-var getRandomInt = function getRandomInt(min, max) {
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _Consts = require('./Consts');
+
+var _Consts2 = _interopRequireDefault(_Consts);
+
+var _famous = require('famous');
+
+var ScoreDisplay = (function (_core$Node) {
+    _inherits(ScoreDisplay, _core$Node);
+
+    function ScoreDisplay() {
+        _classCallCheck(this, ScoreDisplay);
+
+        _get(Object.getPrototypeOf(ScoreDisplay.prototype), 'constructor', this).call(this);
+
+        this.setMountPoint(0, 0).setAlign(0, 0).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / 2, _Consts2['default'].DOT_SIDE * _Consts2['default'].DIMENSION / 2);
+
+        this.score = {};
+        var localStorageScore = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__score'));
+        if (localStorageScore) {
+            this.score = localStorageScore;
+        } else {
+            this.score = {
+                best: 0,
+                current: 0
+            };
+            localStorage.setItem(_Consts2['default'].DIMENSION + '__score', JSON.stringify(this.score));
+        }
+
+        this.domElement = new _famous.domRenderables.DOMElement(this, {
+            tagName: 'h2',
+            classes: ['Scores'],
+            properties: {
+                color: '#fff',
+                fontSize: '32px',
+                padding: '1rem'
+            },
+            content: '\n\t\t\t<p class="Score">Score:\n\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t' + this.score.current + '\n\t\t\t\t</var>\n\t\t\t</p>\n\t\t\t<p class="Score">Best:\n\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t' + this.score.best + '\n\t\t\t\t</var>\n\t\t\t</p>'
+        });
+
+        this.domElement.setAttribute('role', 'log');
+        this.domElement.setAttribute('aria-live', 'polite');
+
+        this.position = new _famous.components.Position(this);
+    }
+
+    _createClass(ScoreDisplay, [{
+        key: 'scoreSetContent',
+        value: function scoreSetContent(value) {
+            if (value >= this.score.best) {
+                this.domElement.setContent('\n\t\t\t\t<p class="Score">Score:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>\n\t\t\t\t<p class="Score">Best:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>');
+                this.score.best = value;
+            } else {
+                this.domElement.setContent('\n\t\t\t\t<p class="Score">Score:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + value + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>\n\t\t\t\t<p class="Score">Best:\n\t\t\t\t\t<var class="ScoreValue">\n\t\t\t\t\t\t' + this.score.best + '\n\t\t\t\t\t</var>\n\t\t\t\t</p>');
+            }
+            localStorage.setItem(_Consts2['default'].DIMENSION + '__score', JSON.stringify(this.score));
+        }
+    }, {
+        key: 'scoreInc',
+        value: function scoreInc(inc) {
+            this.score.current += inc;
+            this.scoreSetContent(this.score.current);
+        }
+    }, {
+        key: 'scoreReset',
+        value: function scoreReset() {
+            this.score.current = 0;
+            this.scoreSetContent(this.score.current);
+        }
+    }, {
+        key: 'scoreSurcharge',
+        value: function scoreSurcharge() {
+            this.score.current = this.score.current * _Consts2['default'].SCORE__SURCHARGE;
+            this.scoreSetContent(this.score.current);
+        }
+    }]);
+
+    return ScoreDisplay;
+})(_famous.core.Node);
+
+exports['default'] = ScoreDisplay;
+module.exports = exports['default'];
+
+},{"./Consts":144,"famous":46}],154:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+exports['default'] = getRandomInt;
+
+function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
-};
+}
 
-module.exports = getRandomInt;
+module.exports = exports['default'];
 
-},{}],152:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 'use strict';
 
-var famous = require('famous');
-//var CoreJS = require('core-js');
-var Consts = require('./Consts.js');
-var Game = require('./Game.js');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var FamousEngine = famous.core.FamousEngine;
+var _famous = require('famous');
+
+var _famous2 = _interopRequireDefault(_famous);
+
+var _Consts = require('./Consts');
+
+var _Consts2 = _interopRequireDefault(_Consts);
+
+var _Game = require('./Game');
+
+var _Game2 = _interopRequireDefault(_Game);
+
+var FamousEngine = _famous2['default'].core.FamousEngine;
 
 /*jshint -W121 */
 if (!Array.prototype.initialize) {
@@ -30907,7 +31307,7 @@ if (!Object.keys) {
 
 FamousEngine.init();
 var scene = FamousEngine.createScene();
-var game = new Game(Consts.ROWS, Consts.COLUMNS);
+var game = new _Game2['default'](_Consts2['default'].ROWS, _Consts2['default'].COLUMNS);
 
 if (!localStorage.getItem('reset')) {
 	localStorage.clear();
@@ -30920,4 +31320,4 @@ if (!localStorage.getItem('reset')) {
 
 scene.addChild(game);
 
-},{"./Array.js":142,"./Consts.js":144,"./Game.js":147,"./Polyfills.js":150,"famous":46}]},{},[152]);
+},{"./Array.js":142,"./Consts":144,"./Game":147,"./Polyfills.js":152,"famous":46}]},{},[155]);

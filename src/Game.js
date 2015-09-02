@@ -1,55 +1,156 @@
 'use strict';
 
-var famous = require('famous');
-var Consts = require('./Consts.js');
-var Figure = require('./Figure.js');
-var Dot = require('./Dot.js');
-var Nav = require('./Nav.js').Nav;
-var Modal = require('./Modal.js');
-var getRandomInt = require('./getRandomInt.js');
+import Consts from './Consts';
+import {core, domRenderables} from 'famous';
+import Figure from './Figure';
+import Dot from './Dot';
+import Nav from './Nav';
+import Modal from './Modal';
+import Layout from './Layout';
+import getRandomInt from './getRandomInt';
 
-/*jshint -W079 */
-var Node = famous.core.Node;/*jshint +W079 */
-var Curves = famous.transitions.Curves;
-var DOMElement = famous.domRenderables.DOMElement;
+const DOMElement = domRenderables.DOMElement;
+
 
 //var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
 //var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
 
-function Game(rows, cols) {
-	Node.call(this);
-	this.domElement = new DOMElement(this, {
-		tagName: 'main',
-		classes: ['Game']
-	});
+export default class Game extends core.Node {
+	constructor (rows, cols) {
+		super();
 
-	this.domElement.setAttribute('role', 'grid');
-	this.domElement.setAttribute('aria-multiselectable', true);
-	this.domElement.setAttribute('aria-colcount', Consts.COLUMNS);
-	this.domElement.setAttribute('aria-rowcount', Consts.ROWS);
+		this._setupDomElement();
 
-	var scoreMultiplier = 1;
-	var count = 0;
-	this.dots = [];
-	let _localStorageDots = [];
-	let localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
-	for (let row = 0; row < rows; row++) {
-		for (let col = 0; col < cols; col++) {
-			let dot = new Dot(count++);
-			this.addChild(dot);
-			this.dots.push(dot);
-			if (localStorageDots.length === 0) {
-				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
+		this.scoreMultiplier = 1;
+		let count = 0;
+		this.dots = [];
+		let _localStorageDots = [];
+		let localStorageDots = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dots')) || [];
+		for (let row = 0; row < rows; row++) {
+			for (let col = 0; col < cols; col++) {
+				let dot = new Dot(count++);
+				this.addChild(dot);
+				this.dots.push(dot);
+				if (localStorageDots.length === 0) {
+					_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
+				}
 			}
 		}
-	}
-	if (localStorageDots.length === 0) {
-		localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+		if (localStorageDots.length === 0) {
+			localStorage.setItem(Consts.DIMENSION + '__dots', JSON.stringify(_localStorageDots));
+		}
+
+		this.figures = [];
+
+		let _localStorageFigures = [];
+		let localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
+		for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
+			if (localStorageFigures.length === 0) {
+				let randomId = this.figureIndexGenerate();
+				let figure = new Figure(figureCounter, randomId);
+				this.addChild(figure);
+				this.figures.push(figure);
+				_localStorageFigures.push(randomId);
+			} else {
+				let figure = new Figure(figureCounter, localStorageFigures[figureCounter]);
+				this.addChild(figure);
+				this.figures.push(figure);
+			}
+		}
+		if (localStorageFigures.length === 0) {
+			localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
+		}
+
+
+		this.stat = {};
+		let localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat'));
+		if (localStorageStat) {
+			this.stat = localStorageStat;
+		} else {
+			this.stat = {
+				rowsMoved: 0,
+				columnsMoved: 0,
+				figuresPlaced: 0
+			};
+			localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(this.stat));
+		}
+
+
+		this.nav = new Nav();
+		this.addChild(this.nav);
+
+		this.modal = new Modal();
+		this.addChild(this.modal);
+
+
+		this.mousing = 0;
+
+
+		let localStorageDotHovers = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dotHovers')) || [];
+		if (localStorageDotHovers.length === 0) {
+			this.dotHovers = [];
+			localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
+		} else {
+			this.dotHovers = localStorageDotHovers;
+		}
+
+
+		let localStorageOrderRows = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [];
+		if (localStorageOrderRows.length === 0) {
+			this.orderRows = [].initialize(Consts.ROWS);
+			localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
+		} else {
+			this.orderRows = localStorageOrderRows;
+		}
+
+		let localStorageOrderColumns = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderColumns')) || [];
+		if (localStorageOrderColumns.length === 0) {
+			this.orderColumns = [].initialize(Consts.COLUMNS);
+			localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
+		} else {
+			this.orderColumns = localStorageOrderColumns;
+		}
+
+		this.etalonRows = [];
+		this.etalonColumns = [];
+
+
+		this.hoverId = undefined;
+
+
+		this
+			.setMountPoint(0.5, 0.5)
+			.setAlign(0.5, 0.5)
+			.setOrigin(0.5, 0.5)
+			.setSizeMode('absolute', 'absolute')
+			.setAbsoluteSize(Consts.COLUMNS * Consts.DOT_SIDE, Consts.ROWS * Consts.DOT_SIDE);
+
+		this.layout = new Layout(this);
+
+		console.log(this);
+
+		this._addUIEvents();
 	}
 
-	this.figures = [];
+	_addUIEvents () {
+		this.addUIEvent('mousedown');
+		this.addUIEvent('mouseleave');
+		this.addUIEvent('mouseup');
+	}
 
-	this.figureIndexGenerate = function figureIndexGenerate() {
+	_setupDomElement () {
+		this.domElement = new DOMElement(this, {
+			tagName: 'main',
+			classes: ['Game']
+		});
+
+		this.domElement.setAttribute('role', 'grid');
+		this.domElement.setAttribute('aria-multiselectable', true);
+		this.domElement.setAttribute('aria-colcount', Consts.COLUMNS);
+		this.domElement.setAttribute('aria-rowcount', Consts.ROWS);
+	}
+
+	figureIndexGenerate () {
 		let figures = this.figures || [];
 		let rand = getRandomInt(0, Consts.FIGURES.length);
 		if (figures.length < 1) {
@@ -67,9 +168,9 @@ function Game(rows, cols) {
 			}
 			return rand;
 		}
-	};
+	}
 
-	this.figureUpdate = function figureUpdate(index) {
+	figureUpdate(index) {
 		let figures = this.figures;
 		let uniqueFigureId = this.figureIndexGenerate();
 		let figure = Consts.FIGURES[uniqueFigureId];
@@ -91,41 +192,10 @@ function Game(rows, cols) {
 		if (_localStorageFigures.length !== 0) {
 			localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
 		}
-	};
-
-	let _localStorageFigures = [];
-	let localStorageFigures = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__figures')) || [];
-	for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
-		if (localStorageFigures.length === 0) {
-			let randomId = this.figureIndexGenerate();
-			let figure = new Figure(figureCounter, randomId);
-			this.addChild(figure);
-			this.figures.push(figure);
-			_localStorageFigures.push(randomId);
-		} else {
-			let figure = new Figure(figureCounter, localStorageFigures[figureCounter]);
-			this.addChild(figure);
-			this.figures.push(figure);
-		}
-	}
-	if (localStorageFigures.length === 0) {
-		localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify(_localStorageFigures));
 	}
 
-	let stat = {};
-	let localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat'));
-	if (localStorageStat) {
-		stat = localStorageStat;
-	} else {
-		stat = {
-			rowsMoved: 0,
-			columnsMoved: 0,
-			figuresPlaced: 0
-		};
-		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
-	}
-
-	this.statInc = function statInc(statArg) {
+	statInc(statArg) {
+		let stat = this.stat;
 		let localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
 		let keys = Object.keys(statArg);
 		keys.forEach(function(key) {
@@ -137,7 +207,8 @@ function Game(rows, cols) {
 		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
 	}
 
-	this.statSet = function statSet(statArg) {
+	statSet (statArg) {
+		let stat = this.stat;
 		let localStorageStat = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__stat')) || stat;
 		let keys = Object.keys(statArg);
 		keys.forEach(function(key) {
@@ -149,25 +220,19 @@ function Game(rows, cols) {
 		localStorage.setItem(Consts.DIMENSION + '__stat', JSON.stringify(stat));
 	}
 
-	let nav = new Nav();
-	this.addChild(nav);
-	this.nav = nav;
+	scoreInc(value) {
+		this.nav.scoreInc(value * this.scoreMultiplier);
+	}
 
-	let modal = new Modal();
-	this.addChild(modal);
-	this.modal = modal;
-
-	this.scoreInc = function scoreInc(value) {
-		this.nav.scoreInc(value * scoreMultiplier);
-	};
-	this.scoreReset = function scoreReset() {
+	scoreReset() {
 		this.nav.scoreReset();
-	};
-	this.scoreSurcharge = function scoreSurcharge() {
-		this.nav.scoreSurcharge();
-	};
+	}
 
-	this.figureSet = function figureSet(figure) {
+	scoreSurcharge() {
+		this.nav.scoreSurcharge();
+	}
+
+	figureSet(figure) {
 		//audioFigureSet.play();
 
 		let dots = this.dots;
@@ -182,9 +247,10 @@ function Game(rows, cols) {
 		this.figureUpdate(figure);
 		this.statInc({ figuresPlaced: 1 });
 		setTimeout(this.isGameEnded(), 10);
-	};
+	}
 
-	this.figureCheck = function figureCheck() {
+	/*jshint -W074 */
+	figureCheck () {
 		let hovers = this.dotHovers;
 
 		if (hovers.length === 4) {
@@ -234,30 +300,22 @@ function Game(rows, cols) {
 				}
 			}
 		}
-	};
-
-	this.mousing = 0;
+	}
+	/*jshint +W074 */
 
 	/**
 	 * Allow hovering dots by mousemoving
 	 * @param {number} id - Id of dot
 	 */
-	this.mousingDown = function (id) {
+	mousingDown (id) {
 		this.mousing = this.dots[id].state ? -1 : +1;
-	};
-	this.mousingUp = function (id) {
-		this.mousing = 0;
-	};
-
-	let localStorageDotHovers = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__dotHovers')) || [];
-	if (localStorageDotHovers.length === 0) {
-		this.dotHovers = [];
-		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
-	} else {
-		this.dotHovers = localStorageDotHovers;
 	}
 
-	this.dotSelect = function dotSelect(id) {
+	mousingUp (id) {
+		this.mousing = 0;
+	}
+
+	dotSelect (id) {
 		if (this.dots[id].state !== Consts.DOT_STATE__PLACED) {
 			this.dots[id].select();
 			this.linesCheck();
@@ -268,9 +326,9 @@ function Game(rows, cols) {
 	 * Check dot for hoverability
 	 * @param {number} id - Id of dot
 	 */
-	this.dotHover = function (id) {
+	dotHover (id) {
 		switch (this.dots[id].state) {
-		case Consts.DOT_STATE__UNTOUCHED:
+			case Consts.DOT_STATE__UNTOUCHED:
 				if (this.dotHovers.indexOf(id) < 0) {
 					if (this.dotHovers.length < 4) {
 						this.dotHovers.push(id);
@@ -286,40 +344,21 @@ function Game(rows, cols) {
 					localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 				}
 				break;
-		case Consts.DOT_STATE__HOVERED:
+			case Consts.DOT_STATE__HOVERED:
 				this.dotHovers.splice(this.dotHovers.indexOf(id), 1);
 				this.dots[id].unhover();
 				localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
 				break;
-		default:
+			default:
 				return false;
 		}
-	};
-
-	let localStorageOrderRows = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderRows')) || [];
-	if (localStorageOrderRows.length === 0) {
-		this.orderRows = [].initialize(Consts.ROWS);
-		localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(this.orderRows));
-	} else {
-		this.orderRows = localStorageOrderRows;
 	}
-
-	let localStorageOrderColumns = JSON.parse(localStorage.getItem(Consts.DIMENSION + '__orderColumns')) || [];
-	if (localStorageOrderColumns.length === 0) {
-		this.orderColumns = [].initialize(Consts.COLUMNS);
-		localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(this.orderColumns));
-	} else {
-		this.orderColumns = localStorageOrderColumns;
-	}
-
-	this.etalonRows = [];
-	this.etalonColumns = [];
 
 	/**
 	 * Check lines if dots are filled
 	 */
 	/*jshint -W074 */
-	this.linesCheck = function linesCheck() {
+	linesCheck () {
 		var dots = this.dots;
 		var filledRows = [];
 		var filledColumns = [];
@@ -364,33 +403,34 @@ function Game(rows, cols) {
 
 		if (filledRows.length === 1 && (filledRows[0] === orderRows[0] || filledRows[0] === orderRows[Consts.ROWS - 1])) {
 			this.lineRotate(filledRows[0], 'y');
-			scoreMultiplier++;
+			this.scoreMultiplier++;
 		} else {
 			for (let row = 0; row < filledRows.length; row++) {
 				this.lineMove(filledRows[row], 'y', row + 1);
-				scoreMultiplier++;
+				this.scoreMultiplier++;
 			}
 		}
 		if (filledColumns.length === 1 && (filledColumns[0] === orderColumns[0] || filledColumns[0] === orderColumns[Consts.COLUMNS - 1])) {
 			this.lineRotate(filledColumns[0], 'x');
-			scoreMultiplier++;
+			this.scoreMultiplier++;
 		} else {
 			for (let column = 0; column < filledColumns.length; column++) {
 				this.lineMove(filledColumns[column], 'x', column + 1);
-				scoreMultiplier++;
+				this.scoreMultiplier++;
 			}
 		}
 
-		this.statInc({ rowsMoved: filledRows.length, columnsMoved: filledColumns.length });
-		scoreMultiplier = 1;
-	};/*jshint +W074 */
+		this.statInc({rowsMoved: filledRows.length, columnsMoved: filledColumns.length});
+		this.scoreMultiplier = 1;
+	}
+	/*jshint +W074 */
 
 	/**
 	 * Move stateed line
 	 * @param {number} id - Id of stateed line
 	 */
 	/*jshint -W071, -W074 */
-	this.lineMove = function lineMove(line, direction, delay) {
+	lineMove (line, direction, delay) {
 		console.log('lineMove', line, direction, delay);
 		//audioLineMove.play();
 
@@ -405,7 +445,7 @@ function Game(rows, cols) {
 		let lineHash = 0;
 
 		switch (direction) {
-		case 'x':
+			case 'x':
 				order = orderColumns;
 				etalon = etalonColumns;
 				lineHash = order.indexOf(line);
@@ -461,7 +501,7 @@ function Game(rows, cols) {
 					localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify(orderColumns));
 				}
 				break;
-		case 'y':
+			case 'y':
 				order = orderRows;
 				etalon = etalonRows;
 				lineHash = order.indexOf(line);
@@ -517,18 +557,19 @@ function Game(rows, cols) {
 					localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify(orderRows));
 				}
 				break;
-		default:
+			default:
 				return false;
 		}
 		return true;
-	};/*jshint +W071, +W074 */
+	}
+	/*jshint +W071, +W074 */
 
 	/**
 	 * Rotate stateed line
 	 * @param {number} id - Id of stateed line
 	 */
 	/*jshint -W071, -W074 */
-	this.lineRotate = function lineRotate(line, direction) {
+	lineRotate (line, direction) {
 		this.scoreInc(Consts.SCORE__LINE);
 
 		let orderRows = this.orderRows;
@@ -540,7 +581,7 @@ function Game(rows, cols) {
 		let lineHash = 0;
 
 		switch (direction) {
-		case 'x':
+			case 'x':
 				order = orderColumns;
 				etalon = etalonColumns;
 				lineHash = order.indexOf(line);
@@ -555,7 +596,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(scoreMultiplier);
+						dot.unplace(this.scoreMultiplier);
 					}
 				} else {
 					for (let row = 0; row < Consts.ROWS; row++) {
@@ -568,11 +609,11 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(scoreMultiplier);
+						dot.unplace(this.scoreMultiplier);
 					}
 				}
 				break;
-		case 'y':
+			case 'y':
 				order = orderRows;
 				etalon = etalonRows;
 				lineHash = order.indexOf(line);
@@ -587,7 +628,7 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(scoreMultiplier);
+						dot.unplace(this.scoreMultiplier);
 					}
 				} else {
 					for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -600,19 +641,18 @@ function Game(rows, cols) {
 							duration: Consts.DOT_DURATION__ROTATION,
 							curve: Consts.DOT_CURVE__ROTATION
 						});
-						dot.unplace(scoreMultiplier);
+						dot.unplace(this.scoreMultiplier);
 					}
 				}
 				break;
-		default:
+			default:
 				return false;
 		}
 	}
+	/*jshint +W071, +W074 */
 
-	/**
-	 * Check if player can't place new figure (Game over state)
-	 */
-	this.isGameEnded = function isGameEnded() {
+	/*jshint -W074, -W083 */
+	isMovePossible () {
 		let figures = this.figures;
 		let orderRows = this.orderRows;
 		let orderColumns = this.orderColumns;
@@ -622,24 +662,28 @@ function Game(rows, cols) {
 			let figureOrigin = figures[figureCounter];
 			let figureContainer = [];
 			for (let cell = 0; cell < 4; cell++) {
-				figureContainer.push({ x: figureOrigin.cells[cell].x, y: figureOrigin.cells[cell].y });
+				figureContainer.push({x: figureOrigin.cells[cell].x, y: figureOrigin.cells[cell].y});
 			}
 			figuresCollection.push(figureContainer);
 		}
 		for (let y = 0, yL = Consts.ROWS; y < yL; y++) {
 			for (let x = 0, xL = Consts.COLUMNS; x < xL; x++) {
-				let canPlaceFigure = figuresCollection.some(function(element, index) {
+				let canPlaceFigure = figuresCollection.some(function (element, index) {
 					let figure = element;
 					let column = orderColumns[x];
 					let row = orderRows[y];
-					let xs = figure.map(function (element) { return element.x; });
-					let ys = figure.map(function (element) { return element.y; });
+					let xs = figure.map(function (element) {
+						return element.x;
+					});
+					let ys = figure.map(function (element) {
+						return element.y;
+					});
 					let dx = xs.max() - xs.min() + 1;
 					let dy = ys.max() - ys.min() + 1;
 					if (row + dy > Consts.ROWS || column + dx > Consts.COLUMNS) {
 						return false;
 					} else {
-						return figure.every(function(element, index) {
+						return figure.every(function (element, index) {
 							let id = (orderRows[row + element.y]) * Consts.ROWS + (orderColumns[column + element.x]);
 							if (dots[id].state !== Consts.DOT_STATE__PLACED) {
 								return true;
@@ -654,24 +698,35 @@ function Game(rows, cols) {
 				}
 			}
 		}
-		this.modal.show();
-		return false;
-	};
 
-	var hoverId;
+		return false;
+	}
+	/*jshint +W074, +W083 */
+
+	/**
+	 * Check if player can't place new figure (Game over state)
+	 */
+	isGameEnded () {
+		if (this.isMovePossible()) {
+			return true;
+		} else {
+			this.modal.show();
+			return false;
+		}
+	}
 
 	/**
 	 * Fill dot
 	 * @param {number} id - Id of dot
 	 */
-	this.dotState = function (id) {
-		if (id !== undefined && id !== hoverId) {
+	dotState (id) {
+		if (id !== undefined && id !== this.hoverId) {
 			this.dotHover(id);
-			hoverId = id;
+			this.hoverId = id;
 		}
-	};
+	}
 
-	this.gameStart = function gameStart() {
+	gameStart () {
 		var dots = this.dots;
 
 		let etalonRows = this.etalonRows;
@@ -680,7 +735,7 @@ function Game(rows, cols) {
 		this.dotHovers.forEach((element) => dots[element].unhover());
 		this.dotHovers = [];
 		localStorage.setItem(Consts.DIMENSION + '__dotHovers', JSON.stringify(this.dotHovers));
-		hoverId = undefined;
+		this.hoverId = undefined;
 
 		let _localStorageDots = [];
 		for (let column = 0; column < Consts.COLUMNS; column++) {
@@ -709,108 +764,26 @@ function Game(rows, cols) {
 		for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
 			this.figureUpdate(figureCounter);
 		}
-	};
 
-	// Centering
-	this
-		.setMountPoint(0.5, 0.5)
-		.setAlign(0.5, 0.5)
-		.setOrigin(0.5,0.5)
-		.setSizeMode('absolute', 'absolute')
-		.setAbsoluteSize(Consts.COLUMNS * Consts.DOT_SIDE, Consts.ROWS * Consts.DOT_SIDE);
+		this.modal.hide();
+	}
 
-	this.layout = new Layout(this);
-
-	console.log(this);
-	this.addUIEvent('mousedown');
-	this.addUIEvent('mouseleave');
-	this.addUIEvent('mouseup');
+	onReceive(type, ev) {
+		switch (type) {
+			case 'mousedown':
+				this.emit('x', ev.x).emit('y', ev.y);
+				this.mousing = true;
+				break;
+			case 'mouseleave':
+				this.emit('x', ev.x).emit('y', ev.y);
+				this.mousing = false;
+				break;
+			case 'mouseup':
+				this.emit('x', ev.x).emit('y', ev.y);
+				this.mousing = false;
+				break;
+			default:
+				return false;
+		}
+	}
 }
-
-Game.prototype = Object.create(Node.prototype);
-Game.prototype.constructor = Node;
-
-Game.prototype.onReceive = function onReceive(type, ev) {
-	switch (type) {
-	case 'mousedown':
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = true;
-			break;
-	case 'mouseleave':
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = false;
-			break;
-	case 'mouseup':
-			this.emit('x', ev.x).emit('y', ev.y);
-			this.mousing = false;
-			break;
-	default:
-			return false;
-	}
-};
-
-function Layout(node) {
-	this.node = node;
-	this.id = this.node.addComponent(this);
-	this.current = 0;
-	this.curve = [Curves.outQuint, Curves.outElastic, Curves.inElastic, Curves.inOutEase, Curves.inBounce];
-	this.duration = [2 * Consts.DURATION, 3 * Consts.DURATION, 3 * Consts.DURATION, Consts.DURATION, 2 * Consts.DURATION];
-
-	let width = document.body.clientWidth;
-	let height = document.body.clientHeight;
-	for (let figureCounter = 0; figureCounter < 2; figureCounter++) {
-		let figure = this.node.figures[figureCounter];
-		let position = figure.position;
-		if (width > height) {
-			position.set(-Consts.ROWS * Consts.DOT_SIDE, (figureCounter -1) * Consts.ROWS * Consts.DOT_SIDE / 2);
-		} else {
-			position.set(-figureCounter * Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE);
-		}
-	}
-
-	let nav = this.node.nav;
-	let navPosition = nav.position;
-	if (width > height) {
-		navPosition.set(Consts.ROWS * Consts.DOT_SIDE / 2, -Consts.ROWS * Consts.DOT_SIDE / 2);
-	} else {
-		navPosition.set(-Consts.ROWS * Consts.DOT_SIDE / 2, Consts.ROWS * Consts.DOT_SIDE / 2);
-	}
-
-	this.next();
-}
-
-Layout.prototype.next = function next() {
-	let orderColumns = this.node.orderColumns;
-	let orderRows = this.node.orderRows;
-
-	if (this.current++ === Consts.ROWS) {
-		this.current = 0;
-	}
-	let duration = this.duration[this.current];
-	let curve = this.curve[this.current];
-	let row = 0;
-	let column = 0;
-	let bounds = [Consts.DOT_SIDE * (1 - Consts.ROWS) / 2, Consts.DOT_SIDE * (1 - Consts.COLUMNS) / 2];
-
-	for (let i = 0; i < this.node.dots.length; i++) {
-		let x = bounds[0] + (Consts.DOT_SIDE * column++);
-		let y = bounds[1] + (Consts.DOT_SIDE * row);
-		if (i < Consts.COLUMNS) {
-			this.node.etalonColumns.push(x);
-		}
-		if (i % Consts.ROWS === 0) {
-			this.node.etalonRows.push(y);
-		}
-		let id = orderRows[row ] * Consts.COLUMNS + orderColumns[column - 1];
-		this.node.dots[id].position.set(x, y, 0, {
-			duration: i * Consts.ROWS + duration,
-			curve: curve
-		});
-		if (column >= Consts.COLUMNS) {
-			column = 0;
-			row++;
-		}
-	}
-};
-
-module.exports = Game;

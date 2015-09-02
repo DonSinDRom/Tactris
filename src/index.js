@@ -1,11 +1,10 @@
 'use strict';
 
-var famous = require('famous');
-//var CoreJS = require('core-js');
-var Consts = require('./Consts.js');
-var Game = require('./Game.js');
+import famous from 'famous';
+import Consts from './Consts';
+import Game from './Game';
 
-var FamousEngine = famous.core.FamousEngine;
+const FamousEngine = famous.core.FamousEngine;
 
 /*jshint -W121 */
 if (!Array.prototype.initialize) {
@@ -45,8 +44,8 @@ if (!Object.keys) {
 /*jshint +W121 */
 
 FamousEngine.init();
-var scene = FamousEngine.createScene();
-var game = new Game(Consts.ROWS, Consts.COLUMNS);
+const scene = FamousEngine.createScene();
+const game = new Game(Consts.ROWS, Consts.COLUMNS);
 
 if (!localStorage.getItem('reset')) {
 	localStorage.clear();

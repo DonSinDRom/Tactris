@@ -25,6 +25,7 @@
 	"browser": true,
 	"node": true,
 	"globals": {
-		"describe": true
+		"describe": true,
+		"confirm": true
 	}
 }
