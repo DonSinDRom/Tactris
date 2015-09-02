@@ -406,6 +406,17 @@ export default {
 	MODAL_DURATION: 1200,
 
 	init: function() {
+		if (location.search) {
+			let qs = {};
+			location.search.replace(/^\?/, '').split('&').map((param) => {
+				let [name, value] = param.split('=');
+				qs[name] = value;
+			});
+
+			if (qs.s) {
+				this.DIMENSION = parseInt(qs.s);
+			}
+		}
 		var w = document.body.clientWidth;
 		var h = document.body.clientHeight;
 		this.WIDTH = w;
