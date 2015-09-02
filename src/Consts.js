@@ -405,6 +405,18 @@ const Consts = {
 	MODAL_DURATION: 1200,
 
 	init: function() {
+		if (location.search) {
+			let qs = {};
+			location.search.split('&').map((param) => {
+				let [name, value] = param.split('=');
+				qs[name] = value;
+			});
+
+			if (qs.s) {
+				this.DIMENSION = parseInt(qs.s);
+			}
+		}
+
 		var w = document.body.clientWidth;
 		var h = document.body.clientHeight;
 		this.WIDTH = w;
@@ -415,7 +427,7 @@ const Consts = {
 		}
 		this.CELL_SIZE = this.DOT_SIZE * this.CELL_RATIO;
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
-		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN,
+		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN;
 		this.ROWS = this.DIMENSION;
 		this.COLUMNS = this.DIMENSION;
 
