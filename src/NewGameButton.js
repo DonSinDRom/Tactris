@@ -43,6 +43,7 @@ export default class NewGameButton extends core.Node {
     onReceive(type, ev) {
         switch (type) {
             case 'click':
+                this._parent._parent.sound.ui();
                 if (!this._parent._parent.isMovePossible() || confirm('Are you sure?')) {
                     this._parent.gameStart();
                 }

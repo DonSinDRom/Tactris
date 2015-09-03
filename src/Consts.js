@@ -405,7 +405,9 @@ export default {
 	MODAL_CURVE: 'outBounce',
 	MODAL_DURATION: 1200,
 
-	init: function() {
+	MUTE: false,
+
+	init: function () {
 		if (location.search) {
 			let qs = {};
 			location.search.replace(/^\?/, '').split('&').map((param) => {
@@ -419,6 +421,12 @@ export default {
 					dimension++;
 				}
 				this.DIMENSION = dimension;
+			}
+
+			if (qs.mute === 'off') {
+				this.MUTE = false;
+			} else if (qs.mute === 'on') {
+				this.MUTE = true;
 			}
 		}
 		var w = document.body.clientWidth;

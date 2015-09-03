@@ -9,6 +9,7 @@ import Nav from './Nav';
 import Modal from './Modal';
 import Layout from './Layout';
 import getRandomInt from './getRandomInt';
+import Sound from './Sound';
 
 const DOMElement = domRenderables.DOMElement;
 const FamousEngine = core.FamousEngine;
@@ -132,6 +133,8 @@ export default class Game extends core.Node {
 		console.log(this);
 
 		this._addUIEvents();
+
+		this.sound = new Sound(Consts.MUTE);
 	}
 
 	_addUIEvents () {
@@ -235,7 +238,7 @@ export default class Game extends core.Node {
 	}
 
 	figureSet(figure) {
-		//audioFigureSet.play();
+		this.sound.figure();
 
 		let dots = this.dots;
 		let hovers = this.dotHovers;
@@ -421,17 +424,16 @@ export default class Game extends core.Node {
 
 	/**
 	 * Move stateed line
-	 * @param {number} id - Id of stateed line
+	 * @param {number} line
+	 * @param {string} direction
+	 * @param {number} delay
 	 */
 	/*jshint -W071, -W074 */
 	lineMove (line, direction, delay) {
 		console.log('lineMove', line, direction, delay);
 
-		let synth = new Tone.SimpleSynth().toMaster();
 		let clock = FamousEngine.getClock();
-		clock.setTimeout(function() {
-			synth.triggerAttackRelease('C4', '8n');
-		}, Consts.DURATION * delay);
+		clock.setTimeout(this.sound.line.bind(this.sound, line, direction), Consts.DURATION * delay);
 
 		this.scoreInc(Consts.SCORE__LINE);
 
@@ -571,6 +573,9 @@ export default class Game extends core.Node {
 	lineRotate (line, direction) {
 		this.scoreInc(Consts.SCORE__LINE);
 
+		let clock = FamousEngine.getClock();
+		clock.setTimeout(this.sound.line.bind(this.sound, line, direction), Consts.DOT_DURATION__ROTATION);
+
 		let orderRows = this.orderRows;
 		let orderColumns = this.orderColumns;
 		let etalonRows = this.etalonRows;
@@ -709,6 +714,7 @@ export default class Game extends core.Node {
 		if (this.isMovePossible()) {
 			return true;
 		} else {
+			this.sound.gameOver();
 			this.modal.show();
 			return false;
 		}
