@@ -15,9 +15,6 @@ const DOMElement = domRenderables.DOMElement;
 const FamousEngine = core.FamousEngine;
 
 
-//var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
-//var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
-
 export default class Game extends core.Node {
 	constructor (rows, cols) {
 		super();
