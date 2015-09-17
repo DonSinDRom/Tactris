@@ -1,4 +1,97 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = setTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    clearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],2:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -77,7 +170,7 @@ Align.prototype.onUpdate = Align.prototype.update;
 
 module.exports = Align;
 
-},{"./Position":7}],2:[function(require,module,exports){
+},{"./Position":8}],3:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -392,7 +485,7 @@ Camera.prototype.onTransformChange = function onTransformChange(transform) {
 
 module.exports = Camera;
 
-},{"../core/Commands":15}],3:[function(require,module,exports){
+},{"../core/Commands":16}],4:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -898,7 +991,7 @@ function _processMouseLeave() {
 
 module.exports = GestureHandler;
 
-},{"../math/Vec2":49,"../utilities/CallbackStore":94}],4:[function(require,module,exports){
+},{"../math/Vec2":50,"../utilities/CallbackStore":95}],5:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -977,7 +1070,7 @@ MountPoint.prototype.onUpdate = MountPoint.prototype.update;
 
 module.exports = MountPoint;
 
-},{"./Position":7}],5:[function(require,module,exports){
+},{"./Position":8}],6:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1144,7 +1237,7 @@ Opacity.prototype.onUpdate = Opacity.prototype.update;
 
 module.exports = Opacity;
 
-},{"../transitions/Transitionable":92}],6:[function(require,module,exports){
+},{"../transitions/Transitionable":93}],7:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1223,7 +1316,7 @@ Origin.prototype.onUpdate = Origin.prototype.update;
 
 module.exports = Origin;
 
-},{"./Position":7}],7:[function(require,module,exports){
+},{"./Position":8}],8:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1510,7 +1603,7 @@ Position.prototype.halt = function halt() {
 
 module.exports = Position;
 
-},{"../transitions/Transitionable":92}],8:[function(require,module,exports){
+},{"../transitions/Transitionable":93}],9:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1605,7 +1698,7 @@ Rotation.prototype.onUpdate = Rotation.prototype.update;
 
 module.exports = Rotation;
 
-},{"./Position":7}],9:[function(require,module,exports){
+},{"./Position":8}],10:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1682,7 +1775,7 @@ Scale.prototype.onUpdate = Scale.prototype.update;
 
 module.exports = Scale;
 
-},{"./Position":7}],10:[function(require,module,exports){
+},{"./Position":8}],11:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -2093,7 +2186,7 @@ Size.prototype.halt = function halt () {
 
 module.exports = Size;
 
-},{"../core/SizeSystem":24,"../transitions/Transitionable":92}],11:[function(require,module,exports){
+},{"../core/SizeSystem":25,"../transitions/Transitionable":93}],12:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2436,7 +2529,7 @@ Transform.prototype.onUpdate = Transform.prototype.clean;
 
 module.exports = Transform;
 
-},{"../math/Quaternion":48,"../transitions/Transitionable":92}],12:[function(require,module,exports){
+},{"../math/Quaternion":49,"../transitions/Transitionable":93}],13:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -2477,7 +2570,7 @@ module.exports = {
     Transform: require('./Transform')
 };
 
-},{"./Align":1,"./Camera":2,"./GestureHandler":3,"./MountPoint":4,"./Opacity":5,"./Origin":6,"./Position":7,"./Rotation":8,"./Scale":9,"./Size":10,"./Transform":11}],13:[function(require,module,exports){
+},{"./Align":2,"./Camera":3,"./GestureHandler":4,"./MountPoint":5,"./Opacity":6,"./Origin":7,"./Position":8,"./Rotation":9,"./Scale":10,"./Size":11,"./Transform":12}],14:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2594,7 +2687,7 @@ Channel.prototype.postMessage = function postMessage(message) {
 
 module.exports = Channel;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2804,7 +2897,7 @@ Clock.prototype.clearTimer = function (timer) {
 module.exports = Clock;
 
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -3019,7 +3112,7 @@ commandPrinters[Commands.NEED_SIZE_FOR] = function need_size_for (buffer, data) 
 module.exports = Commands;
 
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -3443,7 +3536,7 @@ function _splitTo (string, target) {
 
 module.exports = new Dispatch();
 
-},{"./Event":17,"./Path":20}],17:[function(require,module,exports){
+},{"./Event":18,"./Path":21}],18:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -3496,7 +3589,7 @@ function stopPropagation () {
 module.exports = Event;
 
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -3967,7 +4060,7 @@ FamousEngine.prototype.stopEngine = function stopEngine() {
 
 module.exports = new FamousEngine();
 
-},{"../render-loops/RequestAnimationFrameLoop":83,"../renderers/Compositor":86,"../renderers/UIManager":88,"./Channel":13,"./Clock":14,"./Commands":15,"./Dispatch":16,"./Scene":22,"./SizeSystem":24,"./TransformSystem":26}],19:[function(require,module,exports){
+},{"../render-loops/RequestAnimationFrameLoop":84,"../renderers/Compositor":87,"../renderers/UIManager":89,"./Channel":14,"./Clock":15,"./Commands":16,"./Dispatch":17,"./Scene":23,"./SizeSystem":25,"./TransformSystem":27}],20:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5259,7 +5352,7 @@ Node.prototype.dismount = function dismount () {
 
 module.exports = Node;
 
-},{"./Dispatch":16,"./Size":23,"./SizeSystem":24,"./Transform":25,"./TransformSystem":26}],20:[function(require,module,exports){
+},{"./Dispatch":17,"./Size":24,"./SizeSystem":25,"./Transform":26,"./TransformSystem":27}],21:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5433,7 +5526,7 @@ var Path = {
 
 module.exports = Path;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5602,7 +5695,7 @@ PathStore.prototype.getPaths = function getPaths () {
 
 module.exports = PathStore;
 
-},{"./Path":20}],22:[function(require,module,exports){
+},{"./Path":21}],23:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5757,7 +5850,7 @@ Scene.prototype.mount = function mount (path) {
 
 module.exports = Scene;
 
-},{"./Commands":15,"./Dispatch":16,"./Node":19,"./SizeSystem":24,"./TransformSystem":26}],23:[function(require,module,exports){
+},{"./Commands":16,"./Dispatch":17,"./Node":20,"./SizeSystem":25,"./TransformSystem":27}],24:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -6091,7 +6184,7 @@ Size.prototype.fromComponents = function fromComponents (components) {
 module.exports = Size;
 
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -6364,7 +6457,7 @@ function sizeChanged (node, components, size) {
 
 module.exports = new SizeSystem();
 
-},{"./Dispatch":16,"./Path":20,"./PathStore":21,"./Size":23}],25:[function(require,module,exports){
+},{"./Dispatch":17,"./Path":21,"./PathStore":22,"./Size":24}],26:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7151,7 +7244,7 @@ function multiply (out, a, b) {
 
 module.exports = Transform;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -7528,7 +7621,7 @@ function worldTransformChanged (node, components, transform) {
 
 module.exports = new TransformSystem();
 
-},{"./Dispatch":16,"./Path":20,"./PathStore":21,"./Transform":25}],27:[function(require,module,exports){
+},{"./Dispatch":17,"./Path":21,"./PathStore":22,"./Transform":26}],28:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7572,7 +7665,7 @@ module.exports = {
     TransformSystem: require('./TransformSystem')
 };
 
-},{"./Channel":13,"./Clock":14,"./Commands":15,"./Dispatch":16,"./Event":17,"./FamousEngine":18,"./Node":19,"./Path":20,"./PathStore":21,"./Scene":22,"./Size":23,"./SizeSystem":24,"./Transform":25,"./TransformSystem":26}],28:[function(require,module,exports){
+},{"./Channel":14,"./Clock":15,"./Commands":16,"./Dispatch":17,"./Event":18,"./FamousEngine":19,"./Node":20,"./Path":21,"./PathStore":22,"./Scene":23,"./Size":24,"./SizeSystem":25,"./Transform":26,"./TransformSystem":27}],29:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -8265,7 +8358,7 @@ DOMElement.prototype.draw = function draw() {
 
 module.exports = DOMElement;
 
-},{"../core/Commands":15,"../core/Size":23,"../core/TransformSystem":26,"../utilities/CallbackStore":94}],29:[function(require,module,exports){
+},{"../core/Commands":16,"../core/Size":24,"../core/TransformSystem":27,"../utilities/CallbackStore":95}],30:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -8296,7 +8389,7 @@ module.exports = {
     DOMElement: require('./DOMElement')
 };
 
-},{"./DOMElement":28}],30:[function(require,module,exports){
+},{"./DOMElement":29}],31:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9075,7 +9168,7 @@ DOMRenderer.prototype.offRemoveEl = function offRemoveEl(path, callback) {
 
 module.exports = DOMRenderer;
 
-},{"../core/Path":20,"../utilities/CallbackStore":94,"../utilities/vendorPrefix":105,"./ElementCache":31,"./Math":32,"./events/EventMap":36}],31:[function(require,module,exports){
+},{"../core/Path":21,"../utilities/CallbackStore":95,"../utilities/vendorPrefix":106,"./ElementCache":32,"./Math":33,"./events/EventMap":37}],32:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9140,7 +9233,7 @@ function ElementCache (element, path) {
 
 module.exports = ElementCache;
 
-},{"./VoidElements":33}],32:[function(require,module,exports){
+},{"./VoidElements":34}],33:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9326,7 +9419,7 @@ module.exports = {
     invert: invert
 };
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9379,7 +9472,7 @@ var VoidElements = {
 
 module.exports = VoidElements;
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9447,7 +9540,7 @@ CompositionEvent.prototype.toString = function toString () {
 
 module.exports = CompositionEvent;
 
-},{"./UIEvent":42}],35:[function(require,module,exports){
+},{"./UIEvent":43}],36:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9567,7 +9660,7 @@ Event.prototype.toString = function toString () {
 
 module.exports = Event;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9659,7 +9752,7 @@ var EventMap = {
 
 module.exports = EventMap;
 
-},{"./CompositionEvent":34,"./Event":35,"./FocusEvent":37,"./InputEvent":38,"./KeyboardEvent":39,"./MouseEvent":40,"./TouchEvent":41,"./UIEvent":42,"./WheelEvent":43}],37:[function(require,module,exports){
+},{"./CompositionEvent":35,"./Event":36,"./FocusEvent":38,"./InputEvent":39,"./KeyboardEvent":40,"./MouseEvent":41,"./TouchEvent":42,"./UIEvent":43,"./WheelEvent":44}],38:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9721,7 +9814,7 @@ FocusEvent.prototype.toString = function toString () {
 
 module.exports = FocusEvent;
 
-},{"./UIEvent":42}],38:[function(require,module,exports){
+},{"./UIEvent":43}],39:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9812,7 +9905,7 @@ InputEvent.prototype.toString = function toString () {
 
 module.exports = InputEvent;
 
-},{"./UIEvent":42}],39:[function(require,module,exports){
+},{"./UIEvent":43}],40:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9973,7 +10066,7 @@ KeyboardEvent.prototype.toString = function toString () {
 
 module.exports = KeyboardEvent;
 
-},{"./UIEvent":42}],40:[function(require,module,exports){
+},{"./UIEvent":43}],41:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10143,7 +10236,7 @@ MouseEvent.prototype.toString = function toString () {
 
 module.exports = MouseEvent;
 
-},{"./UIEvent":42}],41:[function(require,module,exports){
+},{"./UIEvent":43}],42:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10341,7 +10434,7 @@ TouchEvent.prototype.toString = function toString () {
 
 module.exports = TouchEvent;
 
-},{"./UIEvent":42}],42:[function(require,module,exports){
+},{"./UIEvent":43}],43:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10409,7 +10502,7 @@ UIEvent.prototype.toString = function toString () {
 
 module.exports = UIEvent;
 
-},{"./Event":35}],43:[function(require,module,exports){
+},{"./Event":36}],44:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10520,7 +10613,7 @@ WheelEvent.prototype.toString = function toString () {
 
 module.exports = WheelEvent;
 
-},{"./MouseEvent":40}],44:[function(require,module,exports){
+},{"./MouseEvent":41}],45:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -10561,7 +10654,7 @@ module.exports = {
 };
 
 
-},{"./CompositionEvent":34,"./Event":35,"./EventMap":36,"./FocusEvent":37,"./InputEvent":38,"./KeyboardEvent":39,"./MouseEvent":40,"./TouchEvent":41,"./UIEvent":42,"./WheelEvent":43}],45:[function(require,module,exports){
+},{"./CompositionEvent":35,"./Event":36,"./EventMap":37,"./FocusEvent":38,"./InputEvent":39,"./KeyboardEvent":40,"./MouseEvent":41,"./TouchEvent":42,"./UIEvent":43,"./WheelEvent":44}],46:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10596,7 +10689,7 @@ module.exports = {
     VoidElements: require('./VoidElements')
 };
 
-},{"./DOMRenderer":30,"./ElementCache":31,"./Math":32,"./VoidElements":33,"./events":44}],46:[function(require,module,exports){
+},{"./DOMRenderer":31,"./ElementCache":32,"./Math":33,"./VoidElements":34,"./events":45}],47:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10640,7 +10733,7 @@ module.exports = {
     polyfills: require('./polyfills')
 };
 
-},{"./components":12,"./core":27,"./dom-renderables":29,"./dom-renderers":45,"./math":51,"./physics":79,"./polyfills":81,"./render-loops":84,"./renderers":89,"./transitions":93,"./utilities":101,"./webgl-geometries":110,"./webgl-materials":124,"./webgl-renderables":126,"./webgl-renderers":139,"./webgl-shaders":141}],47:[function(require,module,exports){
+},{"./components":13,"./core":28,"./dom-renderables":30,"./dom-renderers":46,"./math":52,"./physics":80,"./polyfills":82,"./render-loops":85,"./renderers":90,"./transitions":94,"./utilities":102,"./webgl-geometries":111,"./webgl-materials":125,"./webgl-renderables":127,"./webgl-renderers":140,"./webgl-shaders":142}],48:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -11132,7 +11225,7 @@ Mat33.multiply = function multiply(matrix1, matrix2, output) {
 
 module.exports = Mat33;
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -11682,7 +11775,7 @@ Quaternion.dot = function dot(q1, q2) {
 
 module.exports = Quaternion;
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12053,7 +12146,7 @@ Vec2.cross = function(v1,v2) {
 
 module.exports = Vec2;
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12661,7 +12754,7 @@ Vec3.project = function project(v1, v2, output) {
 
 module.exports = Vec3;
 
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -12694,7 +12787,7 @@ module.exports = {
 };
 
 
-},{"./Mat33":47,"./Quaternion":48,"./Vec2":49,"./Vec3":50}],52:[function(require,module,exports){
+},{"./Mat33":48,"./Quaternion":49,"./Vec2":50,"./Vec3":51}],53:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13495,7 +13588,7 @@ module.exports = {
     ConvexHull: ConvexHull
 };
 
-},{"../math/Mat33":47,"../math/Vec3":50,"../utilities/ObjectManager":97}],53:[function(require,module,exports){
+},{"../math/Mat33":48,"../math/Vec3":51,"../utilities/ObjectManager":98}],54:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13995,7 +14088,7 @@ function _integratePose(body, dt) {
 
 module.exports = PhysicsEngine;
 
-},{"../math/Quaternion":48,"../math/Vec3":50,"../utilities/CallbackStore":94,"./bodies/Particle":55,"./constraints/Constraint":62,"./forces/Force":73}],54:[function(require,module,exports){
+},{"../math/Quaternion":49,"../math/Vec3":51,"../utilities/CallbackStore":95,"./bodies/Particle":56,"./constraints/Constraint":63,"./forces/Force":74}],55:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14061,7 +14154,7 @@ Box.prototype.constructor = Box;
 
 module.exports = Box;
 
-},{"../../math/Vec3":50,"./convexBodyFactory":58}],55:[function(require,module,exports){
+},{"../../math/Vec3":51,"./convexBodyFactory":59}],56:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14565,7 +14658,7 @@ Particle.prototype.updateShape = function updateShape() {};
 
 module.exports = Particle;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"../../utilities/CallbackStore":94}],56:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"../../utilities/CallbackStore":95}],57:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14687,7 +14780,7 @@ Sphere.prototype.support = function support(direction) {
  */
 module.exports = Sphere;
 
-},{"../../math/Vec3":50,"./Particle":55}],57:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Particle":56}],58:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14776,7 +14869,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{"../../math/Vec3":50,"./Particle":55}],58:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Particle":56}],59:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15031,7 +15124,7 @@ function _computeInertiaProperties(T) {
 
 module.exports = convexBodyFactory;
 
-},{"../../math/Mat33":47,"../../math/Vec3":50,"../Geometry":52,"./Particle":55}],59:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Vec3":51,"../Geometry":53,"./Particle":56}],60:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15155,7 +15248,7 @@ Angle.prototype.resolve = function update() {
 
 module.exports = Angle;
 
-},{"../../math/Mat33":47,"../../math/Vec3":50,"./Constraint":62}],60:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Vec3":51,"./Constraint":63}],61:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15326,7 +15419,7 @@ BallAndSocket.prototype.resolve = function resolve() {
 
 module.exports = BallAndSocket;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Constraint":62}],61:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"./Constraint":63}],62:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15736,7 +15829,7 @@ Collision.BruteForceAABB = BruteForce.BruteForceAABB;
 
 module.exports = Collision;
 
-},{"../../math/Vec3":50,"../../utilities/ObjectManager":97,"./Constraint":62,"./collision/BruteForce":68,"./collision/ContactManifold":69,"./collision/ConvexCollisionDetection":70,"./collision/SweepAndPrune":71}],62:[function(require,module,exports){
+},{"../../math/Vec3":51,"../../utilities/ObjectManager":98,"./Constraint":63,"./collision/BruteForce":69,"./collision/ContactManifold":70,"./collision/ConvexCollisionDetection":71,"./collision/SweepAndPrune":72}],63:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15822,7 +15915,7 @@ Constraint.prototype.resolve = function resolve(time, dt) {};
 
 module.exports = Constraint;
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16023,7 +16116,7 @@ Curve.prototype.resolve = function resolve() {
 
 module.exports = Curve;
 
-},{"../../math/Vec3":50,"./Constraint":62}],64:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Constraint":63}],65:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16203,7 +16296,7 @@ Direction.prototype.resolve = function update() {
 
 module.exports = Direction;
 
-},{"../../math/Vec3":50,"./Constraint":62}],65:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Constraint":63}],66:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16380,7 +16473,7 @@ Distance.prototype.resolve = function resolve() {
 
 module.exports = Distance;
 
-},{"../../math/Vec3":50,"./Constraint":62}],66:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Constraint":63}],67:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16632,7 +16725,7 @@ Hinge.prototype.resolve = function resolve() {
 
 module.exports = Hinge;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Constraint":62}],67:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"./Constraint":63}],68:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16804,7 +16897,7 @@ AABB.vertexThreshold = 100;
 
 module.exports = AABB;
 
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16922,7 +17015,7 @@ BruteForce.prototype.update = function update() {
 module.exports.BruteForceAABB = BruteForceAABB;
 module.exports.BruteForce = BruteForce;
 
-},{"./AABB":67}],69:[function(require,module,exports){
+},{"./AABB":68}],70:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17521,7 +17614,7 @@ Contact.prototype.resolve = function resolve() {
 
 module.exports = ContactManifoldTable;
 
-},{"../../../math/Vec3":50,"../../../utilities/ObjectManager":97}],70:[function(require,module,exports){
+},{"../../../math/Vec3":51,"../../../utilities/ObjectManager":98}],71:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17747,7 +17840,7 @@ function epa(body1, body2, polytope) {
 module.exports.gjk = gjk;
 module.exports.epa = epa;
 
-},{"../../../math/Vec3":50,"../../../utilities/ObjectManager":97}],71:[function(require,module,exports){
+},{"../../../math/Vec3":51,"../../../utilities/ObjectManager":98}],72:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17991,7 +18084,7 @@ SweepVolume.prototype.update = function() {
 
 module.exports = SweepAndPrune;
 
-},{"./AABB":67}],72:[function(require,module,exports){
+},{"./AABB":68}],73:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18100,7 +18193,7 @@ Drag.prototype.update = function update() {
 
 module.exports = Drag;
 
-},{"../../math/Vec3":50,"./Force":73}],73:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],74:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18206,7 +18299,7 @@ Force.prototype.update = function update(time, dt) {};
 
 module.exports = Force;
 
-},{}],74:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18329,7 +18422,7 @@ Gravity1D.prototype.update = function() {
 
 module.exports = Gravity1D;
 
-},{"../../math/Vec3":50,"./Force":73}],75:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],76:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18425,7 +18518,7 @@ Gravity3D.prototype.update = function() {
 
 module.exports = Gravity3D;
 
-},{"../../math/Vec3":50,"./Force":73}],76:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],77:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18530,7 +18623,7 @@ RotationalDrag.prototype.update = function update() {
 
 module.exports = RotationalDrag;
 
-},{"../../math/Vec3":50,"./Force":73}],77:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],78:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18674,7 +18767,7 @@ RotationalSpring.prototype.update = function update() {
 
 module.exports = RotationalSpring;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Force":73}],78:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"./Force":74}],79:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18840,7 +18933,7 @@ Spring.prototype.update = function() {
 
 module.exports = Spring;
 
-},{"../../math/Vec3":50,"./Force":73}],79:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],80:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18895,7 +18988,7 @@ module.exports = {
     Geometry: require('./Geometry')
 };
 
-},{"./Geometry":52,"./PhysicsEngine":53,"./bodies/Box":54,"./bodies/Particle":55,"./bodies/Sphere":56,"./bodies/Wall":57,"./bodies/convexBodyFactory":58,"./constraints/Angle":59,"./constraints/BallAndSocket":60,"./constraints/Collision":61,"./constraints/Constraint":62,"./constraints/Curve":63,"./constraints/Direction":64,"./constraints/Distance":65,"./constraints/Hinge":66,"./forces/Drag":72,"./forces/Force":73,"./forces/Gravity1D":74,"./forces/Gravity3D":75,"./forces/RotationalDrag":76,"./forces/RotationalSpring":77,"./forces/Spring":78}],80:[function(require,module,exports){
+},{"./Geometry":53,"./PhysicsEngine":54,"./bodies/Box":55,"./bodies/Particle":56,"./bodies/Sphere":57,"./bodies/Wall":58,"./bodies/convexBodyFactory":59,"./constraints/Angle":60,"./constraints/BallAndSocket":61,"./constraints/Collision":62,"./constraints/Constraint":63,"./constraints/Curve":64,"./constraints/Direction":65,"./constraints/Distance":66,"./constraints/Hinge":67,"./forces/Drag":73,"./forces/Force":74,"./forces/Gravity1D":75,"./forces/Gravity3D":76,"./forces/RotationalDrag":77,"./forces/RotationalSpring":78,"./forces/Spring":79}],81:[function(require,module,exports){
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 // requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
@@ -18980,7 +19073,7 @@ var animationFrame = {
 
 module.exports = animationFrame;
 
-},{}],81:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19012,7 +19105,7 @@ module.exports = {
     cancelAnimationFrame: require('./animationFrame').cancelAnimationFrame
 };
 
-},{"./animationFrame":80}],82:[function(require,module,exports){
+},{"./animationFrame":81}],83:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19173,7 +19266,7 @@ ContainerLoop.prototype.noLongerUpdate = function noLongerUpdate(updateable) {
 
 module.exports = ContainerLoop;
 
-},{"./now":85}],83:[function(require,module,exports){
+},{"./now":86}],84:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19485,7 +19578,7 @@ RequestAnimationFrameLoop.prototype.noLongerUpdate = function noLongerUpdate(upd
 
 module.exports = RequestAnimationFrameLoop;
 
-},{"../polyfills":81}],84:[function(require,module,exports){
+},{"../polyfills":82}],85:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19518,7 +19611,7 @@ module.exports = {
     now: require('./now')
 };
 
-},{"./ContainerLoop":82,"./RequestAnimationFrameLoop":83,"./now":85}],85:[function(require,module,exports){
+},{"./ContainerLoop":83,"./RequestAnimationFrameLoop":84,"./now":86}],86:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19551,7 +19644,7 @@ var now = (window.performance && window.performance.now) ? function() {
 
 module.exports = now;
 
-},{}],86:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19845,7 +19938,7 @@ Compositor.prototype.clearCommands = function clearCommands() {
 
 module.exports = Compositor;
 
-},{"../core/Commands":15,"./Context":87,"./inject-css":90}],87:[function(require,module,exports){
+},{"../core/Commands":16,"./Context":88,"./inject-css":91}],88:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20390,7 +20483,7 @@ function changeViewTransform (context, path, commands, iterator) {
 
 module.exports = Context;
 
-},{"../components/Camera":2,"../core/Commands":15,"../dom-renderers/DOMRenderer":30,"../webgl-renderers/WebGLRenderer":136}],88:[function(require,module,exports){
+},{"../components/Camera":3,"../core/Commands":16,"../dom-renderers/DOMRenderer":31,"../webgl-renderers/WebGLRenderer":137}],89:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20549,7 +20642,7 @@ UIManager.prototype.update = function update (time) {
 
 module.exports = UIManager;
 
-},{"../core/Commands":15}],89:[function(require,module,exports){
+},{"../core/Commands":16}],90:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20583,7 +20676,7 @@ module.exports = {
     injectCSS: require('./inject-css')
 };
 
-},{"./Compositor":86,"./Context":87,"./UIManager":88,"./inject-css":90}],90:[function(require,module,exports){
+},{"./Compositor":87,"./Context":88,"./UIManager":89,"./inject-css":91}],91:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20674,7 +20767,7 @@ function injectCSS() {
 
 module.exports = injectCSS;
 
-},{}],91:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20930,7 +21023,7 @@ var Curves = {
 
 module.exports = Curves;
 
-},{}],92:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21388,7 +21481,7 @@ Transitionable.prototype.set = function(state, transition, callback) {
 
 module.exports = Transitionable;
 
-},{"../core/FamousEngine":18,"./Curves":91}],93:[function(require,module,exports){
+},{"../core/FamousEngine":19,"./Curves":92}],94:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -21420,7 +21513,7 @@ module.exports = {
     Transitionable: require('./Transitionable')
 };
 
-},{"./Curves":91,"./Transitionable":92}],94:[function(require,module,exports){
+},{"./Curves":92,"./Transitionable":93}],95:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21518,7 +21611,7 @@ CallbackStore.prototype.trigger = function trigger (key, payload) {
 
 module.exports = CallbackStore;
 
-},{}],95:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21968,7 +22061,7 @@ var colorNames = { aliceblue: '#f0f8ff', antiquewhite: '#faebd7', aqua: '#00ffff
 
 module.exports = Color;
 
-},{"../transitions/Transitionable":92}],96:[function(require,module,exports){
+},{"../transitions/Transitionable":93}],97:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -22075,7 +22168,7 @@ module.exports = {
 };
 
 
-},{}],97:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22168,7 +22261,7 @@ ObjectManager.disposeOf = function(type) {
 
 module.exports = ObjectManager;
 
-},{}],98:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 'use strict';
 
 function Registry () {
@@ -22227,7 +22320,7 @@ Registry.prototype.getKeyToValue = function getKeyToValue () {
 
 module.exports = Registry;
 
-},{}],99:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -22271,7 +22364,7 @@ function clamp(value, lower, upper) {
 module.exports = clamp;
 
 
-},{}],100:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22335,7 +22428,7 @@ var clone = function clone(b) {
 
 module.exports = clone;
 
-},{}],101:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22376,7 +22469,7 @@ module.exports = {
     vendorPrefix: require('./vendorPrefix')
 };
 
-},{"./CallbackStore":94,"./Color":95,"./KeyCodes":96,"./ObjectManager":97,"./Registry":98,"./clamp":99,"./clone":100,"./keyValueToArrays":102,"./loadURL":103,"./strip":104,"./vendorPrefix":105}],102:[function(require,module,exports){
+},{"./CallbackStore":95,"./Color":96,"./KeyCodes":97,"./ObjectManager":98,"./Registry":99,"./clamp":100,"./clone":101,"./keyValueToArrays":103,"./loadURL":104,"./strip":105,"./vendorPrefix":106}],103:[function(require,module,exports){
 'use strict';
 
 /**
@@ -22433,7 +22526,7 @@ module.exports = function keyValuesToArrays(obj) {
     };
 };
 
-},{}],103:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22484,7 +22577,7 @@ var loadURL = function loadURL(url, callback) {
 
 module.exports = loadURL;
 
-},{}],104:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22550,7 +22643,7 @@ function strip(obj) {
 
 module.exports = strip;
 
-},{}],105:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22610,7 +22703,7 @@ function vendorPrefix(property) {
 
 module.exports = vendorPrefix;
 
-},{}],106:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22817,7 +22910,7 @@ DynamicGeometry.prototype.getTextureCoords = function () {
 
 module.exports = DynamicGeometry;
 
-},{"./Geometry":107}],107:[function(require,module,exports){
+},{"./Geometry":108}],108:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22883,7 +22976,7 @@ function Geometry(options) {
 
 module.exports = Geometry;
 
-},{}],108:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23451,7 +23544,7 @@ GeometryHelper.addBackfaceTriangles = function addBackfaceTriangles(vertices, in
 
 module.exports = GeometryHelper;
 
-},{"../math/Vec2":49,"../math/Vec3":50}],109:[function(require,module,exports){
+},{"../math/Vec2":50,"../math/Vec3":51}],110:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23945,7 +24038,7 @@ function flatten(arr) {
 
 module.exports = OBJLoader;
 
-},{"../utilities/loadURL":103,"./GeometryHelper":108}],110:[function(require,module,exports){
+},{"../utilities/loadURL":104,"./GeometryHelper":109}],111:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23990,7 +24083,7 @@ module.exports = {
     OBJLoader: require('./OBJLoader')
 };
 
-},{"./DynamicGeometry":106,"./Geometry":107,"./GeometryHelper":108,"./OBJLoader":109,"./primitives/Box":111,"./primitives/Circle":112,"./primitives/Cylinder":113,"./primitives/GeodesicSphere":114,"./primitives/Icosahedron":115,"./primitives/ParametricCone":116,"./primitives/Plane":117,"./primitives/Sphere":118,"./primitives/Tetrahedron":119,"./primitives/Torus":120,"./primitives/Triangle":121}],111:[function(require,module,exports){
+},{"./DynamicGeometry":107,"./Geometry":108,"./GeometryHelper":109,"./OBJLoader":110,"./primitives/Box":112,"./primitives/Circle":113,"./primitives/Cylinder":114,"./primitives/GeodesicSphere":115,"./primitives/Icosahedron":116,"./primitives/ParametricCone":117,"./primitives/Plane":118,"./primitives/Sphere":119,"./primitives/Tetrahedron":120,"./primitives/Torus":121,"./primitives/Triangle":122}],112:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24085,7 +24178,7 @@ function BoxGeometry(options) {
 
 module.exports = BoxGeometry;
 
-},{"../Geometry":107}],112:[function(require,module,exports){
+},{"../Geometry":108}],113:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24201,7 +24294,7 @@ function getCircleBuffers(detail) {
 
 module.exports = Circle;
 
-},{"../Geometry":107,"../GeometryHelper":108}],113:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],114:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24290,7 +24383,7 @@ Cylinder.generator = function generator(r, u, v, pos) {
 
 module.exports = Cylinder;
 
-},{"../Geometry":107,"../GeometryHelper":108}],114:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],115:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -24370,7 +24463,7 @@ function GeodesicSphere (options) {
 
 module.exports = GeodesicSphere;
 
-},{"../Geometry":107,"../GeometryHelper":108}],115:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],116:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -24448,7 +24541,7 @@ function Icosahedron( options )
 
 module.exports = Icosahedron;
 
-},{"../Geometry":107,"../GeometryHelper":108}],116:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],117:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24534,7 +24627,7 @@ ParametricCone.generator = function generator(r, u, v, pos) {
 
 module.exports = ParametricCone;
 
-},{"../Geometry":107,"../GeometryHelper":108}],117:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],118:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24625,7 +24718,7 @@ function Plane(options) {
 
 module.exports = Plane;
 
-},{"../Geometry":107,"../GeometryHelper":108}],118:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],119:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24713,7 +24806,7 @@ ParametricSphere.generator = function generator(u, v, pos) {
 
 module.exports = ParametricSphere;
 
-},{"../Geometry":107,"../GeometryHelper":108}],119:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],120:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24816,7 +24909,7 @@ function Tetrahedron(options) {
 
 module.exports = Tetrahedron;
 
-},{"../Geometry":107,"../GeometryHelper":108}],120:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],121:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24902,7 +24995,7 @@ Torus.generator = function generator(c, a, u, v, pos) {
 
 module.exports = Torus;
 
-},{"../Geometry":107,"../GeometryHelper":108}],121:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],122:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24982,7 +25075,7 @@ function Triangle (options) {
 
 module.exports = Triangle;
 
-},{"../Geometry":107,"../GeometryHelper":108}],122:[function(require,module,exports){
+},{"../Geometry":108,"../GeometryHelper":109}],123:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -25209,7 +25302,7 @@ Material.prototype.traverse = function traverse(callback) {
 };
 
 
-},{"./TextureRegistry":123}],123:[function(require,module,exports){
+},{"./TextureRegistry":124}],124:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25294,7 +25387,7 @@ TextureRegistry.get = function get(accessor) {
 
 module.exports = TextureRegistry;
 
-},{}],124:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25326,7 +25419,7 @@ module.exports = {
     TextureRegistry: require('./TextureRegistry')
 };
 
-},{"./Material":122,"./TextureRegistry":123}],125:[function(require,module,exports){
+},{"./Material":123,"./TextureRegistry":124}],126:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26031,7 +26124,7 @@ function addMeshToMaterial(mesh, material, name) {
 
 module.exports = Mesh;
 
-},{"../core/Commands":15,"../core/TransformSystem":26,"../webgl-geometries":110}],126:[function(require,module,exports){
+},{"../core/Commands":16,"../core/TransformSystem":27,"../webgl-geometries":111}],127:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26064,7 +26157,7 @@ module.exports = {
     AmbientLight: require('./lights/AmbientLight')
 };
 
-},{"./Mesh":125,"./lights/AmbientLight":127,"./lights/PointLight":129}],127:[function(require,module,exports){
+},{"./Mesh":126,"./lights/AmbientLight":128,"./lights/PointLight":130}],128:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26124,7 +26217,7 @@ AmbientLight.prototype.constructor = AmbientLight;
 
 module.exports = AmbientLight;
 
-},{"../../core/Commands":15,"./Light":128}],128:[function(require,module,exports){
+},{"../../core/Commands":16,"./Light":129}],129:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26246,7 +26339,7 @@ Light.prototype.onUpdate = function onUpdate() {
 
 module.exports = Light;
 
-},{"../../core/Commands":15}],129:[function(require,module,exports){
+},{"../../core/Commands":16}],130:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26339,7 +26432,7 @@ PointLight.prototype.onTransformChange = function onTransformChange (transform) 
 
 module.exports = PointLight;
 
-},{"../../core/TransformSystem":26,"./Light":128}],130:[function(require,module,exports){
+},{"../../core/TransformSystem":27,"./Light":129}],131:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26411,7 +26504,7 @@ Buffer.prototype.subData = function subData() {
 
 module.exports = Buffer;
 
-},{}],131:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26558,7 +26651,7 @@ BufferRegistry.prototype.allocate = function allocate(geometryId, name, value, s
 
 module.exports = BufferRegistry;
 
-},{"./Buffer":130}],132:[function(require,module,exports){
+},{"./Buffer":131}],133:[function(require,module,exports){
 'use strict';
 
 /**
@@ -26655,7 +26748,7 @@ function _processErrors(errors, source) {
 
 module.exports = Debug;
 
-},{}],133:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27138,7 +27231,7 @@ Program.prototype.compileShader = function compileShader(shader, source) {
 
 module.exports = Program;
 
-},{"../utilities/clone":100,"../utilities/keyValueToArrays":102,"../webgl-shaders":141,"./Debug":132}],134:[function(require,module,exports){
+},{"../utilities/clone":101,"../utilities/keyValueToArrays":103,"../webgl-shaders":142,"./Debug":133}],135:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27279,7 +27372,7 @@ Texture.prototype.readBack = function readBack(x, y, width, height) {
 
 module.exports = Texture;
 
-},{}],135:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27491,7 +27584,7 @@ TextureManager.prototype.bindTexture = function bindTexture(id) {
 
 module.exports = TextureManager;
 
-},{"./Texture":134,"./createCheckerboard":138}],136:[function(require,module,exports){
+},{"./Texture":135,"./createCheckerboard":139}],137:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28347,7 +28440,7 @@ WebGLRenderer.prototype.resetOptions = function resetOptions(options) {
 
 module.exports = WebGLRenderer;
 
-},{"../utilities/Registry":98,"../utilities/keyValueToArrays":102,"./BufferRegistry":131,"./Program":133,"./TextureManager":135,"./compileMaterial":137,"./radixSort":140}],137:[function(require,module,exports){
+},{"../utilities/Registry":99,"../utilities/keyValueToArrays":103,"./BufferRegistry":132,"./Program":134,"./TextureManager":136,"./compileMaterial":138,"./radixSort":141}],138:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28480,7 +28573,7 @@ function _arrayToVec(array) {
 
 module.exports = compileMaterial;
 
-},{}],138:[function(require,module,exports){
+},{}],139:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28531,7 +28624,7 @@ function createCheckerBoard() {
 
 module.exports = createCheckerBoard;
 
-},{}],139:[function(require,module,exports){
+},{}],140:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -28571,7 +28664,7 @@ module.exports = {
     WebGLRenderer: require('./WebGLRenderer')
 };
 
-},{"./Buffer":130,"./BufferRegistry":131,"./Debug":132,"./Program":133,"./Texture":134,"./TextureManager":135,"./WebGLRenderer":136,"./compileMaterial":137,"./createCheckerboard":138,"./radixSort":140}],140:[function(require,module,exports){
+},{"./Buffer":131,"./BufferRegistry":132,"./Debug":133,"./Program":134,"./Texture":135,"./TextureManager":136,"./WebGLRenderer":137,"./compileMaterial":138,"./createCheckerboard":139,"./radixSort":141}],141:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28708,7 +28801,7 @@ function radixSort(list, registry) {
 
 module.exports = radixSort;
 
-},{}],141:[function(require,module,exports){
+},{}],142:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28739,12 +28832,2438 @@ module.exports = radixSort;
 
 var shaders = {
     vertex: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates transpose inverse matrix from transform\n * \n * @method random\n * @private\n *\n *\n */\n\n\nmat3 getNormalMatrix_1_0(in mat4 t) {\n   mat3 matNorm;\n   mat4 a = t;\n\n   float a00 = a[0][0], a01 = a[0][1], a02 = a[0][2], a03 = a[0][3],\n   a10 = a[1][0], a11 = a[1][1], a12 = a[1][2], a13 = a[1][3],\n   a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3],\n   a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3],\n   b00 = a00 * a11 - a01 * a10,\n   b01 = a00 * a12 - a02 * a10,\n   b02 = a00 * a13 - a03 * a10,\n   b03 = a01 * a12 - a02 * a11,\n   b04 = a01 * a13 - a03 * a11,\n   b05 = a02 * a13 - a03 * a12,\n   b06 = a20 * a31 - a21 * a30,\n   b07 = a20 * a32 - a22 * a30,\n   b08 = a20 * a33 - a23 * a30,\n   b09 = a21 * a32 - a22 * a31,\n   b10 = a21 * a33 - a23 * a31,\n   b11 = a22 * a33 - a23 * a32,\n\n   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n   det = 1.0 / det;\n\n   matNorm[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;\n   matNorm[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;\n   matNorm[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;\n\n   matNorm[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;\n   matNorm[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;\n   matNorm[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;\n\n   matNorm[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;\n   matNorm[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;\n   matNorm[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;\n\n   return matNorm;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates a matrix that creates the identity when multiplied by m\n * \n * @method inverse\n * @private\n *\n *\n */\n\n\nfloat inverse_2_1(float m) {\n    return 1.0 / m;\n}\n\nmat2 inverse_2_1(mat2 m) {\n    return mat2(m[1][1],-m[0][1],\n               -m[1][0], m[0][0]) / (m[0][0]*m[1][1] - m[0][1]*m[1][0]);\n}\n\nmat3 inverse_2_1(mat3 m) {\n    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];\n    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];\n    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];\n\n    float b01 =  a22 * a11 - a12 * a21;\n    float b11 = -a22 * a10 + a12 * a20;\n    float b21 =  a21 * a10 - a11 * a20;\n\n    float det = a00 * b01 + a01 * b11 + a02 * b21;\n\n    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),\n                b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),\n                b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;\n}\n\nmat4 inverse_2_1(mat4 m) {\n    float\n        a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],\n        a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],\n        a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3],\n        a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3],\n\n        b00 = a00 * a11 - a01 * a10,\n        b01 = a00 * a12 - a02 * a10,\n        b02 = a00 * a13 - a03 * a10,\n        b03 = a01 * a12 - a02 * a11,\n        b04 = a01 * a13 - a03 * a11,\n        b05 = a02 * a13 - a03 * a12,\n        b06 = a20 * a31 - a21 * a30,\n        b07 = a20 * a32 - a22 * a30,\n        b08 = a20 * a33 - a23 * a30,\n        b09 = a21 * a32 - a22 * a31,\n        b10 = a21 * a33 - a23 * a31,\n        b11 = a22 * a33 - a23 * a32,\n\n        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n\n    return mat4(\n        a11 * b11 - a12 * b10 + a13 * b09,\n        a02 * b10 - a01 * b11 - a03 * b09,\n        a31 * b05 - a32 * b04 + a33 * b03,\n        a22 * b04 - a21 * b05 - a23 * b03,\n        a12 * b08 - a10 * b11 - a13 * b07,\n        a00 * b11 - a02 * b08 + a03 * b07,\n        a32 * b02 - a30 * b05 - a33 * b01,\n        a20 * b05 - a22 * b02 + a23 * b01,\n        a10 * b10 - a11 * b08 + a13 * b06,\n        a01 * b08 - a00 * b10 - a03 * b06,\n        a30 * b04 - a31 * b02 + a33 * b00,\n        a21 * b02 - a20 * b04 - a23 * b00,\n        a11 * b07 - a10 * b09 - a12 * b06,\n        a00 * b09 - a01 * b07 + a02 * b06,\n        a31 * b01 - a30 * b03 - a32 * b00,\n        a20 * b03 - a21 * b01 + a22 * b00) / det;\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Reflects a matrix over its main diagonal.\n * \n * @method transpose\n * @private\n *\n *\n */\n\n\nfloat transpose_3_2(float m) {\n    return m;\n}\n\nmat2 transpose_3_2(mat2 m) {\n    return mat2(m[0][0], m[1][0],\n                m[0][1], m[1][1]);\n}\n\nmat3 transpose_3_2(mat3 m) {\n    return mat3(m[0][0], m[1][0], m[2][0],\n                m[0][1], m[1][1], m[2][1],\n                m[0][2], m[1][2], m[2][2]);\n}\n\nmat4 transpose_3_2(mat4 m) {\n    return mat4(m[0][0], m[1][0], m[2][0], m[3][0],\n                m[0][1], m[1][1], m[2][1], m[3][1],\n                m[0][2], m[1][2], m[2][2], m[3][2],\n                m[0][3], m[1][3], m[2][3], m[3][3]);\n}\n\n\n\n\n/**\n * Converts vertex from modelspace to screenspace using transform\n * information from context.\n *\n * @method applyTransform\n * @private\n *\n *\n */\n\nvec4 applyTransform(vec4 pos) {\n    //TODO: move this multiplication to application code. \n\n    /**\n     * Currently multiplied in the vertex shader to avoid consuming the complexity of holding an additional\n     * transform as state on the mesh object in WebGLRenderer. Multiplies the object's transformation from object space\n     * to world space with its transformation from world space to eye space.\n     */\n    mat4 MVMatrix = u_view * u_transform;\n\n    //TODO: move the origin, sizeScale and y axis inversion to application code in order to amortize redundant per-vertex calculations.\n\n    /**\n     * The transform uniform should be changed to the result of the transformation chain:\n     *\n     * view * modelTransform * invertYAxis * sizeScale * origin\n     *\n     * which could be simplified to:\n     *\n     * view * modelTransform * convertToDOMSpace\n     *\n     * where convertToDOMSpace represents the transform matrix:\n     *\n     *                           size.x 0       0       size.x \n     *                           0      -size.y 0       size.y\n     *                           0      0       1       0\n     *                           0      0       0       1\n     *\n     */\n\n    /**\n     * Assuming a unit volume, moves the object space origin [0, 0, 0] to the \"top left\" [1, -1, 0], the DOM space origin.\n     * Later in the transformation chain, the projection transform negates the rigidbody translation.\n     * Equivalent to (but much faster than) multiplying a translation matrix \"origin\"\n     *\n     *                           1 0 0 1 \n     *                           0 1 0 -1\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.x += 1.0;\n    pos.y -= 1.0;\n\n    /**\n     * Assuming a unit volume, scales an object to the amount of pixels in the size uniform vector's specified dimensions.\n     * Later in the transformation chain, the projection transform transforms the point into clip space by scaling\n     * by the inverse of the canvas' resolution.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"sizeScale\"\n     *\n     *                           size.x 0      0      0 \n     *                           0      size.y 0      0\n     *                           0      0      size.z 0\n     *                           0      0      0      1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.xyz *= u_size * 0.5;\n\n    /**\n     * Inverts the object space's y axis in order to match DOM space conventions. \n     * Later in the transformation chain, the projection transform reinverts the y axis to convert to clip space.\n     * Equivalent to (but much faster than) multiplying a scale matrix \"invertYAxis\"\n     *\n     *                           1 0 0 0 \n     *                           0 -1 0 0\n     *                           0 0 1 0\n     *                           0 0 0 1\n     *\n     * in the transform chain: projection * view * modelTransform * invertYAxis * sizeScale * origin * positionVector.\n     */\n    pos.y *= -1.0;\n\n    /**\n     * Exporting the vertex's position as a varying, in DOM space, to be used for lighting calculations. This has to be in DOM space\n     * since light position and direction is derived from the scene graph, calculated in DOM space.\n     */\n\n    v_position = (MVMatrix * pos).xyz;\n\n    /**\n    * Exporting the eye vector (a vector from the center of the screen) as a varying, to be used for lighting calculations.\n    * In clip space deriving the eye vector is a matter of simply taking the inverse of the position, as the position is a vector\n    * from the center of the screen. However, since our points are represented in DOM space,\n    * the position is a vector from the top left corner of the screen, so some additional math is needed (specifically, subtracting\n    * the position from the center of the screen, i.e. half the resolution of the canvas).\n    */\n\n    v_eyeVector = (u_resolution * 0.5) - v_position;\n\n    /**\n     * Transforming the position (currently represented in dom space) into view space (with our dom space view transform)\n     * and then projecting the point into raster both by applying a perspective transformation and converting to clip space\n     * (the perspective matrix is a combination of both transformations, therefore it's probably more apt to refer to it as a\n     * projection transform).\n     */\n\n    pos = u_perspective * MVMatrix * pos;\n\n    return pos;\n}\n\n/**\n * Placeholder for positionOffset chunks to be templated in.\n * Used for mesh deformation.\n *\n * @method calculateOffset\n * @private\n *\n *\n */\n#vert_definitions\nvec3 calculateOffset(vec3 ID) {\n    #vert_applications\n    return vec3(0.0);\n}\n\n/**\n * Writes the position of the vertex onto the screen.\n * Passes texture coordinate and normal attributes as varyings\n * and passes the position attribute through position pipeline.\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    v_textureCoordinate = a_texCoord;\n    vec3 invertedNormals = a_normals + (u_normals.x < 0.0 ? calculateOffset(u_normals) * 2.0 - 1.0 : vec3(0.0));\n    invertedNormals.y *= -1.0;\n    v_normal = transpose_3_2(mat3(inverse_2_1(u_transform))) * invertedNormals;\n    vec3 offsetPos = a_pos + calculateOffset(u_positionOffset);\n    gl_Position = applyTransform(vec4(offsetPos, 1.0));\n}\n",
-    fragment: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Placeholder for fragmentShader  chunks to be templated in.\n * Used for normal mapping, gloss mapping and colors.\n * \n * @method applyMaterial\n * @private\n *\n *\n */\n\n#float_definitions\nfloat applyMaterial_1_0(float ID) {\n    #float_applications\n    return 1.;\n}\n\n#vec3_definitions\nvec3 applyMaterial_1_0(vec3 ID) {\n    #vec3_applications\n    return vec3(0);\n}\n\n#vec4_definitions\nvec4 applyMaterial_1_0(vec4 ID) {\n    #vec4_applications\n\n    return vec4(0);\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates the intensity of light on a surface.\n *\n * @method applyLight\n * @private\n *\n */\nvec4 applyLight_2_1(in vec4 baseColor, in vec3 normal, in vec4 glossiness, int numLights, vec3 ambientColor, vec3 eyeVector, mat4 lightPosition, mat4 lightColor, vec3 v_position) {\n    vec3 diffuse = vec3(0.0);\n    bool hasGlossiness = glossiness.a > 0.0;\n    bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n\n    for(int i = 0; i < 4; i++) {\n        if (i >= numLights) break;\n        vec3 lightDirection = normalize(lightPosition[i].xyz - v_position);\n        float lambertian = max(dot(lightDirection, normal), 0.0);\n\n        if (lambertian > 0.0) {\n            diffuse += lightColor[i].rgb * baseColor.rgb * lambertian;\n            if (hasGlossiness) {\n                vec3 halfVector = normalize(lightDirection + eyeVector);\n                float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n                vec3 specularColor = hasSpecularColor ? glossiness.rgb : lightColor[i].rgb;\n                diffuse += specularColor * specularWeight * lambertian;\n            }\n        }\n\n    }\n\n    return vec4(ambientColor + diffuse, baseColor.a);\n}\n\n\n\n\n\n/**\n * Writes the color of the pixel onto the screen\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : applyMaterial_1_0(u_baseColor);\n\n    /**\n     * Apply lights only if flat shading is false\n     * and at least one light is added to the scene\n     */\n    bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n\n    vec3 normal = normalize(v_normal);\n    vec4 glossiness = u_glossiness.x < 0.0 ? applyMaterial_1_0(u_glossiness) : u_glossiness;\n\n    vec4 color = lightsEnabled ?\n    applyLight_2_1(material, normalize(v_normal), glossiness,\n               int(u_numLights),\n               u_ambientLight * u_baseColor.rgb,\n               normalize(v_eyeVector),\n               u_lightPosition,\n               u_lightColor,   \n               v_position)\n    : material;\n\n    gl_FragColor = color;\n    gl_FragColor.a *= u_opacity;   \n}\n"
+    fragment: "#define GLSLIFY 1\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Placeholder for fragmentShader  chunks to be templated in.\n * Used for normal mapping, gloss mapping and colors.\n * \n * @method applyMaterial\n * @private\n *\n *\n */\n\n#float_definitions\nfloat applyMaterial_2_0(float ID) {\n    #float_applications\n    return 1.;\n}\n\n#vec3_definitions\nvec3 applyMaterial_2_0(vec3 ID) {\n    #vec3_applications\n    return vec3(0);\n}\n\n#vec4_definitions\nvec4 applyMaterial_2_0(vec4 ID) {\n    #vec4_applications\n\n    return vec4(0);\n}\n\n\n\n/**\n * The MIT License (MIT)\n * \n * Copyright (c) 2015 Famous Industries Inc.\n * \n * Permission is hereby granted, free of charge, to any person obtaining a copy\n * of this software and associated documentation files (the \"Software\"), to deal\n * in the Software without restriction, including without limitation the rights\n * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n * \n * The above copyright notice and this permission notice shall be included in\n * all copies or substantial portions of the Software.\n * \n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n * THE SOFTWARE.\n */\n\n/**\n * Calculates the intensity of light on a surface.\n *\n * @method applyLight\n * @private\n *\n */\nvec4 applyLight_1_1(in vec4 baseColor, in vec3 normal, in vec4 glossiness, int numLights, vec3 ambientColor, vec3 eyeVector, mat4 lightPosition, mat4 lightColor, vec3 v_position) {\n    vec3 diffuse = vec3(0.0);\n    bool hasGlossiness = glossiness.a > 0.0;\n    bool hasSpecularColor = length(glossiness.rgb) > 0.0;\n\n    for(int i = 0; i < 4; i++) {\n        if (i >= numLights) break;\n        vec3 lightDirection = normalize(lightPosition[i].xyz - v_position);\n        float lambertian = max(dot(lightDirection, normal), 0.0);\n\n        if (lambertian > 0.0) {\n            diffuse += lightColor[i].rgb * baseColor.rgb * lambertian;\n            if (hasGlossiness) {\n                vec3 halfVector = normalize(lightDirection + eyeVector);\n                float specularWeight = pow(max(dot(halfVector, normal), 0.0), glossiness.a);\n                vec3 specularColor = hasSpecularColor ? glossiness.rgb : lightColor[i].rgb;\n                diffuse += specularColor * specularWeight * lambertian;\n            }\n        }\n\n    }\n\n    return vec4(ambientColor + diffuse, baseColor.a);\n}\n\n\n\n\n\n/**\n * Writes the color of the pixel onto the screen\n *\n * @method main\n * @private\n *\n *\n */\nvoid main() {\n    vec4 material = u_baseColor.r >= 0.0 ? u_baseColor : applyMaterial_2_0(u_baseColor);\n\n    /**\n     * Apply lights only if flat shading is false\n     * and at least one light is added to the scene\n     */\n    bool lightsEnabled = (u_flatShading == 0.0) && (u_numLights > 0.0 || length(u_ambientLight) > 0.0);\n\n    vec3 normal = normalize(v_normal);\n    vec4 glossiness = u_glossiness.x < 0.0 ? applyMaterial_2_0(u_glossiness) : u_glossiness;\n\n    vec4 color = lightsEnabled ?\n    applyLight_1_1(material, normalize(v_normal), glossiness,\n               int(u_numLights),\n               u_ambientLight * u_baseColor.rgb,\n               normalize(v_eyeVector),\n               u_lightPosition,\n               u_lightColor,   \n               v_position)\n    : material;\n\n    gl_FragColor = color;\n    gl_FragColor.a *= u_opacity;   \n}\n"
 };
 
 module.exports = shaders;
 
-},{}],142:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
+'use strict';
+
+var asap = require('asap')
+
+module.exports = Promise
+function Promise(fn) {
+  if (typeof this !== 'object') throw new TypeError('Promises must be constructed via new')
+  if (typeof fn !== 'function') throw new TypeError('not a function')
+  var state = null
+  var value = null
+  var deferreds = []
+  var self = this
+
+  this.then = function(onFulfilled, onRejected) {
+    return new Promise(function(resolve, reject) {
+      handle(new Handler(onFulfilled, onRejected, resolve, reject))
+    })
+  }
+
+  function handle(deferred) {
+    if (state === null) {
+      deferreds.push(deferred)
+      return
+    }
+    asap(function() {
+      var cb = state ? deferred.onFulfilled : deferred.onRejected
+      if (cb === null) {
+        (state ? deferred.resolve : deferred.reject)(value)
+        return
+      }
+      var ret
+      try {
+        ret = cb(value)
+      }
+      catch (e) {
+        deferred.reject(e)
+        return
+      }
+      deferred.resolve(ret)
+    })
+  }
+
+  function resolve(newValue) {
+    try { //Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+      if (newValue === self) throw new TypeError('A promise cannot be resolved with itself.')
+      if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
+        var then = newValue.then
+        if (typeof then === 'function') {
+          doResolve(then.bind(newValue), resolve, reject)
+          return
+        }
+      }
+      state = true
+      value = newValue
+      finale()
+    } catch (e) { reject(e) }
+  }
+
+  function reject(newValue) {
+    state = false
+    value = newValue
+    finale()
+  }
+
+  function finale() {
+    for (var i = 0, len = deferreds.length; i < len; i++)
+      handle(deferreds[i])
+    deferreds = null
+  }
+
+  doResolve(fn, resolve, reject)
+}
+
+
+function Handler(onFulfilled, onRejected, resolve, reject){
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null
+  this.resolve = resolve
+  this.reject = reject
+}
+
+/**
+ * Take a potentially misbehaving resolver function and make sure
+ * onFulfilled and onRejected are only called once.
+ *
+ * Makes no guarantees about asynchrony.
+ */
+function doResolve(fn, onFulfilled, onRejected) {
+  var done = false;
+  try {
+    fn(function (value) {
+      if (done) return
+      done = true
+      onFulfilled(value)
+    }, function (reason) {
+      if (done) return
+      done = true
+      onRejected(reason)
+    })
+  } catch (ex) {
+    if (done) return
+    done = true
+    onRejected(ex)
+  }
+}
+
+},{"asap":145}],144:[function(require,module,exports){
+'use strict';
+
+//This file contains then/promise specific extensions to the core promise API
+
+var Promise = require('./core.js')
+var asap = require('asap')
+
+module.exports = Promise
+
+/* Static Functions */
+
+function ValuePromise(value) {
+  this.then = function (onFulfilled) {
+    if (typeof onFulfilled !== 'function') return this
+    return new Promise(function (resolve, reject) {
+      asap(function () {
+        try {
+          resolve(onFulfilled(value))
+        } catch (ex) {
+          reject(ex);
+        }
+      })
+    })
+  }
+}
+ValuePromise.prototype = Object.create(Promise.prototype)
+
+var TRUE = new ValuePromise(true)
+var FALSE = new ValuePromise(false)
+var NULL = new ValuePromise(null)
+var UNDEFINED = new ValuePromise(undefined)
+var ZERO = new ValuePromise(0)
+var EMPTYSTRING = new ValuePromise('')
+
+Promise.resolve = function (value) {
+  if (value instanceof Promise) return value
+
+  if (value === null) return NULL
+  if (value === undefined) return UNDEFINED
+  if (value === true) return TRUE
+  if (value === false) return FALSE
+  if (value === 0) return ZERO
+  if (value === '') return EMPTYSTRING
+
+  if (typeof value === 'object' || typeof value === 'function') {
+    try {
+      var then = value.then
+      if (typeof then === 'function') {
+        return new Promise(then.bind(value))
+      }
+    } catch (ex) {
+      return new Promise(function (resolve, reject) {
+        reject(ex)
+      })
+    }
+  }
+
+  return new ValuePromise(value)
+}
+
+Promise.from = Promise.cast = function (value) {
+  var err = new Error('Promise.from and Promise.cast are deprecated, use Promise.resolve instead')
+  err.name = 'Warning'
+  console.warn(err.stack)
+  return Promise.resolve(value)
+}
+
+Promise.denodeify = function (fn, argumentCount) {
+  argumentCount = argumentCount || Infinity
+  return function () {
+    var self = this
+    var args = Array.prototype.slice.call(arguments)
+    return new Promise(function (resolve, reject) {
+      while (args.length && args.length > argumentCount) {
+        args.pop()
+      }
+      args.push(function (err, res) {
+        if (err) reject(err)
+        else resolve(res)
+      })
+      fn.apply(self, args)
+    })
+  }
+}
+Promise.nodeify = function (fn) {
+  return function () {
+    var args = Array.prototype.slice.call(arguments)
+    var callback = typeof args[args.length - 1] === 'function' ? args.pop() : null
+    try {
+      return fn.apply(this, arguments).nodeify(callback)
+    } catch (ex) {
+      if (callback === null || typeof callback == 'undefined') {
+        return new Promise(function (resolve, reject) { reject(ex) })
+      } else {
+        asap(function () {
+          callback(ex)
+        })
+      }
+    }
+  }
+}
+
+Promise.all = function () {
+  var calledWithArray = arguments.length === 1 && Array.isArray(arguments[0])
+  var args = Array.prototype.slice.call(calledWithArray ? arguments[0] : arguments)
+
+  if (!calledWithArray) {
+    var err = new Error('Promise.all should be called with a single array, calling it with multiple arguments is deprecated')
+    err.name = 'Warning'
+    console.warn(err.stack)
+  }
+
+  return new Promise(function (resolve, reject) {
+    if (args.length === 0) return resolve([])
+    var remaining = args.length
+    function res(i, val) {
+      try {
+        if (val && (typeof val === 'object' || typeof val === 'function')) {
+          var then = val.then
+          if (typeof then === 'function') {
+            then.call(val, function (val) { res(i, val) }, reject)
+            return
+          }
+        }
+        args[i] = val
+        if (--remaining === 0) {
+          resolve(args);
+        }
+      } catch (ex) {
+        reject(ex)
+      }
+    }
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i])
+    }
+  })
+}
+
+Promise.reject = function (value) {
+  return new Promise(function (resolve, reject) { 
+    reject(value);
+  });
+}
+
+Promise.race = function (values) {
+  return new Promise(function (resolve, reject) { 
+    values.forEach(function(value){
+      Promise.resolve(value).then(resolve, reject);
+    })
+  });
+}
+
+/* Prototype Methods */
+
+Promise.prototype.done = function (onFulfilled, onRejected) {
+  var self = arguments.length ? this.then.apply(this, arguments) : this
+  self.then(null, function (err) {
+    asap(function () {
+      throw err
+    })
+  })
+}
+
+Promise.prototype.nodeify = function (callback) {
+  if (typeof callback != 'function') return this
+
+  this.then(function (value) {
+    asap(function () {
+      callback(null, value)
+    })
+  }, function (err) {
+    asap(function () {
+      callback(err)
+    })
+  })
+}
+
+Promise.prototype['catch'] = function (onRejected) {
+  return this.then(null, onRejected);
+}
+
+},{"./core.js":143,"asap":145}],145:[function(require,module,exports){
+(function (process){
+
+// Use the fastest possible means to execute a task in a future turn
+// of the event loop.
+
+// linked list of tasks (single, with head node)
+var head = {task: void 0, next: null};
+var tail = head;
+var flushing = false;
+var requestFlush = void 0;
+var isNodeJS = false;
+
+function flush() {
+    /* jshint loopfunc: true */
+
+    while (head.next) {
+        head = head.next;
+        var task = head.task;
+        head.task = void 0;
+        var domain = head.domain;
+
+        if (domain) {
+            head.domain = void 0;
+            domain.enter();
+        }
+
+        try {
+            task();
+
+        } catch (e) {
+            if (isNodeJS) {
+                // In node, uncaught exceptions are considered fatal errors.
+                // Re-throw them synchronously to interrupt flushing!
+
+                // Ensure continuation if the uncaught exception is suppressed
+                // listening "uncaughtException" events (as domains does).
+                // Continue in next event to avoid tick recursion.
+                if (domain) {
+                    domain.exit();
+                }
+                setTimeout(flush, 0);
+                if (domain) {
+                    domain.enter();
+                }
+
+                throw e;
+
+            } else {
+                // In browsers, uncaught exceptions are not fatal.
+                // Re-throw them asynchronously to avoid slow-downs.
+                setTimeout(function() {
+                   throw e;
+                }, 0);
+            }
+        }
+
+        if (domain) {
+            domain.exit();
+        }
+    }
+
+    flushing = false;
+}
+
+if (typeof process !== "undefined" && process.nextTick) {
+    // Node.js before 0.9. Note that some fake-Node environments, like the
+    // Mocha test runner, introduce a `process` global without a `nextTick`.
+    isNodeJS = true;
+
+    requestFlush = function () {
+        process.nextTick(flush);
+    };
+
+} else if (typeof setImmediate === "function") {
+    // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
+    if (typeof window !== "undefined") {
+        requestFlush = setImmediate.bind(window, flush);
+    } else {
+        requestFlush = function () {
+            setImmediate(flush);
+        };
+    }
+
+} else if (typeof MessageChannel !== "undefined") {
+    // modern browsers
+    // http://www.nonblocking.io/2011/06/windownexttick.html
+    var channel = new MessageChannel();
+    channel.port1.onmessage = flush;
+    requestFlush = function () {
+        channel.port2.postMessage(0);
+    };
+
+} else {
+    // old browsers
+    requestFlush = function () {
+        setTimeout(flush, 0);
+    };
+}
+
+function asap(task) {
+    tail = tail.next = {
+        task: task,
+        domain: isNodeJS && process.domain,
+        next: null
+    };
+
+    if (!flushing) {
+        flushing = true;
+        requestFlush();
+    }
+};
+
+module.exports = asap;
+
+
+}).call(this,require('_process'))
+},{"_process":1}],146:[function(require,module,exports){
+// Some code originally from async_storage.js in
+// [Gaia](https://github.com/mozilla-b2g/gaia).
+(function() {
+    'use strict';
+
+    // Originally found in https://github.com/mozilla-b2g/gaia/blob/e8f624e4cc9ea945727278039b3bc9bcb9f8667a/shared/js/async_storage.js
+
+    // Promises!
+    var Promise = (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') ?
+                  require('promise') : this.Promise;
+
+    // Initialize IndexedDB; fall back to vendor-prefixed versions if needed.
+    var indexedDB = indexedDB || this.indexedDB || this.webkitIndexedDB ||
+                    this.mozIndexedDB || this.OIndexedDB ||
+                    this.msIndexedDB;
+
+    // If IndexedDB isn't available, we get outta here!
+    if (!indexedDB) {
+        return;
+    }
+
+    var DETECT_BLOB_SUPPORT_STORE = 'local-forage-detect-blob-support';
+    var supportsBlobs;
+
+    // Abstracts constructing a Blob object, so it also works in older
+    // browsers that don't support the native Blob constructor. (i.e.
+    // old QtWebKit versions, at least).
+    function _createBlob(parts, properties) {
+        parts = parts || [];
+        properties = properties || {};
+        try {
+            return new Blob(parts, properties);
+        } catch (e) {
+            if (e.name !== 'TypeError') {
+                throw e;
+            }
+            var BlobBuilder = window.BlobBuilder ||
+                window.MSBlobBuilder ||
+                window.MozBlobBuilder ||
+                window.WebKitBlobBuilder;
+            var builder = new BlobBuilder();
+            for (var i = 0; i < parts.length; i += 1) {
+                builder.append(parts[i]);
+            }
+            return builder.getBlob(properties.type);
+        }
+    }
+
+    // Transform a binary string to an array buffer, because otherwise
+    // weird stuff happens when you try to work with the binary string directly.
+    // It is known.
+    // From http://stackoverflow.com/questions/14967647/ (continues on next line)
+    // encode-decode-image-with-base64-breaks-image (2013-04-21)
+    function _binStringToArrayBuffer(bin) {
+        var length = bin.length;
+        var buf = new ArrayBuffer(length);
+        var arr = new Uint8Array(buf);
+        for (var i = 0; i < length; i++) {
+            arr[i] = bin.charCodeAt(i);
+        }
+        return buf;
+    }
+
+    // Fetch a blob using ajax. This reveals bugs in Chrome < 43.
+    // For details on all this junk:
+    // https://github.com/nolanlawson/state-of-binary-data-in-the-browser#readme
+    function _blobAjax(url) {
+        return new Promise(function(resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            xhr.withCredentials = true;
+            xhr.responseType = 'arraybuffer';
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== 4) {
+                    return;
+                }
+                if (xhr.status === 200) {
+                    return resolve({
+                        response: xhr.response,
+                        type: xhr.getResponseHeader('Content-Type')
+                    });
+                }
+                reject({status: xhr.status, response: xhr.response});
+            };
+            xhr.send();
+        });
+    }
+
+    //
+    // Detect blob support. Chrome didn't support it until version 38.
+    // In version 37 they had a broken version where PNGs (and possibly
+    // other binary types) aren't stored correctly, because when you fetch
+    // them, the content type is always null.
+    //
+    // Furthermore, they have some outstanding bugs where blobs occasionally
+    // are read by FileReader as null, or by ajax as 404s.
+    //
+    // Sadly we use the 404 bug to detect the FileReader bug, so if they
+    // get fixed independently and released in different versions of Chrome,
+    // then the bug could come back. So it's worthwhile to watch these issues:
+    // 404 bug: https://code.google.com/p/chromium/issues/detail?id=447916
+    // FileReader bug: https://code.google.com/p/chromium/issues/detail?id=447836
+    //
+    function _checkBlobSupportWithoutCaching(idb) {
+        return new Promise(function(resolve, reject) {
+            var blob = _createBlob([''], {type: 'image/png'});
+            var txn = idb.transaction([DETECT_BLOB_SUPPORT_STORE], 'readwrite');
+            txn.objectStore(DETECT_BLOB_SUPPORT_STORE).put(blob, 'key');
+            txn.oncomplete = function() {
+                // have to do it in a separate transaction, else the correct
+                // content type is always returned
+                var blobTxn = idb.transaction([DETECT_BLOB_SUPPORT_STORE],
+                    'readwrite');
+                var getBlobReq = blobTxn.objectStore(
+                    DETECT_BLOB_SUPPORT_STORE).get('key');
+                getBlobReq.onerror = reject;
+                getBlobReq.onsuccess = function(e) {
+
+                    var storedBlob = e.target.result;
+                    var url = URL.createObjectURL(storedBlob);
+
+                    _blobAjax(url).then(function(res) {
+                        resolve(!!(res && res.type === 'image/png'));
+                    }, function() {
+                        resolve(false);
+                    }).then(function() {
+                        URL.revokeObjectURL(url);
+                    });
+                };
+            };
+        }).catch(function() {
+            return false; // error, so assume unsupported
+        });
+    }
+
+    function _checkBlobSupport(idb) {
+        if (typeof supportsBlobs === 'boolean') {
+            return Promise.resolve(supportsBlobs);
+        }
+        return _checkBlobSupportWithoutCaching(idb).then(function(value) {
+            supportsBlobs = value;
+            return supportsBlobs;
+        });
+    }
+
+    // encode a blob for indexeddb engines that don't support blobs
+    function _encodeBlob(blob) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onerror = reject;
+            reader.onloadend = function(e) {
+                var base64 = btoa(e.target.result || '');
+                resolve({
+                    __local_forage_encoded_blob: true,
+                    data: base64,
+                    type: blob.type
+                });
+            };
+            reader.readAsBinaryString(blob);
+        });
+    }
+
+    // decode an encoded blob
+    function _decodeBlob(encodedBlob) {
+        var arrayBuff = _binStringToArrayBuffer(atob(encodedBlob.data));
+        return _createBlob([arrayBuff], { type: encodedBlob.type});
+    }
+
+    // is this one of our fancy encoded blobs?
+    function _isEncodedBlob(value) {
+        return value && value.__local_forage_encoded_blob;
+    }
+
+    // Open the IndexedDB database (automatically creates one if one didn't
+    // previously exist), using any options set in the config.
+    function _initStorage(options) {
+        var self = this;
+        var dbInfo = {
+            db: null
+        };
+
+        if (options) {
+            for (var i in options) {
+                dbInfo[i] = options[i];
+            }
+        }
+
+        return new Promise(function(resolve, reject) {
+            var openreq = indexedDB.open(dbInfo.name, dbInfo.version);
+            openreq.onerror = function() {
+                reject(openreq.error);
+            };
+            openreq.onupgradeneeded = function(e) {
+                // First time setup: create an empty object store
+                openreq.result.createObjectStore(dbInfo.storeName);
+                if (e.oldVersion <= 1) {
+                    // added when support for blob shims was added
+                    openreq.result.createObjectStore(DETECT_BLOB_SUPPORT_STORE);
+                }
+            };
+            openreq.onsuccess = function() {
+                dbInfo.db = openreq.result;
+                self._dbInfo = dbInfo;
+                resolve();
+            };
+        });
+    }
+
+    function getItem(key, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                    .objectStore(dbInfo.storeName);
+                var req = store.get(key);
+
+                req.onsuccess = function() {
+                    var value = req.result;
+                    if (value === undefined) {
+                        value = null;
+                    }
+                    if (_isEncodedBlob(value)) {
+                        value = _decodeBlob(value);
+                    }
+                    resolve(value);
+                };
+
+                req.onerror = function() {
+                    reject(req.error);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Iterate over all items stored in database.
+    function iterate(iterator, callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                                     .objectStore(dbInfo.storeName);
+
+                var req = store.openCursor();
+                var iterationNumber = 1;
+
+                req.onsuccess = function() {
+                    var cursor = req.result;
+
+                    if (cursor) {
+                        var value = cursor.value;
+                        if (_isEncodedBlob(value)) {
+                            value = _decodeBlob(value);
+                        }
+                        var result = iterator(value, cursor.key,
+                                              iterationNumber++);
+
+                        if (result !== void(0)) {
+                            resolve(result);
+                        } else {
+                            cursor.continue();
+                        }
+                    } else {
+                        resolve();
+                    }
+                };
+
+                req.onerror = function() {
+                    reject(req.error);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+
+        return promise;
+    }
+
+    function setItem(key, value, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = new Promise(function(resolve, reject) {
+            var dbInfo;
+            self.ready().then(function() {
+                dbInfo = self._dbInfo;
+                return _checkBlobSupport(dbInfo.db);
+            }).then(function(blobSupport) {
+                if (!blobSupport && value instanceof Blob) {
+                    return _encodeBlob(value);
+                }
+                return value;
+            }).then(function(value) {
+                var transaction = dbInfo.db.transaction(dbInfo.storeName, 'readwrite');
+                var store = transaction.objectStore(dbInfo.storeName);
+
+                // The reason we don't _save_ null is because IE 10 does
+                // not support saving the `null` type in IndexedDB. How
+                // ironic, given the bug below!
+                // See: https://github.com/mozilla/localForage/issues/161
+                if (value === null) {
+                    value = undefined;
+                }
+
+                var req = store.put(value, key);
+                transaction.oncomplete = function() {
+                    // Cast to undefined so the value passed to
+                    // callback/promise is the same as what one would get out
+                    // of `getItem()` later. This leads to some weirdness
+                    // (setItem('foo', undefined) will return `null`), but
+                    // it's not my fault localStorage is our baseline and that
+                    // it's weird.
+                    if (value === undefined) {
+                        value = null;
+                    }
+
+                    resolve(value);
+                };
+                transaction.onabort = transaction.onerror = function() {
+                    var err = req.error ? req.error : req.transaction.error;
+                    reject(err);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function removeItem(key, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var transaction = dbInfo.db.transaction(dbInfo.storeName, 'readwrite');
+                var store = transaction.objectStore(dbInfo.storeName);
+
+                // We use a Grunt task to make this safe for IE and some
+                // versions of Android (including those used by Cordova).
+                // Normally IE won't like `.delete()` and will insist on
+                // using `['delete']()`, but we have a build step that
+                // fixes this for us now.
+                var req = store.delete(key);
+                transaction.oncomplete = function() {
+                    resolve();
+                };
+
+                transaction.onerror = function() {
+                    reject(req.error);
+                };
+
+                // The request will be also be aborted if we've exceeded our storage
+                // space.
+                transaction.onabort = function() {
+                    var err = req.error ? req.error : req.transaction.error;
+                    reject(err);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function clear(callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var transaction = dbInfo.db.transaction(dbInfo.storeName, 'readwrite');
+                var store = transaction.objectStore(dbInfo.storeName);
+                var req = store.clear();
+
+                transaction.oncomplete = function() {
+                    resolve();
+                };
+
+                transaction.onabort = transaction.onerror = function() {
+                    var err = req.error ? req.error : req.transaction.error;
+                    reject(err);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function length(callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                              .objectStore(dbInfo.storeName);
+                var req = store.count();
+
+                req.onsuccess = function() {
+                    resolve(req.result);
+                };
+
+                req.onerror = function() {
+                    reject(req.error);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function key(n, callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            if (n < 0) {
+                resolve(null);
+
+                return;
+            }
+
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                              .objectStore(dbInfo.storeName);
+
+                var advanced = false;
+                var req = store.openCursor();
+                req.onsuccess = function() {
+                    var cursor = req.result;
+                    if (!cursor) {
+                        // this means there weren't enough keys
+                        resolve(null);
+
+                        return;
+                    }
+
+                    if (n === 0) {
+                        // We have the first key, return it if that's what they
+                        // wanted.
+                        resolve(cursor.key);
+                    } else {
+                        if (!advanced) {
+                            // Otherwise, ask the cursor to skip ahead n
+                            // records.
+                            advanced = true;
+                            cursor.advance(n);
+                        } else {
+                            // When we get here, we've got the nth key.
+                            resolve(cursor.key);
+                        }
+                    }
+                };
+
+                req.onerror = function() {
+                    reject(req.error);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function keys(callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                              .objectStore(dbInfo.storeName);
+
+                var req = store.openCursor();
+                var keys = [];
+
+                req.onsuccess = function() {
+                    var cursor = req.result;
+
+                    if (!cursor) {
+                        resolve(keys);
+                        return;
+                    }
+
+                    keys.push(cursor.key);
+                    cursor.continue();
+                };
+
+                req.onerror = function() {
+                    reject(req.error);
+                };
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function executeCallback(promise, callback) {
+        if (callback) {
+            promise.then(function(result) {
+                callback(null, result);
+            }, function(error) {
+                callback(error);
+            });
+        }
+    }
+
+    var asyncStorage = {
+        _driver: 'asyncStorage',
+        _initStorage: _initStorage,
+        iterate: iterate,
+        getItem: getItem,
+        setItem: setItem,
+        removeItem: removeItem,
+        clear: clear,
+        length: length,
+        key: key,
+        keys: keys
+    };
+
+    if (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') {
+        module.exports = asyncStorage;
+    } else if (typeof define === 'function' && define.amd) {
+        define('asyncStorage', function() {
+            return asyncStorage;
+        });
+    } else {
+        this.asyncStorage = asyncStorage;
+    }
+}).call(window);
+
+},{"promise":144}],147:[function(require,module,exports){
+// If IndexedDB isn't available, we'll fall back to localStorage.
+// Note that this will have considerable performance and storage
+// side-effects (all data will be serialized on save and only data that
+// can be converted to a string via `JSON.stringify()` will be saved).
+(function() {
+    'use strict';
+
+    // Promises!
+    var Promise = (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') ?
+                  require('promise') : this.Promise;
+
+    var globalObject = this;
+    var serializer = null;
+    var localStorage = null;
+
+    // If the app is running inside a Google Chrome packaged webapp, or some
+    // other context where localStorage isn't available, we don't use
+    // localStorage. This feature detection is preferred over the old
+    // `if (window.chrome && window.chrome.runtime)` code.
+    // See: https://github.com/mozilla/localForage/issues/68
+    try {
+        // If localStorage isn't available, we get outta here!
+        // This should be inside a try catch
+        if (!this.localStorage || !('setItem' in this.localStorage)) {
+            return;
+        }
+        // Initialize localStorage and create a variable to use throughout
+        // the code.
+        localStorage = this.localStorage;
+    } catch (e) {
+        return;
+    }
+
+    var ModuleType = {
+        DEFINE: 1,
+        EXPORT: 2,
+        WINDOW: 3
+    };
+
+    // Attaching to window (i.e. no module loader) is the assumed,
+    // simple default.
+    var moduleType = ModuleType.WINDOW;
+
+    // Find out what kind of module setup we have; if none, we'll just attach
+    // localForage to the main window.
+    if (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') {
+        moduleType = ModuleType.EXPORT;
+    } else if (typeof define === 'function' && define.amd) {
+        moduleType = ModuleType.DEFINE;
+    }
+
+    // Config the localStorage backend, using options set in the config.
+    function _initStorage(options) {
+        var self = this;
+        var dbInfo = {};
+        if (options) {
+            for (var i in options) {
+                dbInfo[i] = options[i];
+            }
+        }
+
+        dbInfo.keyPrefix = dbInfo.name + '/';
+
+        self._dbInfo = dbInfo;
+
+        var serializerPromise = new Promise(function(resolve/*, reject*/) {
+            // We allow localForage to be declared as a module or as a
+            // library available without AMD/require.js.
+            if (moduleType === ModuleType.DEFINE) {
+                require(['localforageSerializer'], resolve);
+            } else if (moduleType === ModuleType.EXPORT) {
+                // Making it browserify friendly
+                resolve(require('./../utils/serializer'));
+            } else {
+                resolve(globalObject.localforageSerializer);
+            }
+        });
+
+        return serializerPromise.then(function(lib) {
+            serializer = lib;
+            return Promise.resolve();
+        });
+    }
+
+    // Remove all keys from the datastore, effectively destroying all data in
+    // the app's key/value store!
+    function clear(callback) {
+        var self = this;
+        var promise = self.ready().then(function() {
+            var keyPrefix = self._dbInfo.keyPrefix;
+
+            for (var i = localStorage.length - 1; i >= 0; i--) {
+                var key = localStorage.key(i);
+
+                if (key.indexOf(keyPrefix) === 0) {
+                    localStorage.removeItem(key);
+                }
+            }
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Retrieve an item from the store. Unlike the original async_storage
+    // library in Gaia, we don't modify return values at all. If a key's value
+    // is `undefined`, we pass that value to the callback function.
+    function getItem(key, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            var result = localStorage.getItem(dbInfo.keyPrefix + key);
+
+            // If a result was found, parse it from the serialized
+            // string into a JS object. If result isn't truthy, the key
+            // is likely undefined and we'll pass it straight to the
+            // callback.
+            if (result) {
+                result = serializer.deserialize(result);
+            }
+
+            return result;
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Iterate over all items in the store.
+    function iterate(iterator, callback) {
+        var self = this;
+
+        var promise = self.ready().then(function() {
+            var keyPrefix = self._dbInfo.keyPrefix;
+            var keyPrefixLength = keyPrefix.length;
+            var length = localStorage.length;
+
+            // We use a dedicated iterator instead of the `i` variable below
+            // so other keys we fetch in localStorage aren't counted in
+            // the `iterationNumber` argument passed to the `iterate()`
+            // callback.
+            //
+            // See: github.com/mozilla/localForage/pull/435#discussion_r38061530
+            var iterationNumber = 1;
+
+            for (var i = 0; i < length; i++) {
+                var key = localStorage.key(i);
+                if (key.indexOf(keyPrefix) !== 0) {
+                    continue;
+                }
+                var value = localStorage.getItem(key);
+
+                // If a result was found, parse it from the serialized
+                // string into a JS object. If result isn't truthy, the
+                // key is likely undefined and we'll pass it straight
+                // to the iterator.
+                if (value) {
+                    value = serializer.deserialize(value);
+                }
+
+                value = iterator(value, key.substring(keyPrefixLength),
+                                 iterationNumber++);
+
+                if (value !== void(0)) {
+                    return value;
+                }
+            }
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Same as localStorage's key() method, except takes a callback.
+    function key(n, callback) {
+        var self = this;
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            var result;
+            try {
+                result = localStorage.key(n);
+            } catch (error) {
+                result = null;
+            }
+
+            // Remove the prefix from the key, if a key is found.
+            if (result) {
+                result = result.substring(dbInfo.keyPrefix.length);
+            }
+
+            return result;
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function keys(callback) {
+        var self = this;
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            var length = localStorage.length;
+            var keys = [];
+
+            for (var i = 0; i < length; i++) {
+                if (localStorage.key(i).indexOf(dbInfo.keyPrefix) === 0) {
+                    keys.push(localStorage.key(i).substring(dbInfo.keyPrefix.length));
+                }
+            }
+
+            return keys;
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Supply the number of keys in the datastore to the callback function.
+    function length(callback) {
+        var self = this;
+        var promise = self.keys().then(function(keys) {
+            return keys.length;
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Remove an item from the store, nice and simple.
+    function removeItem(key, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            localStorage.removeItem(dbInfo.keyPrefix + key);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Set a key's value and run an optional callback once the value is set.
+    // Unlike Gaia's implementation, the callback function is passed the value,
+    // in case you want to operate on that value only after you're sure it
+    // saved, or something like that.
+    function setItem(key, value, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = self.ready().then(function() {
+            // Convert undefined values to null.
+            // https://github.com/mozilla/localForage/pull/42
+            if (value === undefined) {
+                value = null;
+            }
+
+            // Save the original value to pass to the callback.
+            var originalValue = value;
+
+            return new Promise(function(resolve, reject) {
+                serializer.serialize(value, function(value, error) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        try {
+                            var dbInfo = self._dbInfo;
+                            localStorage.setItem(dbInfo.keyPrefix + key, value);
+                            resolve(originalValue);
+                        } catch (e) {
+                            // localStorage capacity exceeded.
+                            // TODO: Make this a specific error/event.
+                            if (e.name === 'QuotaExceededError' ||
+                                e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                                reject(e);
+                            }
+                            reject(e);
+                        }
+                    }
+                });
+            });
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function executeCallback(promise, callback) {
+        if (callback) {
+            promise.then(function(result) {
+                callback(null, result);
+            }, function(error) {
+                callback(error);
+            });
+        }
+    }
+
+    var localStorageWrapper = {
+        _driver: 'localStorageWrapper',
+        _initStorage: _initStorage,
+        // Default API, from Gaia/localStorage.
+        iterate: iterate,
+        getItem: getItem,
+        setItem: setItem,
+        removeItem: removeItem,
+        clear: clear,
+        length: length,
+        key: key,
+        keys: keys
+    };
+
+    if (moduleType === ModuleType.EXPORT) {
+        module.exports = localStorageWrapper;
+    } else if (moduleType === ModuleType.DEFINE) {
+        define('localStorageWrapper', function() {
+            return localStorageWrapper;
+        });
+    } else {
+        this.localStorageWrapper = localStorageWrapper;
+    }
+}).call(window);
+
+},{"./../utils/serializer":150,"promise":144}],148:[function(require,module,exports){
+/*
+ * Includes code from:
+ *
+ * base64-arraybuffer
+ * https://github.com/niklasvh/base64-arraybuffer
+ *
+ * Copyright (c) 2012 Niklas von Hertzen
+ * Licensed under the MIT license.
+ */
+(function() {
+    'use strict';
+
+    // Promises!
+    var Promise = (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') ?
+                  require('promise') : this.Promise;
+
+    var globalObject = this;
+    var serializer = null;
+    var openDatabase = this.openDatabase;
+
+    // If WebSQL methods aren't available, we can stop now.
+    if (!openDatabase) {
+        return;
+    }
+
+    var ModuleType = {
+        DEFINE: 1,
+        EXPORT: 2,
+        WINDOW: 3
+    };
+
+    // Attaching to window (i.e. no module loader) is the assumed,
+    // simple default.
+    var moduleType = ModuleType.WINDOW;
+
+    // Find out what kind of module setup we have; if none, we'll just attach
+    // localForage to the main window.
+    if (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') {
+        moduleType = ModuleType.EXPORT;
+    } else if (typeof define === 'function' && define.amd) {
+        moduleType = ModuleType.DEFINE;
+    }
+
+    // Open the WebSQL database (automatically creates one if one didn't
+    // previously exist), using any options set in the config.
+    function _initStorage(options) {
+        var self = this;
+        var dbInfo = {
+            db: null
+        };
+
+        if (options) {
+            for (var i in options) {
+                dbInfo[i] = typeof(options[i]) !== 'string' ?
+                            options[i].toString() : options[i];
+            }
+        }
+
+        var serializerPromise = new Promise(function(resolve/*, reject*/) {
+            // We allow localForage to be declared as a module or as a
+            // library available without AMD/require.js.
+            if (moduleType === ModuleType.DEFINE) {
+                require(['localforageSerializer'], resolve);
+            } else if (moduleType === ModuleType.EXPORT) {
+                // Making it browserify friendly
+                resolve(require('./../utils/serializer'));
+            } else {
+                resolve(globalObject.localforageSerializer);
+            }
+        });
+
+        var dbInfoPromise = new Promise(function(resolve, reject) {
+            // Open the database; the openDatabase API will automatically
+            // create it for us if it doesn't exist.
+            try {
+                dbInfo.db = openDatabase(dbInfo.name, String(dbInfo.version),
+                                         dbInfo.description, dbInfo.size);
+            } catch (e) {
+                return self.setDriver(self.LOCALSTORAGE).then(function() {
+                    return self._initStorage(options);
+                }).then(resolve).catch(reject);
+            }
+
+            // Create our key/value table if it doesn't exist.
+            dbInfo.db.transaction(function(t) {
+                t.executeSql('CREATE TABLE IF NOT EXISTS ' + dbInfo.storeName +
+                             ' (id INTEGER PRIMARY KEY, key unique, value)', [],
+                             function() {
+                    self._dbInfo = dbInfo;
+                    resolve();
+                }, function(t, error) {
+                    reject(error);
+                });
+            });
+        });
+
+        return serializerPromise.then(function(lib) {
+            serializer = lib;
+            return dbInfoPromise;
+        });
+    }
+
+    function getItem(key, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                dbInfo.db.transaction(function(t) {
+                    t.executeSql('SELECT * FROM ' + dbInfo.storeName +
+                                 ' WHERE key = ? LIMIT 1', [key],
+                                 function(t, results) {
+                        var result = results.rows.length ?
+                                     results.rows.item(0).value : null;
+
+                        // Check to see if this is serialized content we need to
+                        // unpack.
+                        if (result) {
+                            result = serializer.deserialize(result);
+                        }
+
+                        resolve(result);
+                    }, function(t, error) {
+
+                        reject(error);
+                    });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function iterate(iterator, callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+
+                dbInfo.db.transaction(function(t) {
+                    t.executeSql('SELECT * FROM ' + dbInfo.storeName, [],
+                        function(t, results) {
+                            var rows = results.rows;
+                            var length = rows.length;
+
+                            for (var i = 0; i < length; i++) {
+                                var item = rows.item(i);
+                                var result = item.value;
+
+                                // Check to see if this is serialized content
+                                // we need to unpack.
+                                if (result) {
+                                    result = serializer.deserialize(result);
+                                }
+
+                                result = iterator(result, item.key, i + 1);
+
+                                // void(0) prevents problems with redefinition
+                                // of `undefined`.
+                                if (result !== void(0)) {
+                                    resolve(result);
+                                    return;
+                                }
+                            }
+
+                            resolve();
+                        }, function(t, error) {
+                            reject(error);
+                        });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function setItem(key, value, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                // The localStorage API doesn't return undefined values in an
+                // "expected" way, so undefined is always cast to null in all
+                // drivers. See: https://github.com/mozilla/localForage/pull/42
+                if (value === undefined) {
+                    value = null;
+                }
+
+                // Save the original value to pass to the callback.
+                var originalValue = value;
+
+                serializer.serialize(value, function(value, error) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        var dbInfo = self._dbInfo;
+                        dbInfo.db.transaction(function(t) {
+                            t.executeSql('INSERT OR REPLACE INTO ' +
+                                         dbInfo.storeName +
+                                         ' (key, value) VALUES (?, ?)',
+                                         [key, value], function() {
+                                resolve(originalValue);
+                            }, function(t, error) {
+                                reject(error);
+                            });
+                        }, function(sqlError) {
+                            // The transaction failed; check
+                            // to see if it's a quota error.
+                            if (sqlError.code === sqlError.QUOTA_ERR) {
+                                // We reject the callback outright for now, but
+                                // it's worth trying to re-run the transaction.
+                                // Even if the user accepts the prompt to use
+                                // more storage on Safari, this error will
+                                // be called.
+                                //
+                                // TODO: Try to re-run the transaction.
+                                reject(sqlError);
+                            }
+                        });
+                    }
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function removeItem(key, callback) {
+        var self = this;
+
+        // Cast the key to a string, as that's all we can set as a key.
+        if (typeof key !== 'string') {
+            window.console.warn(key +
+                                ' used as a key, but it is not a string.');
+            key = String(key);
+        }
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                dbInfo.db.transaction(function(t) {
+                    t.executeSql('DELETE FROM ' + dbInfo.storeName +
+                                 ' WHERE key = ?', [key],
+                                 function() {
+                        resolve();
+                    }, function(t, error) {
+
+                        reject(error);
+                    });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Deletes every item in the table.
+    // TODO: Find out if this resets the AUTO_INCREMENT number.
+    function clear(callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                dbInfo.db.transaction(function(t) {
+                    t.executeSql('DELETE FROM ' + dbInfo.storeName, [],
+                                 function() {
+                        resolve();
+                    }, function(t, error) {
+                        reject(error);
+                    });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Does a simple `COUNT(key)` to get the number of items stored in
+    // localForage.
+    function length(callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                dbInfo.db.transaction(function(t) {
+                    // Ahhh, SQL makes this one soooooo easy.
+                    t.executeSql('SELECT COUNT(key) as c FROM ' +
+                                 dbInfo.storeName, [], function(t, results) {
+                        var result = results.rows.item(0).c;
+
+                        resolve(result);
+                    }, function(t, error) {
+
+                        reject(error);
+                    });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Return the key located at key index X; essentially gets the key from a
+    // `WHERE id = ?`. This is the most efficient way I can think to implement
+    // this rarely-used (in my experience) part of the API, but it can seem
+    // inconsistent, because we do `INSERT OR REPLACE INTO` on `setItem()`, so
+    // the ID of each key will change every time it's updated. Perhaps a stored
+    // procedure for the `setItem()` SQL would solve this problem?
+    // TODO: Don't change ID on `setItem()`.
+    function key(n, callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                dbInfo.db.transaction(function(t) {
+                    t.executeSql('SELECT key FROM ' + dbInfo.storeName +
+                                 ' WHERE id = ? LIMIT 1', [n + 1],
+                                 function(t, results) {
+                        var result = results.rows.length ?
+                                     results.rows.item(0).key : null;
+                        resolve(result);
+                    }, function(t, error) {
+                        reject(error);
+                    });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function keys(callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                dbInfo.db.transaction(function(t) {
+                    t.executeSql('SELECT key FROM ' + dbInfo.storeName, [],
+                                 function(t, results) {
+                        var keys = [];
+
+                        for (var i = 0; i < results.rows.length; i++) {
+                            keys.push(results.rows.item(i).key);
+                        }
+
+                        resolve(keys);
+                    }, function(t, error) {
+
+                        reject(error);
+                    });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function executeCallback(promise, callback) {
+        if (callback) {
+            promise.then(function(result) {
+                callback(null, result);
+            }, function(error) {
+                callback(error);
+            });
+        }
+    }
+
+    var webSQLStorage = {
+        _driver: 'webSQLStorage',
+        _initStorage: _initStorage,
+        iterate: iterate,
+        getItem: getItem,
+        setItem: setItem,
+        removeItem: removeItem,
+        clear: clear,
+        length: length,
+        key: key,
+        keys: keys
+    };
+
+    if (moduleType === ModuleType.DEFINE) {
+        define('webSQLStorage', function() {
+            return webSQLStorage;
+        });
+    } else if (moduleType === ModuleType.EXPORT) {
+        module.exports = webSQLStorage;
+    } else {
+        this.webSQLStorage = webSQLStorage;
+    }
+}).call(window);
+
+},{"./../utils/serializer":150,"promise":144}],149:[function(require,module,exports){
+(function() {
+    'use strict';
+
+    // Promises!
+    var Promise = (typeof module !== 'undefined' && module.exports &&
+                   typeof require !== 'undefined') ?
+                  require('promise') : this.Promise;
+
+    // Custom drivers are stored here when `defineDriver()` is called.
+    // They are shared across all instances of localForage.
+    var CustomDrivers = {};
+
+    var DriverType = {
+        INDEXEDDB: 'asyncStorage',
+        LOCALSTORAGE: 'localStorageWrapper',
+        WEBSQL: 'webSQLStorage'
+    };
+
+    var DefaultDriverOrder = [
+        DriverType.INDEXEDDB,
+        DriverType.WEBSQL,
+        DriverType.LOCALSTORAGE
+    ];
+
+    var LibraryMethods = [
+        'clear',
+        'getItem',
+        'iterate',
+        'key',
+        'keys',
+        'length',
+        'removeItem',
+        'setItem'
+    ];
+
+    var ModuleType = {
+        DEFINE: 1,
+        EXPORT: 2,
+        WINDOW: 3
+    };
+
+    var DefaultConfig = {
+        description: '',
+        driver: DefaultDriverOrder.slice(),
+        name: 'localforage',
+        // Default DB size is _JUST UNDER_ 5MB, as it's the highest size
+        // we can use without a prompt.
+        size: 4980736,
+        storeName: 'keyvaluepairs',
+        version: 1.0
+    };
+
+    // Attaching to window (i.e. no module loader) is the assumed,
+    // simple default.
+    var moduleType = ModuleType.WINDOW;
+
+    // Find out what kind of module setup we have; if none, we'll just attach
+    // localForage to the main window.
+    if (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') {
+        moduleType = ModuleType.EXPORT;
+    } else if (typeof define === 'function' && define.amd) {
+        moduleType = ModuleType.DEFINE;
+    }
+
+    // Check to see if IndexedDB is available and if it is the latest
+    // implementation; it's our preferred backend library. We use "_spec_test"
+    // as the name of the database because it's not the one we'll operate on,
+    // but it's useful to make sure its using the right spec.
+    // See: https://github.com/mozilla/localForage/issues/128
+    var driverSupport = (function(self) {
+        // Initialize IndexedDB; fall back to vendor-prefixed versions
+        // if needed.
+        var indexedDB = indexedDB || self.indexedDB || self.webkitIndexedDB ||
+                        self.mozIndexedDB || self.OIndexedDB ||
+                        self.msIndexedDB;
+
+        var result = {};
+
+        result[DriverType.WEBSQL] = !!self.openDatabase;
+        result[DriverType.INDEXEDDB] = !!(function() {
+            // We mimic PouchDB here; just UA test for Safari (which, as of
+            // iOS 8/Yosemite, doesn't properly support IndexedDB).
+            // IndexedDB support is broken and different from Blink's.
+            // This is faster than the test case (and it's sync), so we just
+            // do this. *SIGH*
+            // http://bl.ocks.org/nolanlawson/raw/c83e9039edf2278047e9/
+            //
+            // We test for openDatabase because IE Mobile identifies itself
+            // as Safari. Oh the lulz...
+            if (typeof self.openDatabase !== 'undefined' && self.navigator &&
+                self.navigator.userAgent &&
+                /Safari/.test(self.navigator.userAgent) &&
+                !/Chrome/.test(self.navigator.userAgent)) {
+                return false;
+            }
+            try {
+                return indexedDB &&
+                       typeof indexedDB.open === 'function' &&
+                       // Some Samsung/HTC Android 4.0-4.3 devices
+                       // have older IndexedDB specs; if this isn't available
+                       // their IndexedDB is too old for us to use.
+                       // (Replaces the onupgradeneeded test.)
+                       typeof self.IDBKeyRange !== 'undefined';
+            } catch (e) {
+                return false;
+            }
+        })();
+
+        result[DriverType.LOCALSTORAGE] = !!(function() {
+            try {
+                return (self.localStorage &&
+                        ('setItem' in self.localStorage) &&
+                        (self.localStorage.setItem));
+            } catch (e) {
+                return false;
+            }
+        })();
+
+        return result;
+    })(this);
+
+    var isArray = Array.isArray || function(arg) {
+        return Object.prototype.toString.call(arg) === '[object Array]';
+    };
+
+    function callWhenReady(localForageInstance, libraryMethod) {
+        localForageInstance[libraryMethod] = function() {
+            var _args = arguments;
+            return localForageInstance.ready().then(function() {
+                return localForageInstance[libraryMethod].apply(localForageInstance, _args);
+            });
+        };
+    }
+
+    function extend() {
+        for (var i = 1; i < arguments.length; i++) {
+            var arg = arguments[i];
+
+            if (arg) {
+                for (var key in arg) {
+                    if (arg.hasOwnProperty(key)) {
+                        if (isArray(arg[key])) {
+                            arguments[0][key] = arg[key].slice();
+                        } else {
+                            arguments[0][key] = arg[key];
+                        }
+                    }
+                }
+            }
+        }
+
+        return arguments[0];
+    }
+
+    function isLibraryDriver(driverName) {
+        for (var driver in DriverType) {
+            if (DriverType.hasOwnProperty(driver) &&
+                DriverType[driver] === driverName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    var globalObject = this;
+
+    function LocalForage(options) {
+        this._config = extend({}, DefaultConfig, options);
+        this._driverSet = null;
+        this._ready = false;
+        this._dbInfo = null;
+
+        // Add a stub for each driver API method that delays the call to the
+        // corresponding driver method until localForage is ready. These stubs
+        // will be replaced by the driver methods as soon as the driver is
+        // loaded, so there is no performance impact.
+        for (var i = 0; i < LibraryMethods.length; i++) {
+            callWhenReady(this, LibraryMethods[i]);
+        }
+
+        this.setDriver(this._config.driver);
+    }
+
+    LocalForage.prototype.INDEXEDDB = DriverType.INDEXEDDB;
+    LocalForage.prototype.LOCALSTORAGE = DriverType.LOCALSTORAGE;
+    LocalForage.prototype.WEBSQL = DriverType.WEBSQL;
+
+    // Set any config values for localForage; can be called anytime before
+    // the first API call (e.g. `getItem`, `setItem`).
+    // We loop through options so we don't overwrite existing config
+    // values.
+    LocalForage.prototype.config = function(options) {
+        // If the options argument is an object, we use it to set values.
+        // Otherwise, we return either a specified config value or all
+        // config values.
+        if (typeof(options) === 'object') {
+            // If localforage is ready and fully initialized, we can't set
+            // any new configuration values. Instead, we return an error.
+            if (this._ready) {
+                return new Error("Can't call config() after localforage " +
+                                 'has been used.');
+            }
+
+            for (var i in options) {
+                if (i === 'storeName') {
+                    options[i] = options[i].replace(/\W/g, '_');
+                }
+
+                this._config[i] = options[i];
+            }
+
+            // after all config options are set and
+            // the driver option is used, try setting it
+            if ('driver' in options && options.driver) {
+                this.setDriver(this._config.driver);
+            }
+
+            return true;
+        } else if (typeof(options) === 'string') {
+            return this._config[options];
+        } else {
+            return this._config;
+        }
+    };
+
+    // Used to define a custom driver, shared across all instances of
+    // localForage.
+    LocalForage.prototype.defineDriver = function(driverObject, callback,
+                                                  errorCallback) {
+        var defineDriver = new Promise(function(resolve, reject) {
+            try {
+                var driverName = driverObject._driver;
+                var complianceError = new Error(
+                    'Custom driver not compliant; see ' +
+                    'https://mozilla.github.io/localForage/#definedriver'
+                );
+                var namingError = new Error(
+                    'Custom driver name already in use: ' + driverObject._driver
+                );
+
+                // A driver name should be defined and not overlap with the
+                // library-defined, default drivers.
+                if (!driverObject._driver) {
+                    reject(complianceError);
+                    return;
+                }
+                if (isLibraryDriver(driverObject._driver)) {
+                    reject(namingError);
+                    return;
+                }
+
+                var customDriverMethods = LibraryMethods.concat('_initStorage');
+                for (var i = 0; i < customDriverMethods.length; i++) {
+                    var customDriverMethod = customDriverMethods[i];
+                    if (!customDriverMethod ||
+                        !driverObject[customDriverMethod] ||
+                        typeof driverObject[customDriverMethod] !== 'function') {
+                        reject(complianceError);
+                        return;
+                    }
+                }
+
+                var supportPromise = Promise.resolve(true);
+                if ('_support'  in driverObject) {
+                    if (driverObject._support && typeof driverObject._support === 'function') {
+                        supportPromise = driverObject._support();
+                    } else {
+                        supportPromise = Promise.resolve(!!driverObject._support);
+                    }
+                }
+
+                supportPromise.then(function(supportResult) {
+                    driverSupport[driverName] = supportResult;
+                    CustomDrivers[driverName] = driverObject;
+                    resolve();
+                }, reject);
+            } catch (e) {
+                reject(e);
+            }
+        });
+
+        defineDriver.then(callback, errorCallback);
+        return defineDriver;
+    };
+
+    LocalForage.prototype.driver = function() {
+        return this._driver || null;
+    };
+
+    LocalForage.prototype.ready = function(callback) {
+        var self = this;
+
+        var ready = new Promise(function(resolve, reject) {
+            self._driverSet.then(function() {
+                if (self._ready === null) {
+                    self._ready = self._initStorage(self._config);
+                }
+
+                self._ready.then(resolve, reject);
+            }).catch(reject);
+        });
+
+        ready.then(callback, callback);
+        return ready;
+    };
+
+    LocalForage.prototype.setDriver = function(drivers, callback,
+                                               errorCallback) {
+        var self = this;
+
+        if (typeof drivers === 'string') {
+            drivers = [drivers];
+        }
+
+        this._driverSet = new Promise(function(resolve, reject) {
+            var driverName = self._getFirstSupportedDriver(drivers);
+            var error = new Error('No available storage method found.');
+
+            if (!driverName) {
+                self._driverSet = Promise.reject(error);
+                reject(error);
+                return;
+            }
+
+            self._dbInfo = null;
+            self._ready = null;
+
+            if (isLibraryDriver(driverName)) {
+                var driverPromise = new Promise(function(resolve/*, reject*/) {
+                    // We allow localForage to be declared as a module or as a
+                    // library available without AMD/require.js.
+                    if (moduleType === ModuleType.DEFINE) {
+                        require([driverName], resolve);
+                    } else if (moduleType === ModuleType.EXPORT) {
+                        // Making it browserify friendly
+                        switch (driverName) {
+                            case self.INDEXEDDB:
+                                resolve(require('./drivers/indexeddb'));
+                                break;
+                            case self.LOCALSTORAGE:
+                                resolve(require('./drivers/localstorage'));
+                                break;
+                            case self.WEBSQL:
+                                resolve(require('./drivers/websql'));
+                                break;
+                        }
+                    } else {
+                        resolve(globalObject[driverName]);
+                    }
+                });
+                driverPromise.then(function(driver) {
+                    self._extend(driver);
+                    resolve();
+                });
+            } else if (CustomDrivers[driverName]) {
+                self._extend(CustomDrivers[driverName]);
+                resolve();
+            } else {
+                self._driverSet = Promise.reject(error);
+                reject(error);
+            }
+        });
+
+        function setDriverToConfig() {
+            self._config.driver = self.driver();
+        }
+        this._driverSet.then(setDriverToConfig, setDriverToConfig);
+
+        this._driverSet.then(callback, errorCallback);
+        return this._driverSet;
+    };
+
+    LocalForage.prototype.supports = function(driverName) {
+        return !!driverSupport[driverName];
+    };
+
+    LocalForage.prototype._extend = function(libraryMethodsAndProperties) {
+        extend(this, libraryMethodsAndProperties);
+    };
+
+    // Used to determine which driver we should use as the backend for this
+    // instance of localForage.
+    LocalForage.prototype._getFirstSupportedDriver = function(drivers) {
+        if (drivers && isArray(drivers)) {
+            for (var i = 0; i < drivers.length; i++) {
+                var driver = drivers[i];
+
+                if (this.supports(driver)) {
+                    return driver;
+                }
+            }
+        }
+
+        return null;
+    };
+
+    LocalForage.prototype.createInstance = function(options) {
+        return new LocalForage(options);
+    };
+
+    // The actual localForage object that we expose as a module or via a
+    // global. It's extended by pulling in one of our other libraries.
+    var localForage = new LocalForage();
+
+    // We allow localForage to be declared as a module or as a library
+    // available without AMD/require.js.
+    if (moduleType === ModuleType.DEFINE) {
+        define('localforage', function() {
+            return localForage;
+        });
+    } else if (moduleType === ModuleType.EXPORT) {
+        module.exports = localForage;
+    } else {
+        this.localforage = localForage;
+    }
+}).call(window);
+
+},{"./drivers/indexeddb":146,"./drivers/localstorage":147,"./drivers/websql":148,"promise":144}],150:[function(require,module,exports){
+(function() {
+    'use strict';
+
+    // Sadly, the best way to save binary data in WebSQL/localStorage is serializing
+    // it to Base64, so this is how we store it to prevent very strange errors with less
+    // verbose ways of binary <-> string data storage.
+    var BASE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+    var BLOB_TYPE_PREFIX = '~~local_forage_type~';
+    var BLOB_TYPE_PREFIX_REGEX = /^~~local_forage_type~([^~]+)~/;
+
+    var SERIALIZED_MARKER = '__lfsc__:';
+    var SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER.length;
+
+    // OMG the serializations!
+    var TYPE_ARRAYBUFFER = 'arbf';
+    var TYPE_BLOB = 'blob';
+    var TYPE_INT8ARRAY = 'si08';
+    var TYPE_UINT8ARRAY = 'ui08';
+    var TYPE_UINT8CLAMPEDARRAY = 'uic8';
+    var TYPE_INT16ARRAY = 'si16';
+    var TYPE_INT32ARRAY = 'si32';
+    var TYPE_UINT16ARRAY = 'ur16';
+    var TYPE_UINT32ARRAY = 'ui32';
+    var TYPE_FLOAT32ARRAY = 'fl32';
+    var TYPE_FLOAT64ARRAY = 'fl64';
+    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH +
+                                        TYPE_ARRAYBUFFER.length;
+
+    // Get out of our habit of using `window` inline, at least.
+    var globalObject = this;
+
+    // Abstracts constructing a Blob object, so it also works in older
+    // browsers that don't support the native Blob constructor. (i.e.
+    // old QtWebKit versions, at least).
+    function _createBlob(parts, properties) {
+        parts = parts || [];
+        properties = properties || {};
+
+        try {
+            return new Blob(parts, properties);
+        } catch (err) {
+            if (err.name !== 'TypeError') {
+                throw err;
+            }
+
+            var BlobBuilder = globalObject.BlobBuilder ||
+                              globalObject.MSBlobBuilder ||
+                              globalObject.MozBlobBuilder ||
+                              globalObject.WebKitBlobBuilder;
+
+            var builder = new BlobBuilder();
+            for (var i = 0; i < parts.length; i += 1) {
+                builder.append(parts[i]);
+            }
+
+            return builder.getBlob(properties.type);
+        }
+    }
+
+    // Serialize a value, afterwards executing a callback (which usually
+    // instructs the `setItem()` callback/promise to be executed). This is how
+    // we store binary data with localStorage.
+    function serialize(value, callback) {
+        var valueString = '';
+        if (value) {
+            valueString = value.toString();
+        }
+
+        // Cannot use `value instanceof ArrayBuffer` or such here, as these
+        // checks fail when running the tests using casper.js...
+        //
+        // TODO: See why those tests fail and use a better solution.
+        if (value && (value.toString() === '[object ArrayBuffer]' ||
+                      value.buffer &&
+                      value.buffer.toString() === '[object ArrayBuffer]')) {
+            // Convert binary arrays to a string and prefix the string with
+            // a special marker.
+            var buffer;
+            var marker = SERIALIZED_MARKER;
+
+            if (value instanceof ArrayBuffer) {
+                buffer = value;
+                marker += TYPE_ARRAYBUFFER;
+            } else {
+                buffer = value.buffer;
+
+                if (valueString === '[object Int8Array]') {
+                    marker += TYPE_INT8ARRAY;
+                } else if (valueString === '[object Uint8Array]') {
+                    marker += TYPE_UINT8ARRAY;
+                } else if (valueString === '[object Uint8ClampedArray]') {
+                    marker += TYPE_UINT8CLAMPEDARRAY;
+                } else if (valueString === '[object Int16Array]') {
+                    marker += TYPE_INT16ARRAY;
+                } else if (valueString === '[object Uint16Array]') {
+                    marker += TYPE_UINT16ARRAY;
+                } else if (valueString === '[object Int32Array]') {
+                    marker += TYPE_INT32ARRAY;
+                } else if (valueString === '[object Uint32Array]') {
+                    marker += TYPE_UINT32ARRAY;
+                } else if (valueString === '[object Float32Array]') {
+                    marker += TYPE_FLOAT32ARRAY;
+                } else if (valueString === '[object Float64Array]') {
+                    marker += TYPE_FLOAT64ARRAY;
+                } else {
+                    callback(new Error('Failed to get type for BinaryArray'));
+                }
+            }
+
+            callback(marker + bufferToString(buffer));
+        } else if (valueString === '[object Blob]') {
+            // Conver the blob to a binaryArray and then to a string.
+            var fileReader = new FileReader();
+
+            fileReader.onload = function() {
+                // Backwards-compatible prefix for the blob type.
+                var str = BLOB_TYPE_PREFIX + value.type + '~' +
+                    bufferToString(this.result);
+
+                callback(SERIALIZED_MARKER + TYPE_BLOB + str);
+            };
+
+            fileReader.readAsArrayBuffer(value);
+        } else {
+            try {
+                callback(JSON.stringify(value));
+            } catch (e) {
+                console.error("Couldn't convert value into a JSON string: ",
+                              value);
+
+                callback(null, e);
+            }
+        }
+    }
+
+    // Deserialize data we've inserted into a value column/field. We place
+    // special markers into our strings to mark them as encoded; this isn't
+    // as nice as a meta field, but it's the only sane thing we can do whilst
+    // keeping localStorage support intact.
+    //
+    // Oftentimes this will just deserialize JSON content, but if we have a
+    // special marker (SERIALIZED_MARKER, defined above), we will extract
+    // some kind of arraybuffer/binary data/typed array out of the string.
+    function deserialize(value) {
+        // If we haven't marked this string as being specially serialized (i.e.
+        // something other than serialized JSON), we can just return it and be
+        // done with it.
+        if (value.substring(0,
+            SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
+            return JSON.parse(value);
+        }
+
+        // The following code deals with deserializing some kind of Blob or
+        // TypedArray. First we separate out the type of data we're dealing
+        // with from the data itself.
+        var serializedString = value.substring(TYPE_SERIALIZED_MARKER_LENGTH);
+        var type = value.substring(SERIALIZED_MARKER_LENGTH,
+                                   TYPE_SERIALIZED_MARKER_LENGTH);
+
+        var blobType;
+        // Backwards-compatible blob type serialization strategy.
+        // DBs created with older versions of localForage will simply not have the blob type.
+        if (type === TYPE_BLOB && BLOB_TYPE_PREFIX_REGEX.test(serializedString)) {
+            var matcher = serializedString.match(BLOB_TYPE_PREFIX_REGEX);
+            blobType = matcher[1];
+            serializedString = serializedString.substring(matcher[0].length);
+        }
+        var buffer = stringToBuffer(serializedString);
+
+        // Return the right type based on the code/type set during
+        // serialization.
+        switch (type) {
+            case TYPE_ARRAYBUFFER:
+                return buffer;
+            case TYPE_BLOB:
+                return _createBlob([buffer], {type: blobType});
+            case TYPE_INT8ARRAY:
+                return new Int8Array(buffer);
+            case TYPE_UINT8ARRAY:
+                return new Uint8Array(buffer);
+            case TYPE_UINT8CLAMPEDARRAY:
+                return new Uint8ClampedArray(buffer);
+            case TYPE_INT16ARRAY:
+                return new Int16Array(buffer);
+            case TYPE_UINT16ARRAY:
+                return new Uint16Array(buffer);
+            case TYPE_INT32ARRAY:
+                return new Int32Array(buffer);
+            case TYPE_UINT32ARRAY:
+                return new Uint32Array(buffer);
+            case TYPE_FLOAT32ARRAY:
+                return new Float32Array(buffer);
+            case TYPE_FLOAT64ARRAY:
+                return new Float64Array(buffer);
+            default:
+                throw new Error('Unkown type: ' + type);
+        }
+    }
+
+    function stringToBuffer(serializedString) {
+        // Fill the string into a ArrayBuffer.
+        var bufferLength = serializedString.length * 0.75;
+        var len = serializedString.length;
+        var i;
+        var p = 0;
+        var encoded1, encoded2, encoded3, encoded4;
+
+        if (serializedString[serializedString.length - 1] === '=') {
+            bufferLength--;
+            if (serializedString[serializedString.length - 2] === '=') {
+                bufferLength--;
+            }
+        }
+
+        var buffer = new ArrayBuffer(bufferLength);
+        var bytes = new Uint8Array(buffer);
+
+        for (i = 0; i < len; i+=4) {
+            encoded1 = BASE_CHARS.indexOf(serializedString[i]);
+            encoded2 = BASE_CHARS.indexOf(serializedString[i+1]);
+            encoded3 = BASE_CHARS.indexOf(serializedString[i+2]);
+            encoded4 = BASE_CHARS.indexOf(serializedString[i+3]);
+
+            /*jslint bitwise: true */
+            bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+            bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+            bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+        }
+        return buffer;
+    }
+
+    // Converts a buffer to a string to store, serialized, in the backend
+    // storage library.
+    function bufferToString(buffer) {
+        // base64-arraybuffer
+        var bytes = new Uint8Array(buffer);
+        var base64String = '';
+        var i;
+
+        for (i = 0; i < bytes.length; i += 3) {
+            /*jslint bitwise: true */
+            base64String += BASE_CHARS[bytes[i] >> 2];
+            base64String += BASE_CHARS[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+            base64String += BASE_CHARS[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+            base64String += BASE_CHARS[bytes[i + 2] & 63];
+        }
+
+        if ((bytes.length % 3) === 2) {
+            base64String = base64String.substring(0, base64String.length - 1) + '=';
+        } else if (bytes.length % 3 === 1) {
+            base64String = base64String.substring(0, base64String.length - 2) + '==';
+        }
+
+        return base64String;
+    }
+
+    var localforageSerializer = {
+        serialize: serialize,
+        deserialize: deserialize,
+        stringToBuffer: stringToBuffer,
+        bufferToString: bufferToString
+    };
+
+    if (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') {
+        module.exports = localforageSerializer;
+    } else if (typeof define === 'function' && define.amd) {
+        define('localforageSerializer', function() {
+            return localforageSerializer;
+        });
+    } else {
+        this.localforageSerializer = localforageSerializer;
+    }
+}).call(window);
+
+},{}],151:[function(require,module,exports){
 (function (root) {
 	"use strict";
 	var Tone;
@@ -43440,7 +45959,7 @@ module.exports = shaders;
 		root.Tone = Tone;
 	}
 } (this));
-},{}],143:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 'use strict';
 
 module.exports.initialize = function (length) {
@@ -43460,7 +45979,7 @@ module.exports.min = function () {
 	return Math.min.apply(null, this);
 };
 
-},{}],144:[function(require,module,exports){
+},{}],153:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -43522,7 +46041,7 @@ var Cell = (function (_core$Node) {
 exports['default'] = Cell;
 module.exports = exports['default'];
 
-},{"./Consts":145,"famous":46}],145:[function(require,module,exports){
+},{"./Consts":154,"famous":47}],154:[function(require,module,exports){
 'use strict';
 /*
 * Curves:
@@ -43536,6 +46055,8 @@ Object.defineProperty(exports, '__esModule', {
 var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
 
 exports['default'] = ({
+	isDOM: false, // canvas || dom
+
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
@@ -43577,7 +46098,7 @@ exports['default'] = ({
 		x: 0, //    ║      ║                               //
 		y: 3 //     ║      ║                               //
 	} //            ╚══════╝                               //
-	], [{ //             ╔══════╗ ╔══════╗ ╔══════╗ ╔══════╗    //
+	], [{ //             ╔══════╗ ╔═════���╗ ╔══════╗ ╔══════╗    //
 		x: 0, //    ║      ║ ║      ║ ║      ║ ║      ║    //
 		y: 0 //     ║      ║ ║      ║ ║      ║ ║      ║    //
 	}, //           ╚══════╝ ╚══════╝ ╚══════╝ ╚══════╝    //
@@ -43864,6 +46385,12 @@ exports['default'] = ({
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
 	DOT_COLOR__PLACED: 'linear-gradient(135deg, #d5d887 0%, #d5d887 75%, #333 75%, #333 100%)',
 
+	DOT_COLOR__CANVAS___HOVERED: '#e87461',
+	DOT_COLOR__CANVAS___UNTOUCHED: '#7ac74f',
+	DOT_COLOR__CANVAS___PLACED: '#d5d887',
+	DOT_COLOR__CANVAS___DURATION: 600,
+	DOT_COLOR__CANVAS___CURVE: 'inOutQuint',
+
 	DOT_CURVE__POSITION: 'inOutElastic',
 	DOT_DURATION__POSITION: 800,
 
@@ -43918,6 +46445,9 @@ exports['default'] = ({
 		if (vmin / this.DIMENSION < this.DOT_SIZE) {
 			this.DOT_SIZE = vmin / this.DIMENSION - this.DOT_MARGIN;
 		}
+		this.GAME_OFFSET__X = (w - this.DOT_SIZE * this.DIMENSION) / 2;
+		this.GAME_OFFSET__Y = (h - this.DOT_SIZE * this.DIMENSION) / 2;
+
 		this.CELL_SIZE = this.DOT_SIZE * this.CELL_RATIO;
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN;
@@ -43931,7 +46461,7 @@ exports['default'] = ({
 }).init();
 module.exports = exports['default'];
 
-},{}],146:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -43959,6 +46489,18 @@ var Position = _famous.components.Position;
 var Rotation = _famous.components.Rotation;
 var DOMElement = _famous.domRenderables.DOMElement;
 
+var Gravity3D = _famous.physics.Gravity3D;
+var Particle = _famous.physics.Particle;
+var PhysicsEngine = _famous.physics.PhysicsEngine;
+var Spring = _famous.physics.Spring;
+var Vec3 = _famous.math.Vec3;
+
+var Box = _famous.webglGeometries.Box;
+var Color = _famous.utilities.Color;
+var Mesh = _famous.webglRenderables.Mesh;
+var world = new PhysicsEngine();
+var geometry = new Box();
+
 var Dot = (function (_core$Node) {
 	_inherits(Dot, _core$Node);
 
@@ -43967,21 +46509,27 @@ var Dot = (function (_core$Node) {
 
 		_get(Object.getPrototypeOf(Dot.prototype), 'constructor', this).call(this);
 
-		// Center dot.
-		this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].DOT_SIZE, _Consts2['default'].DOT_SIZE);
+		if (_Consts2['default'].isDOM) {
+			this.domElement = new DOMElement(this, {
+				properties: {
+					background: _Consts2['default'].DOT_COLOR__UNTOUCHED
+				},
+				classes: ['Dot']
+			});
 
-		this.domElement = new DOMElement(this, {
-			properties: {
-				background: _Consts2['default'].DOT_COLOR__UNTOUCHED
-			},
-			classes: ['Dot']
-		});
+			// Center dot.
+			this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setSizeMode('absolute', 'absolute').setAbsoluteSize(_Consts2['default'].DOT_SIZE, _Consts2['default'].DOT_SIZE);
 
-		this.domElement.setAttribute('role', 'gridcell');
-		this.domElement.setAttribute('aria-selected', false);
-		this.domElement.setAttribute('aria-live', 'polite');
-		this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / _Consts2['default'].ROWS));
-		this.domElement.setAttribute('aria-colindex', id % _Consts2['default'].COLUMNS);
+			this.domElement.setAttribute('role', 'gridcell');
+			this.domElement.setAttribute('aria-selected', false);
+			this.domElement.setAttribute('aria-live', 'polite');
+			this.domElement.setAttribute('aria-rowindex', Number.parseInt(id / _Consts2['default'].ROWS));
+			this.domElement.setAttribute('aria-colindex', id % _Consts2['default'].COLUMNS);
+		} else {
+			this.setMountPoint(0.5, 0.5).setAlign(0.5, 0.5).setOrigin(0.5, 0.5).setProportionalSize(1 / _Consts2['default'].DIMENSION, 1 / _Consts2['default'].DIMENSION).setDifferentialSize(-_Consts2['default'].DOT_MARGIN, -_Consts2['default'].DOT_MARGIN);
+
+			this.mesh = new Mesh(this).setGeometry(geometry).setBaseColor(new Color(_Consts2['default'].DOT_COLOR__UNTOUCHED));
+		}
 
 		this.id = id;
 
@@ -43992,22 +46540,40 @@ var Dot = (function (_core$Node) {
 			switch (_state) {
 				case _Consts2['default'].DOT_STATE__PLACED:
 					this.state = _Consts2['default'].DOT_STATE__PLACED;
-					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
-					this.domElement.setAttribute('aria-readonly', true);
-					this.domElement.setAttribute('aria-selected', true);
+					if (_Consts2['default'].isDOM) {
+						this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
+						this.domElement.setAttribute('aria-readonly', true);
+						this.domElement.setAttribute('aria-selected', true);
+					} else {
+						var _color = new Color();
+						_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___PLACED);
+						this.mesh.setBaseColor(_color);
+					}
 					break;
 				case _Consts2['default'].DOT_STATE__HOVERED:
 					this.state = _Consts2['default'].DOT_STATE__HOVERED;
-					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__HOVERED);
-					this.domElement.setAttribute('aria-readonly', false);
-					this.domElement.setAttribute('aria-selected', true);
+					if (_Consts2['default'].isDOM) {
+						this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__HOVERED);
+						this.domElement.setAttribute('aria-readonly', false);
+						this.domElement.setAttribute('aria-selected', true);
+					} else {
+						var _color = new Color();
+						_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___HOVERED);
+						this.mesh.setBaseColor(_color);
+					}
 					break;
 				case _Consts2['default'].DOT_STATE__UNTOUCHED:
 				default:
 					this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
-					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
-					this.domElement.setAttribute('aria-readonly', false);
-					this.domElement.setAttribute('aria-selected', false);
+					if (_Consts2['default'].isDOM) {
+						this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+						this.domElement.setAttribute('aria-readonly', false);
+						this.domElement.setAttribute('aria-selected', false);
+					} else {
+						var _color = new Color();
+						_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___UNTOUCHED);
+						this.mesh.setBaseColor(_color);
+					}
 					break;
 			}
 		} else {
@@ -44029,8 +46595,14 @@ var Dot = (function (_core$Node) {
 		value: function hover() {
 			if (this.state === _Consts2['default'].DOT_STATE__UNTOUCHED) {
 				this.state = _Consts2['default'].DOT_STATE__HOVERED;
-				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__HOVERED);
-				this.domElement.setAttribute('aria-selected', true);
+				if (_Consts2['default'].isDOM) {
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__HOVERED);
+					this.domElement.setAttribute('aria-selected', true);
+				} else {
+					var _color = new Color();
+					_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___HOVERED);
+					this.mesh.setBaseColor(_color);
+				}
 				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
 				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__HOVERED;
 				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
@@ -44041,8 +46613,14 @@ var Dot = (function (_core$Node) {
 		value: function unhover() {
 			if (this.state === _Consts2['default'].DOT_STATE__HOVERED) {
 				this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
-				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
-				this.domElement.setAttribute('aria-selected', false);
+				if (_Consts2['default'].isDOM) {
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+					this.domElement.setAttribute('aria-selected', false);
+				} else {
+					var _color = new Color();
+					_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___UNTOUCHED);
+					this.mesh.setBaseColor(_color);
+				}
 				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
 				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__UNTOUCHED;
 				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
@@ -44053,8 +46631,14 @@ var Dot = (function (_core$Node) {
 		value: function place() {
 			if (this.state === _Consts2['default'].DOT_STATE__HOVERED) {
 				this.state = _Consts2['default'].DOT_STATE__PLACED;
-				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
-				this.domElement.setAttribute('aria-readonly', true);
+				if (_Consts2['default'].isDOM) {
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
+					this.domElement.setAttribute('aria-readonly', true);
+				} else {
+					var _color = new Color();
+					_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___PLACED);
+					this.mesh.setBaseColor(_color);
+				}
 				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
 				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__PLACED;
 				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
@@ -44068,15 +46652,33 @@ var Dot = (function (_core$Node) {
 			if (this.state === _Consts2['default'].DOT_STATE__PLACED) {
 				if (delay) {
 					var clock = FamousEngine.getClock();
-					clock.setTimeout(function () {
-						self.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
-					}, _Consts2['default'].DURATION * delayArg);
+					if (_Consts2['default'].isDOM) {
+						clock.setTimeout(function () {
+							self.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+						}, _Consts2['default'].DURATION * delayArg);
+					} else {
+						(function () {
+							var _color = new Color();
+							_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___UNTOUCHED);
+							clock.setTimeout(function () {
+								self.mesh.setBaseColor(_color);
+							}, _Consts2['default'].DURATION * delayArg);
+						})();
+					}
 				} else {
-					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+					if (_Consts2['default'].isDOM) {
+						this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__UNTOUCHED);
+					} else {
+						var _color = new Color();
+						_color.setHex(_Consts2['default'].DOT_COLOR__CANVAS___UNTOUCHED);
+						this.mesh.setBaseColor(_color);
+					}
 				}
 				this.state = _Consts2['default'].DOT_STATE__UNTOUCHED;
-				this.domElement.setAttribute('aria-readonly', false);
-				this.domElement.setAttribute('aria-selected', false);
+				if (_Consts2['default'].isDOM) {
+					this.domElement.setAttribute('aria-readonly', false);
+					this.domElement.setAttribute('aria-selected', false);
+				}
 				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
 				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__UNTOUCHED;
 				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
@@ -44087,8 +46689,10 @@ var Dot = (function (_core$Node) {
 		value: function select() {
 			if (this.state !== _Consts2['default'].DOT_STATE__PLACED) {
 				this.state = _Consts2['default'].DOT_STATE__PLACED;
-				this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
-				this.domElement.setAttribute('aria-readonly', true);
+				if (_Consts2['default'].isDOM) {
+					this.domElement.setProperty('background', _Consts2['default'].DOT_COLOR__PLACED);
+					this.domElement.setAttribute('aria-readonly', true);
+				}
 				var _localStorageDots = JSON.parse(localStorage.getItem(_Consts2['default'].DIMENSION + '__dots'));
 				_localStorageDots[this.id] = _Consts2['default'].DOT_STATE__PLACED;
 				localStorage.setItem(_Consts2['default'].DIMENSION + '__dots', JSON.stringify(_localStorageDots));
@@ -44126,7 +46730,7 @@ var Dot = (function (_core$Node) {
 exports['default'] = Dot;
 module.exports = exports['default'];
 
-},{"./Consts":145,"famous":46}],147:[function(require,module,exports){
+},{"./Consts":154,"famous":47}],156:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -44192,7 +46796,7 @@ var Figure = (function (_core$Node) {
 exports['default'] = Figure;
 module.exports = exports['default'];
 
-},{"./Cell":144,"./Consts":145,"famous":46}],148:[function(require,module,exports){
+},{"./Cell":153,"./Consts":154,"famous":47}],157:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -44218,6 +46822,8 @@ var _famous = require('famous');
 var _tone = require('tone');
 
 var _tone2 = _interopRequireDefault(_tone);
+
+var _localforage = require('localforage');
 
 var _Figure = require('./Figure');
 
@@ -44249,9 +46855,6 @@ var _Sound2 = _interopRequireDefault(_Sound);
 
 var DOMElement = _famous.domRenderables.DOMElement;
 var FamousEngine = _famous.core.FamousEngine;
-
-//var audioLineMove = new Audio('http://donsindrom.github.io/Tactris/audio/lineMove.wav');
-//var audioFigureSet = new Audio('http://donsindrom.github.io/Tactris/audio/figureSet.wav');
 
 var Game = (function (_core$Node) {
 	_inherits(Game, _core$Node);
@@ -44368,6 +46971,7 @@ var Game = (function (_core$Node) {
 		key: '_addUIEvents',
 		value: function _addUIEvents() {
 			this.addUIEvent('mousedown');
+			this.addUIEvent('click');
 			this.addUIEvent('mouseleave');
 			this.addUIEvent('mouseup');
 		}
@@ -44756,7 +47360,7 @@ var Game = (function (_core$Node) {
 								duration: _Consts2['default'].DOT_DURATION__POSITION,
 								curve: _Consts2['default'].DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-colindex', 0);
+							//dot.domElement.setAttribute('aria-colindex', 0);
 							dot.unplace(delay);
 						}
 						for (var column = lineHash - 1; column >= 0; column--) {
@@ -44767,7 +47371,7 @@ var Game = (function (_core$Node) {
 									duration: _Consts2['default'].DOT_DURATION__POSITION,
 									curve: _Consts2['default'].DOT_CURVE__POSITION
 								});
-								dot.domElement.setAttribute('aria-colindex', column + 1);
+								//dot.domElement.setAttribute('aria-colindex', column + 1);
 							}
 						}
 						orderColumns.splice(lineHash, 1);
@@ -44781,7 +47385,7 @@ var Game = (function (_core$Node) {
 								duration: _Consts2['default'].DOT_DURATION__POSITION,
 								curve: _Consts2['default'].DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-colindex', _Consts2['default'].ROWS - 1);
+							//dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
 							dot.unplace(delay);
 						}
 						for (var column = _Consts2['default'].COLUMNS - 1; column > lineHash; column--) {
@@ -44792,7 +47396,7 @@ var Game = (function (_core$Node) {
 									duration: _Consts2['default'].DOT_DURATION__POSITION,
 									curve: _Consts2['default'].DOT_CURVE__POSITION
 								});
-								dot.domElement.setAttribute('aria-colindex', column - 1);
+								//dot.domElement.setAttribute('aria-colindex', column - 1);
 							}
 						}
 						orderColumns.splice(lineHash, 1);
@@ -44812,7 +47416,7 @@ var Game = (function (_core$Node) {
 								duration: _Consts2['default'].DOT_DURATION__POSITION,
 								curve: _Consts2['default'].DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-rowindex', 0);
+							//dot.domElement.setAttribute('aria-rowindex', 0);
 							dot.unplace(delay);
 						}
 						for (var row = lineHash - 1; row >= 0; row--) {
@@ -44823,7 +47427,7 @@ var Game = (function (_core$Node) {
 									duration: _Consts2['default'].DOT_DURATION__POSITION,
 									curve: _Consts2['default'].DOT_CURVE__POSITION
 								});
-								dot.domElement.setAttribute('aria-rowindex', row + 1);
+								//dot.domElement.setAttribute('aria-rowindex', row + 1);
 							}
 						}
 						orderRows.splice(lineHash, 1);
@@ -44837,7 +47441,7 @@ var Game = (function (_core$Node) {
 								duration: _Consts2['default'].DOT_DURATION__POSITION,
 								curve: _Consts2['default'].DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-rowindex', _Consts2['default'].COLUMNS - 1);
+							//dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
 							dot.unplace(delay);
 						}
 						for (var row = _Consts2['default'].ROWS - 1; row > lineHash; row--) {
@@ -44848,7 +47452,7 @@ var Game = (function (_core$Node) {
 									duration: _Consts2['default'].DOT_DURATION__POSITION,
 									curve: _Consts2['default'].DOT_CURVE__POSITION
 								});
-								dot.domElement.setAttribute('aria-rowindex', row - 1);
+								//dot.domElement.setAttribute('aria-rowindex', row - 1);
 							}
 						}
 						orderRows.splice(lineHash, 1);
@@ -45081,8 +47685,8 @@ var Game = (function (_core$Node) {
 						curve: _Consts2['default'].DOT_CURVE__POSITION
 					});
 					dot.unplace();
-					dot.domElement.setAttribute('aria-colindex', column);
-					dot.domElement.setAttribute('aria-rowindex', row);
+					//dot.domElement.setAttribute('aria-colindex', column);
+					//dot.domElement.setAttribute('aria-rowindex', row);
 					_localStorageDots.push(_Consts2['default'].DOT_STATE__UNTOUCHED);
 				}
 			}
@@ -45102,12 +47706,28 @@ var Game = (function (_core$Node) {
 			this.modal.hide();
 		}
 	}, {
+		key: '_defineCellUnderClick',
+		value: function _defineCellUnderClick(x, y) {
+			console.log();
+			var row = y / _Consts2['default'].DOT_SIDE | 0;
+			var column = x / _Consts2['default'].DOT_SIDE | 0;
+			return this.orderRows[row] * _Consts2['default'].DIMENSION + this.orderColumns[column];
+		}
+	}, {
 		key: 'onReceive',
 		value: function onReceive(type, ev) {
 			switch (type) {
 				case 'mousedown':
 					this.emit('x', ev.x).emit('y', ev.y);
 					this.mousing = true;
+					break;
+				case 'click':
+					var x = ev.clientX - _Consts2['default'].GAME_OFFSET__X;
+					var y = ev.clientY - _Consts2['default'].GAME_OFFSET__Y;
+					if (x > 0 && y > 0 && x <= _Consts2['default'].DIMENSION * _Consts2['default'].DOT_SIZE && y <= _Consts2['default'].DIMENSION * _Consts2['default'].DOT_SIZE) {
+						var cellId = this._defineCellUnderClick(x, y);
+						this.dotHover(cellId);
+					}
 					break;
 				case 'mouseleave':
 					this.emit('x', ev.x).emit('y', ev.y);
@@ -45129,7 +47749,7 @@ var Game = (function (_core$Node) {
 exports['default'] = Game;
 module.exports = exports['default'];
 
-},{"./Consts":145,"./Dot":146,"./Figure":147,"./Layout":149,"./Modal":150,"./Nav":151,"./Sound":155,"./getRandomInt":156,"famous":46,"tone":142}],149:[function(require,module,exports){
+},{"./Consts":154,"./Dot":155,"./Figure":156,"./Layout":158,"./Modal":159,"./Nav":160,"./Sound":164,"./getRandomInt":165,"famous":47,"localforage":149,"tone":151}],158:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -45226,7 +47846,7 @@ var Layout = (function () {
 exports['default'] = Layout;
 module.exports = exports['default'];
 
-},{"./Consts":145,"famous":46}],150:[function(require,module,exports){
+},{"./Consts":154,"famous":47}],159:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -45331,7 +47951,7 @@ var Modal = (function (_core$Node) {
 exports['default'] = Modal;
 module.exports = exports['default'];
 
-},{"./Consts":145,"famous":46}],151:[function(require,module,exports){
+},{"./Consts":154,"famous":47}],160:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -45429,7 +48049,7 @@ var Nav = (function (_core$Node) {
 exports['default'] = Nav;
 module.exports = exports['default'];
 
-},{"./Consts":145,"./NewGameButton":152,"./ScoreDisplay":154,"famous":46}],152:[function(require,module,exports){
+},{"./Consts":154,"./NewGameButton":161,"./ScoreDisplay":163,"famous":47}],161:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -45511,7 +48131,7 @@ var NewGameButton = (function (_core$Node) {
 exports['default'] = NewGameButton;
 module.exports = exports['default'];
 
-},{"./Consts":145,"famous":46}],153:[function(require,module,exports){
+},{"./Consts":154,"famous":47}],162:[function(require,module,exports){
 'use strict';
 
 module.exports.ObjectKeys = function () {
@@ -45708,7 +48328,7 @@ module.exports.ArrayIncludes = function (searchElement /*, fromIndex*/) {
 	return false;
 };
 
-},{}],154:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -45807,7 +48427,7 @@ var ScoreDisplay = (function (_core$Node) {
 exports['default'] = ScoreDisplay;
 module.exports = exports['default'];
 
-},{"./Consts":145,"famous":46}],155:[function(require,module,exports){
+},{"./Consts":154,"famous":47}],164:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -45900,7 +48520,7 @@ var Sound = (function () {
 exports['default'] = Sound;
 module.exports = exports['default'];
 
-},{"./Consts":145,"tone":142}],156:[function(require,module,exports){
+},{"./Consts":154,"tone":151}],165:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -45914,7 +48534,7 @@ function getRandomInt(min, max) {
 
 module.exports = exports['default'];
 
-},{}],157:[function(require,module,exports){
+},{}],166:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -45974,10 +48594,6 @@ FamousEngine.init();
 var scene = FamousEngine.createScene();
 var game = new _Game2['default'](_Consts2['default'].ROWS, _Consts2['default'].COLUMNS);
 
-if (!localStorage.getItem('reset')) {
-	localStorage.clear();
-	localStorage.setItem('reset', true);
-}
 //localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify([2,0]));
 //localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
 //localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
@@ -45985,4 +48601,4 @@ if (!localStorage.getItem('reset')) {
 
 scene.addChild(game);
 
-},{"./Array.js":143,"./Consts":145,"./Game":148,"./Polyfills.js":153,"famous":46}]},{},[157]);
+},{"./Array.js":152,"./Consts":154,"./Game":157,"./Polyfills.js":162,"famous":47}]},{},[166]);

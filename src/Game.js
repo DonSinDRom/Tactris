@@ -3,6 +3,7 @@
 import Consts from './Consts';
 import {core, domRenderables} from 'famous';
 import Tone from 'tone';
+import { localforage as Store } from 'localforage';
 import Figure from './Figure';
 import Dot from './Dot';
 import Nav from './Nav';
@@ -136,6 +137,7 @@ export default class Game extends core.Node {
 
 	_addUIEvents () {
 		this.addUIEvent('mousedown');
+		this.addUIEvent('click');
 		this.addUIEvent('mouseleave');
 		this.addUIEvent('mouseup');
 	}
@@ -455,7 +457,7 @@ export default class Game extends core.Node {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
-						dot.domElement.setAttribute('aria-colindex', 0);
+						//dot.domElement.setAttribute('aria-colindex', 0);
 						dot.unplace(delay);
 					}
 					for (let column = lineHash - 1; column >= 0; column--) {
@@ -466,7 +468,7 @@ export default class Game extends core.Node {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-colindex', column + 1);
+							//dot.domElement.setAttribute('aria-colindex', column + 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -480,7 +482,7 @@ export default class Game extends core.Node {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
-						dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
+						//dot.domElement.setAttribute('aria-colindex', Consts.ROWS - 1);
 						dot.unplace(delay);
 					}
 					for (let column = Consts.COLUMNS - 1; column > lineHash; column--) {
@@ -491,7 +493,7 @@ export default class Game extends core.Node {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-colindex', column - 1);
+							//dot.domElement.setAttribute('aria-colindex', column - 1);
 						}
 					}
 					orderColumns.splice(lineHash, 1);
@@ -511,7 +513,7 @@ export default class Game extends core.Node {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
-						dot.domElement.setAttribute('aria-rowindex', 0);
+						//dot.domElement.setAttribute('aria-rowindex', 0);
 						dot.unplace(delay);
 					}
 					for (let row = lineHash - 1; row >= 0; row--) {
@@ -522,7 +524,7 @@ export default class Game extends core.Node {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-rowindex', row + 1);
+							//dot.domElement.setAttribute('aria-rowindex', row + 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -536,7 +538,7 @@ export default class Game extends core.Node {
 							duration: Consts.DOT_DURATION__POSITION,
 							curve: Consts.DOT_CURVE__POSITION
 						});
-						dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
+						//dot.domElement.setAttribute('aria-rowindex', Consts.COLUMNS - 1);
 						dot.unplace(delay);
 					}
 					for (let row = Consts.ROWS - 1; row > lineHash; row--) {
@@ -547,7 +549,7 @@ export default class Game extends core.Node {
 								duration: Consts.DOT_DURATION__POSITION,
 								curve: Consts.DOT_CURVE__POSITION
 							});
-							dot.domElement.setAttribute('aria-rowindex', row - 1);
+							//dot.domElement.setAttribute('aria-rowindex', row - 1);
 						}
 					}
 					orderRows.splice(lineHash, 1);
@@ -749,8 +751,8 @@ export default class Game extends core.Node {
 					curve: Consts.DOT_CURVE__POSITION
 				});
 				dot.unplace();
-				dot.domElement.setAttribute('aria-colindex', column);
-				dot.domElement.setAttribute('aria-rowindex', row);
+				//dot.domElement.setAttribute('aria-colindex', column);
+				//dot.domElement.setAttribute('aria-rowindex', row);
 				_localStorageDots.push(Consts.DOT_STATE__UNTOUCHED);
 			}
 		}
@@ -770,11 +772,26 @@ export default class Game extends core.Node {
 		this.modal.hide();
 	}
 
+	_defineCellUnderClick(x, y) {
+		console.log();
+		let row = y / Consts.DOT_SIDE | 0;
+		let column = x / Consts.DOT_SIDE | 0;
+		return this.orderRows[row] * Consts.DIMENSION + this.orderColumns[column];
+	}
+
 	onReceive(type, ev) {
 		switch (type) {
 			case 'mousedown':
 				this.emit('x', ev.x).emit('y', ev.y);
 				this.mousing = true;
+				break;
+			case 'click':
+				let x = ev.clientX - Consts.GAME_OFFSET__X;
+				let y = ev.clientY - Consts.GAME_OFFSET__Y;
+				if (x > 0 && y > 0 && x <= Consts.DIMENSION * Consts.DOT_SIZE && y <= Consts.DIMENSION * Consts.DOT_SIZE) {
+					let cellId = this._defineCellUnderClick(x, y);
+					this.dotHover(cellId);
+				}
 				break;
 			case 'mouseleave':
 				this.emit('x', ev.x).emit('y', ev.y);

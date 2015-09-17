@@ -6,6 +6,8 @@
 
 
 export default {
+	isDOM: false, // canvas || dom
+
 	DOT_SIZE: 36,
 	DOT_MARGIN: 1,
 
@@ -393,6 +395,13 @@ export default {
 	DOT_COLOR__UNTOUCHED: '#7ac74f',
 	DOT_COLOR__PLACED: 'linear-gradient(135deg, #d5d887 0%, #d5d887 75%, #333 75%, #333 100%)',
 
+	DOT_COLOR__CANVAS___HOVERED: '#e87461',
+	DOT_COLOR__CANVAS___UNTOUCHED: '#7ac74f',
+	DOT_COLOR__CANVAS___PLACED: '#d5d887',
+	DOT_COLOR__CANVAS___DURATION: 600,
+	DOT_COLOR__CANVAS___CURVE: 'inOutQuint',
+
+
 	DOT_CURVE__POSITION: 'inOutElastic',
 	DOT_DURATION__POSITION: 800,
 
@@ -437,6 +446,9 @@ export default {
 		if (vmin / this.DIMENSION < this.DOT_SIZE) {
 			this.DOT_SIZE = vmin / this.DIMENSION - this.DOT_MARGIN;
 		}
+		this.GAME_OFFSET__X = (w - this.DOT_SIZE * this.DIMENSION) / 2;
+		this.GAME_OFFSET__Y = (h - this.DOT_SIZE * this.DIMENSION) / 2;
+
 		this.CELL_SIZE = this.DOT_SIZE * this.CELL_RATIO;
 		this.DOT_SIDE = this.DOT_SIZE + this.DOT_MARGIN;
 		this.CELL_SIDE = this.CELL_SIZE + this.CELL_MARGIN;

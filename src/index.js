@@ -47,10 +47,6 @@ FamousEngine.init();
 const scene = FamousEngine.createScene();
 const game = new Game(Consts.ROWS, Consts.COLUMNS);
 
-if (!localStorage.getItem('reset')) {
-	localStorage.clear();
-	localStorage.setItem('reset', true);
-}
 //localStorage.setItem(Consts.DIMENSION + '__figures', JSON.stringify([2,0]));
 //localStorage.setItem(Consts.DIMENSION + '__orderColumns', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
 //localStorage.setItem(Consts.DIMENSION + '__orderRows', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
